@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: Apache-2.0
+# Nightly: full e2e smoke, IBM adapter offline tests, and — only when the
+# repository holds an IBM_TOKEN secret — one live Bell job on a real backend
+# (T7.ibm-flag). Without the secret the live path is provably dormant: the
+# job is skipped and the compose profile keeps the adapter out of the stack.
+name: nightly
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  e2e-full:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: compose up
+        run: make compose-up
+      - name: full smoke ladder
+        run: |
+          ./hack/smoke-m0.sh
+          ./hack/smoke-m1.sh
+          ./hack/smoke-m2.sh
+      - name: seeded demo mix settles into the full state taxonomy
+        run: ./hack/smoke-m7.sh
+      - name: compose down
+        if: always()
+        run: make compose-down
+
+  ibm-offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: IBM adapter tests (local mode, tokenless)
+        run: cd adapters/ibm && uv run --extra dev pytest -q
+
+  ibm-live:
+    runs-on: ubuntu-latest
+    environment: ibm-quantum
+    steps:
+      - uses: actions/checkout@v4
+        if: ${{ vars.IBM_LIVE_ENABLED == 'true' }}
+      - uses: astral-sh/setup-uv@v5
+        if: ${{ vars.IBM_LIVE_ENABLED == 'true' }}
+      - name: live Bell on a real backend (token-gated)
+        if: ${{ vars.IBM_LIVE_ENABLED == 'true' }}
+        env:
+          IBM_TOKEN: ${{ secrets.IBM_TOKEN }}
+        run: cd adapters/ibm && uv run python scripts/live_bell.py
+      - name: dormant without token
+        if: ${{ vars.IBM_LIVE_ENABLED != 'true' }}
+        run: echo "IBM live path dormant (no token configured) — by design"
