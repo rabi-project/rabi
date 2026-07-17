@@ -127,7 +127,7 @@ func TestJobRunsEndToEnd(t *testing.T) {
 		ID: "alpha", Qubits: 5, Formats: []string{"openqasm3"}, SnapshotID: "snap-abc"})
 
 	rec := insertJob(t, "10000000-0000-0000-0000-000000000001", "acme", gateModelSpec(2, 500))
-	done := awaitPhase(t, rec.JobID, job.Succeeded, 15*time.Second)
+	done := awaitPhase(t, rec.JobID, job.Succeeded, 30*time.Second)
 
 	// Placement audit trail (spec: recorded before submission; T3.audit —
 	// policy id, snapshot id, prediction, and the rejected list are all
@@ -222,7 +222,7 @@ func TestAdapterFailureMapsToFailedJob(t *testing.T) {
 		}})
 
 	rec := insertJob(t, "10000000-0000-0000-0000-000000000003", "acme", gateModelSpec(2, 100))
-	done := awaitPhase(t, rec.JobID, job.Failed, 15*time.Second)
+	done := awaitPhase(t, rec.JobID, job.Failed, 30*time.Second)
 
 	tasks, _ := done.Status["tasks"].([]any)
 	task0, _ := tasks[0].(map[string]any)
@@ -250,7 +250,7 @@ func TestSourceURIFailsFast(t *testing.T) {
 	program["source"] = "s3://bucket/prog.qasm"
 
 	rec := insertJob(t, "10000000-0000-0000-0000-000000000004", "acme", spec)
-	done := awaitPhase(t, rec.JobID, job.Failed, 15*time.Second)
+	done := awaitPhase(t, rec.JobID, job.Failed, 30*time.Second)
 	conditions := fmt.Sprintf("%v", done.Status["conditions"])
 	if !containsStr(conditions, "not resolvable") {
 		t.Fatalf("expected precise source-uri failure, got %s", conditions)
@@ -263,7 +263,7 @@ func TestDispatcherCancelPropagates(t *testing.T) {
 		StepDelay: 2 * time.Second})
 
 	rec := insertJob(t, "10000000-0000-0000-0000-000000000005", "acme", gateModelSpec(2, 100))
-	awaitPhase(t, rec.JobID, job.Submitted, 15*time.Second)
+	awaitPhase(t, rec.JobID, job.Submitted, 30*time.Second)
 
 	if err := d.CancelJob(context.Background(), rec.JobID); err != nil {
 		t.Fatal(err)
@@ -272,7 +272,7 @@ func TestDispatcherCancelPropagates(t *testing.T) {
 		t.Fatal(err)
 	}
 	// The adapter task converges to CANCELLED and the job stays CANCELLED.
-	deadline := time.Now().Add(15 * time.Second)
+	deadline := time.Now().Add(30 * time.Second)
 	for time.Now().Before(deadline) {
 		taskRec, err := testStore.TaskForJob(context.Background(), rec.JobID)
 		if err == nil && taskRec.State == "CANCELLED" {

@@ -13,7 +13,11 @@ cd "$(dirname "$0")/.."
 
 profile="bin/coverage.out"
 mkdir -p bin
-go test -count=1 -coverprofile="$profile" -coverpkg=./internal/... ./internal/... >/dev/null
+if ! go test -count=1 -coverprofile="$profile" -coverpkg=./internal/... ./internal/... > bin/coverage-test.log 2>&1; then
+  echo "coverage test run FAILED:"
+  cat bin/coverage-test.log
+  exit 1
+fi
 
 pkg_pct() { # prefix ("" = all)
   # Blocks appear once per test binary; dedupe by block key, max hit count.
