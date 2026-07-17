@@ -68,6 +68,10 @@ func (s *Store) InsertJob(ctx context.Context, rec *JobRecord) error {
 		rec.JobID, string(rec.Phase), status); err != nil {
 		return fmt.Errorf("store: insert job event: %w", err)
 	}
+	// Delivered on commit: wakes the dispatcher without polling latency.
+	if _, err := tx.Exec(ctx, "SELECT pg_notify($1, $2)", jobsChannel, rec.JobID); err != nil {
+		return fmt.Errorf("store: notify: %w", err)
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("store: commit insert job: %w", err)
 	}

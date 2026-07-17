@@ -12,6 +12,7 @@ var legal = map[[2]Phase]bool{
 	{Pending, Cancelled}:   true,
 	{Scheduled, Submitted}: true,
 	{Scheduled, Pending}:   true,
+	{Scheduled, Failed}:    true,
 	{Scheduled, Cancelled}: true,
 	{Submitted, Running}:   true,
 	{Submitted, Pending}:   true,

@@ -25,11 +25,11 @@ var Phases = []Phase{Pending, Scheduled, Submitted, Running, Succeeded, Failed, 
 // transitions is the single source of truth for legal phase changes
 // (spec/spec/overview.md §3). SCHEDULED/SUBMITTED may return to PENDING
 // (policy-controlled reschedule before RUNNING); FAILED is reachable from
-// SUBMITTED and RUNNING (adapters can reject at submission — see
-// docs/decisions.md D-010); terminal states are immutable.
+// SCHEDULED (bind-time payload/adapter failures), SUBMITTED, and RUNNING
+// (see docs/decisions.md D-010); terminal states are immutable.
 var transitions = map[Phase]map[Phase]bool{
 	Pending:   {Scheduled: true, Cancelled: true},
-	Scheduled: {Submitted: true, Pending: true, Cancelled: true},
+	Scheduled: {Submitted: true, Pending: true, Failed: true, Cancelled: true},
 	Submitted: {Running: true, Pending: true, Failed: true, Cancelled: true},
 	Running:   {Succeeded: true, Failed: true, Cancelled: true},
 	Succeeded: {},
