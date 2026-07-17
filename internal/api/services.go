@@ -17,33 +17,6 @@ type TargetLister interface {
 	GetTarget(ctx context.Context, name string) (*apiv1alpha1.Target, error)
 }
 
-// jobsService is the client-facing JobsService. Job persistence and the
-// lifecycle state machine arrive with M1; until then every method is a
-// well-formed Unimplemented.
-type jobsService struct {
-	apiv1alpha1.UnimplementedJobsServiceServer
-}
-
-func (s *jobsService) SubmitJob(context.Context, *apiv1alpha1.SubmitJobRequest) (*apiv1alpha1.Job, error) {
-	return nil, status.Error(codes.Unimplemented, "SubmitJob: job store lands in M1")
-}
-
-func (s *jobsService) GetJob(context.Context, *apiv1alpha1.JobRef) (*apiv1alpha1.Job, error) {
-	return nil, status.Error(codes.Unimplemented, "GetJob: job store lands in M1")
-}
-
-func (s *jobsService) ListJobs(context.Context, *apiv1alpha1.ListJobsRequest) (*apiv1alpha1.ListJobsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "ListJobs: job store lands in M1")
-}
-
-func (s *jobsService) WatchJob(*apiv1alpha1.JobRef, apiv1alpha1.JobsService_WatchJobServer) error {
-	return status.Error(codes.Unimplemented, "WatchJob: job store lands in M1")
-}
-
-func (s *jobsService) CancelJob(context.Context, *apiv1alpha1.JobRef) (*apiv1alpha1.Job, error) {
-	return nil, status.Error(codes.Unimplemented, "CancelJob: job store lands in M1")
-}
-
 // targetsService serves the fleet view from the registry.
 type targetsService struct {
 	apiv1alpha1.UnimplementedTargetsServiceServer

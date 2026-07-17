@@ -9,6 +9,7 @@ import (
 	"context"
 
 	apiv1alpha1 "tangle.dev/tangle/gen/go/tangle/api/v1alpha1"
+	"tangle.dev/tangle/internal/job"
 )
 
 // Registry is the control plane's authoritative view of registered targets.
@@ -27,4 +28,10 @@ func (r *Registry) ListTargets(_ context.Context, _ string) ([]*apiv1alpha1.Targ
 // GetTarget returns the named target ("<site>/<target_id>") or nil when unknown.
 func (r *Registry) GetTarget(_ context.Context, _ string) (*apiv1alpha1.Target, error) {
 	return nil, nil
+}
+
+// FleetView reports the program formats and billing units currently offered
+// by ≥1 registered target, for admission validation. Empty fleet at M0/M1.
+func (r *Registry) FleetView(_ context.Context) job.FleetView {
+	return job.FleetView{}
 }

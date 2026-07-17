@@ -12,6 +12,7 @@ import (
 	"syscall"
 
 	"tangle.dev/tangle/internal/api"
+	"tangle.dev/tangle/internal/job"
 	"tangle.dev/tangle/internal/registry"
 	"tangle.dev/tangle/internal/store"
 )
@@ -49,11 +50,20 @@ func main() {
 
 	reg := registry.New()
 
+	validator, err := job.NewValidator()
+	if err != nil {
+		logger.Error("compiling admission schema", "error", err)
+		os.Exit(1)
+	}
+
 	srv, err := api.New(api.Config{
-		GRPCAddr: grpcAddr,
-		HTTPAddr: httpAddr,
-		APIKey:   apiKey,
-		Registry: reg,
+		GRPCAddr:  grpcAddr,
+		HTTPAddr:  httpAddr,
+		APIKey:    apiKey,
+		Registry:  reg,
+		Fleet:     reg,
+		Store:     st,
+		Validator: validator,
 	})
 	if err != nil {
 		logger.Error("assembling api server", "error", err)
