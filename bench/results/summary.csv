@@ -1,0 +1,4 @@
+policy,jobs,placed,unplaced,mean_fidelity,fidelity_ci_lo,fidelity_ci_hi,slo_jobs,slo_violation_rate,slo_ci_lo,slo_ci_hi,mean_wait_s,wait_ci_lo,wait_ci_hi,median_wait_s,mean_wait_nofloor_s,deadline_jobs,deadline_met_rate
+calib-aware/v0,2500,2500,0,0.407417,0.394722,0.420404,1019,0.000000,0.000000,0.000000,718.734,532.452,922.748,0.000,0.482,737,0.970149
+static-best/v0,2500,2500,0,0.348736,0.336717,0.360702,1019,0.094210,0.076546,0.112856,10.612,9.819,11.407,0.000,10.658,737,1.000000
+round-robin/v0,2500,2500,0,0.363380,0.350023,0.376720,1019,0.352306,0.322866,0.381747,0.160,0.097,0.233,0.000,0.201,737,1.000000

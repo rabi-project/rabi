@@ -1,0 +1,3 @@
+comparison,fidelity_delta,fidelity_cohens_d,slo_rate_delta,wait_delta_s,wait_cohens_d
+calib-aware/v0 vs static-best/v0,0.058681,0.1858,-0.094210,708.123,0.2044
+calib-aware/v0 vs round-robin/v0,0.044037,0.1320,-0.352306,718.574,0.2074
