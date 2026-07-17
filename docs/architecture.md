@@ -38,8 +38,22 @@ qctl / SDK / REST ──> internal/api (gRPC tangle.api.v1alpha1 + gateway)
 | Milestone | State |
 |---|---|
 | M0 scaffold | done |
-| M1 job store + API | **current** |
-| M2–M8 | pending |
+| M1 job store + API | done |
+| M2 adapter protocol + Aer adapter | **current** |
+| M3–M8 | pending |
+
+## Execution path (M2)
+
+The registry dials adapters from `TANGLE_ADAPTERS` (site=host:port), caches
+capabilities, and polls device state every 5s. The dispatcher claims PENDING
+jobs from the Postgres work queue (`FOR UPDATE SKIP LOCKED`, woken by
+`LISTEN/NOTIFY` on submit), binds them with a placement audit record, submits
+to the adapter with the task UUID as idempotency key, and mirrors task states
+onto the job until terminal. Usage lands in an append-only ledger
+(`UNIQUE (task_id, unit)` makes recording idempotent) served by
+`GetTenantUsage` in native units. The reference Aer adapter builds its noise
+model from the same snapshot `GetDeviceState` reports, and passes the
+public conformance suite (`conformance/`) in CI — categories 1–8.
 
 ## Job lifecycle (M1)
 

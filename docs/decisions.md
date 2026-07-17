@@ -74,9 +74,10 @@ byte-identical to `spec/schemas/quantumjob.schema.json`, and `make gen-check`
 
 Adopted transitions beyond the base diagram: SCHEDULED→PENDING and
 SUBMITTED→PENDING (the spec allows returning to PENDING "before RUNNING" on
-quality degradation) and SUBMITTED→FAILED (adapters can reject at submission
-with e.g. INVALID_PROGRAM; the diagram only draws FAILED from RUNNING).
-Worth an editorial clarification in the spec's lifecycle section.
+quality degradation) and SCHEDULED/SUBMITTED→FAILED (payloads can be
+unsubmittable after binding — e.g. unresolvable source URI — and adapters can
+reject at submission with INVALID_PROGRAM; the diagram only draws FAILED from
+RUNNING). Worth an editorial clarification in the spec's lifecycle section.
 
 ## D-011 · 2026-07-17 · dry_run returns the validated document, no job_id
 
@@ -98,3 +99,33 @@ control-plane logic. Generated `gen/`, vendored `spec/`, and thin `cmd/`
 entrypoints are excluded; cmd binaries are exercised end-to-end by the smoke
 suites instead. Watch streams poll the append-only `job_events` table (250ms)
 for M1; LISTEN/NOTIFY wakeups arrive with the M2 dispatcher.
+
+## D-013 · 2026-07-17 · Python toolchain: uv + Python 3.13, generated stubs committed
+
+The Aer adapter pins Python 3.13 (qiskit/qiskit-aer wheels are not yet
+published for 3.14) and uses uv for env management. gRPC stubs are generated
+by `make gen-python` into `adapters/aer/src/tangle/` (so absolute imports
+resolve) and committed; `make gen-check` enforces freshness.
+
+## D-014 · 2026-07-17 · Adapter execution model: per-target single worker, delay knob
+
+One worker thread per target gives an honest, observable queue (queue_depth =
+queued+running) and makes cancellation semantics testable. The test-only
+`tangle.sim/delay-ms` parameter holds tasks in QUEUED/RUNNING long enough for
+deterministic cancellation tests — it is a simulator affordance, documented,
+not hidden. Aer seeds derive from (target seed, idempotency key), so replays
+of the same task are bit-identical. Inline payloads only in the MVP; a
+`program.source` URI fails fast as INVALID_PROGRAM with a precise message
+(admission cannot reject it: the schema allows URIs and the fleet may gain a
+resolver post-MVP).
+
+## D-015 · 2026-07-17 · Dispatch: task_id doubles as the adapter idempotency key
+
+The control plane creates one task row per placement inside the bind
+transaction; its UUID is the `idempotency_key` sent to the adapter. After a
+restart, `resume()` re-submits active tasks with the same key — the adapter
+conformance contract (category 3) guarantees no duplicate execution. Usage
+recording is idempotent via UNIQUE (task_id, unit) on the append-only ledger.
+M2's target selection is `direct/v0` (first feasible target, rejection
+reasons recorded); M3 replaces exactly that function with the policy
+pipeline.

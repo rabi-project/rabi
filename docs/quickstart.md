@@ -10,10 +10,11 @@ make compose-up          # builds tangled, starts Postgres + control plane
 go run ./cmd/qctl targets --api-key dev-key
 ```
 
-Expected output at M0:
+Expected output (the compose fleet ships one simulated Aer QPU at M2):
 
 ```
-0 targets
+NAME           MODALITY    QUBITS  STATUS
+sim/aer-alpha  gate-model  5       ONLINE
 ```
 
 The same answer over REST:
@@ -22,19 +23,21 @@ The same answer over REST:
 curl -H "Authorization: Bearer dev-key" http://localhost:8080/v1alpha1/targets
 ```
 
-## Submit a job (M1)
+## Run a job
 
 ```sh
 export TANGLE_API_KEY=dev-key
 go run ./cmd/qctl submit -f examples/bell.yaml          # prints "<job-id>  PENDING"
-go run ./cmd/qctl get <job-id>                          # full document + status
-go run ./cmd/qctl watch <job-id>                        # streams phase transitions
-go run ./cmd/qctl cancel <job-id>                       # PENDING → CANCELLED
+go run ./cmd/qctl watch <job-id>                        # PENDING → ... → SUCCEEDED
+go run ./cmd/qctl get <job-id>                          # counts + placement audit
+go run ./cmd/qctl usage --tenant demo                   # native-unit usage ledger
 ```
 
-Jobs are validated against the spec's JSON Schema at admission — try breaking
-`examples/bell.yaml` and the error names the exact field. With no adapters
-registered yet the job carries a `FormatAvailable: False` condition and waits
-in `PENDING`; simulated QPU targets arrive in M2.
+The Bell job routes to the simulated QPU, executes under its calibration
+snapshot's noise model, and returns a counts histogram with |00⟩ and |11⟩
+dominant. `status.placement` records the policy, calibration snapshot id, and
+a human-readable reason for the binding. Jobs are validated against the
+spec's JSON Schema at admission — try breaking `examples/bell.yaml` and the
+error names the exact field.
 
 Tear down with `make compose-down`.
