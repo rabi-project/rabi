@@ -1,0 +1,275 @@
+{
+  "measured_at": "2026-07-01T00:00:00Z",
+  "metrics": [
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        0
+      ],
+      "unit": "probability",
+      "value": 0.0004
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        0
+      ],
+      "unit": "probability",
+      "value": 0.015
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        0
+      ],
+      "unit": "us",
+      "value": 180.0
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        0
+      ],
+      "unit": "us",
+      "value": 120.0
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        1
+      ],
+      "unit": "probability",
+      "value": 0.0003
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        1
+      ],
+      "unit": "probability",
+      "value": 0.012
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        1
+      ],
+      "unit": "us",
+      "value": 210.0
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        1
+      ],
+      "unit": "us",
+      "value": 160.0
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        2
+      ],
+      "unit": "probability",
+      "value": 0.0005
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        2
+      ],
+      "unit": "probability",
+      "value": 0.02
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        2
+      ],
+      "unit": "us",
+      "value": 150.0
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        2
+      ],
+      "unit": "us",
+      "value": 100.0
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        3
+      ],
+      "unit": "probability",
+      "value": 0.0004
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        3
+      ],
+      "unit": "probability",
+      "value": 0.018
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        3
+      ],
+      "unit": "us",
+      "value": 190.0
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        3
+      ],
+      "unit": "us",
+      "value": 140.0
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        4
+      ],
+      "unit": "probability",
+      "value": 0.0006
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        4
+      ],
+      "unit": "probability",
+      "value": 0.025
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        4
+      ],
+      "unit": "us",
+      "value": 160.0
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        4
+      ],
+      "unit": "us",
+      "value": 110.0
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "gate.2q.cx.error",
+      "qubits": [
+        0,
+        1
+      ],
+      "unit": "probability",
+      "value": 0.008
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "gate.2q.cx.error",
+      "qubits": [
+        1,
+        2
+      ],
+      "unit": "probability",
+      "value": 0.01
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "gate.2q.cx.error",
+      "qubits": [
+        2,
+        3
+      ],
+      "unit": "probability",
+      "value": 0.009
+    },
+    {
+      "confidence": 0.9,
+      "methodology": "static-fixture",
+      "modality": "gate-model",
+      "name": "gate.2q.cx.error",
+      "qubits": [
+        3,
+        4
+      ],
+      "unit": "probability",
+      "value": 0.012
+    }
+  ],
+  "snapshot_id": "static-aer-alpha-v1",
+  "source": "handcrafted-static-fixture"
+}

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+# M2 fleet: one noisy 5-qubit Aer target with a static calibration snapshot.
+targets:
+  - target_id: aer-alpha
+    display_name: "Aer alpha (5q linear)"
+    num_qubits: 5
+    coupling_map: [[0, 1], [1, 2], [2, 3], [3, 4]]
+    snapshot_file: snapshots/aer-alpha-static.json
+    noise: true
+    max_shots: 100000
+    seed: 11
