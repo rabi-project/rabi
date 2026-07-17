@@ -42,6 +42,7 @@ services:
       TANGLE_GRPC_ADDR: ":9090"
       TANGLE_HTTP_ADDR: ":8080"
       TANGLE_ADAPTERS: "sim=adapter-aer:50051"
+      TANGLE_POLICY: ${TANGLE_POLICY:-calib-aware/v0}
     ports:
       - "9090:9090"
       - "8080:8080"

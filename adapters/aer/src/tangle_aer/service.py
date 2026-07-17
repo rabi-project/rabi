@@ -20,6 +20,16 @@ from .tasks import TaskEngine
 
 VENDOR = "aer-sim"
 MODALITY = "gate-model"
+
+
+def nominal_2q_median(cfg: TargetConfig) -> float:
+    values = sorted(m.value for m in cfg.snapshot.metrics if m.name.startswith("gate.2q."))
+    if not values:
+        return 0.0
+    mid = len(values) // 2
+    if len(values) % 2:
+        return values[mid]
+    return (values[mid - 1] + values[mid]) / 2
 # Rough per-task service time used for best-effort wait estimates.
 EST_SECONDS_PER_TASK = 1.0
 
@@ -77,7 +87,12 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
             cancellation=True,
             billing_units=list(cfg.billing_units),
             coupling_class="loose",
-            vendor_extensions={"technology": cfg.technology},
+            vendor_extensions={
+                "technology": cfg.technology,
+                # The device's advertised baseline quality — static per
+                # target, drift-blind: what static-best/v0 selects on.
+                "nominal-2q-error-median": f"{nominal_2q_median(cfg):.6g}",
+            },
         )
 
     def GetDeviceState(self, request, context):

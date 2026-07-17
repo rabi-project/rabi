@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"log/slog"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -176,6 +177,9 @@ func entryToView(e *registry.Entry) *scheduler.TargetView {
 		MaxShots:   e.Caps.GetMaxShots(),
 		Billing:    e.Caps.GetBillingUnits(),
 		Cloud:      ext["cloud"] == "true",
+	}
+	if nominal, err := strconv.ParseFloat(ext["nominal-2q-error-median"], 64); err == nil {
+		v.Nominal2QError = nominal
 	}
 	if state := e.State; state != nil {
 		v.Online = state.GetStatus() == adapterv1alpha1.DeviceState_ONLINE
