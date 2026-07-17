@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+# T6.det (reduced): benchmark determinism gate on PRs touching the pipeline.
+name: bench-determinism
+
+on:
+  pull_request:
+    paths:
+      - "bench/**"
+      - "internal/scheduler/**"
+      - "adapters/aer/**"
+      - "hack/bench-determinism.sh"
+
+jobs:
+  determinism:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - uses: astral-sh/setup-uv@v5
+      - name: reduced bench twice, byte-identical
+        run: ./hack/bench-determinism.sh

@@ -225,3 +225,49 @@ previous winner via its best-edge metric (a legitimately lower-ESP reroute
 follows); the tested form is the sound core — the new selection always
 satisfies the tightened floor, and while the previous winner remains
 feasible, ESP never drops.
+
+## D-024 · 2026-07-17 · Benchmark harness: deterministic DES + shared physics series
+
+Artifact B runs as a discrete-event simulation in Go (`bench/runner`) using
+the real `internal/scheduler` policy code — no wall clock, no goroutines, so
+runs are byte-identical per seed. Physics executes in a seeded Python batch
+(`bench/scripts/execute.py`); both sides consume one exported snapshot
+series (`gen_series.py`), so scheduler view and noise model cannot diverge.
+Baseline policies (static-best, round-robin) filter on capability/selector
+dimensions only — current practice cannot act on calibration intent
+(quality floors, calibrationMaxAge); quantifying that gap is the point of
+the benchmark. SLO violations are judged post-hoc against the execution-time
+snapshot. Fidelity proxy is 1−TVD at 1,000 probe shots against the exact
+ideal distribution, on a circuit subset curated to concentrated ideal
+outputs (flat-output families are unverifiable by sampling — excluded and
+disclosed). Jobs sharing a (circuit, target, snapshot) context share one
+seeded measurement. Full methodology and limitations live in the generated
+`bench/out/report.md`.
+
+## D-025 · 2026-07-17 · Identity initial_layout everywhere Qiskit transpiles
+
+Qiskit's seeded layout search (VF2 passes with wall-clock budgets) is not
+run-to-run deterministic even with `seed_transpiler` fixed — observed
+directly on bv_12/bv_16. Determinism is a tested property (T6.det, adapter
+idempotent replays), so both the adapter and the benchmark executor pin
+`initial_layout = identity` onto the BFS-ordered subgraph and let seeded
+routing do the rest. The layout is identical for every policy, so rankings
+are unaffected; the fidelity cost of not searching layouts is shared and
+disclosed. Aer `method="automatic"` is likewise banned in the benchmark (it
+picks a method from free memory at runtime) — methods are explicit.
+
+## D-026 · 2026-07-17 · `qctl watch --all` polls ListJobs client-side
+
+The spec API deliberately has per-job watch streams only; the demo's live
+fleet view is a client-side refresh loop over ListJobs (2s default). A
+fleet-wide stream would be new API surface — post-MVP RFC territory.
+
+## D-027 · 2026-07-17 · IBM adapter: local-mode tests, in-memory idempotency
+
+The token-gated IBM adapter reuses qiskit-ibm-runtime's local mode so its
+entire SamplerV2 path is tested offline with fake backends; only the network
+needs the nightly token-gated probe. Known MVP limits (documented in code):
+the idempotency key→job map is in-memory (an adapter restart may resubmit —
+duplicates stay visible in usage), and `GetDeviceState` snapshot ids hash
+the live vendor metrics. Compose keeps it dormant behind the `ibm` profile +
+`TANGLE_ADAPTERS_EXTRA`, so the default stack provably never dials it.

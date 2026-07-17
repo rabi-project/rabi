@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: build gen gen-check lint test unit smoke compose-up compose-down spdx-check
+.PHONY: build gen gen-check gen-python lint breaking test unit smoke \
+	compose-up compose-down spdx-check bench bench-ci bench-publish
 
 build:
 	go build ./...
@@ -51,3 +52,31 @@ smoke: compose-up
 
 spdx-check:
 	./hack/check-spdx.sh
+
+# ---- Artifact B: the benchmark (mvp-build-plan.md §M6) ----
+# Full run: 5 seeds x 500 jobs x 3 policies over a 60h replay timeline.
+# Deterministic: `make bench` twice => byte-identical CSVs (T6.det).
+BENCH_OUT ?= out
+BENCH_SEEDS ?= 5
+BENCH_JOBS ?= 500
+BENCH_HOURS ?= 60
+BENCH_WORKERS ?= 4
+
+bench:
+	cd bench && uv run python scripts/gen_series.py --hours $(BENCH_HOURS) --out $(BENCH_OUT)/series.json
+	go run ./bench/runner --seeds $(BENCH_SEEDS) --jobs $(BENCH_JOBS) \
+		--series bench/$(BENCH_OUT)/series.json --out bench/$(BENCH_OUT)
+	cd bench && uv run python scripts/execute.py --out $(BENCH_OUT) --workers $(BENCH_WORKERS)
+	cd bench && uv run python scripts/analyze.py --out $(BENCH_OUT)
+	@echo "benchmark report: bench/$(BENCH_OUT)/report.md"
+
+# Reduced determinism gate for CI (T6.det): tiny run twice, CSVs must match.
+bench-ci:
+	./hack/bench-determinism.sh
+
+# Copy the current run's publishable artifacts into the committed bench/results/.
+bench-publish:
+	mkdir -p bench/results
+	cp bench/$(BENCH_OUT)/report.md bench/$(BENCH_OUT)/summary.csv \
+	   bench/$(BENCH_OUT)/effects.csv bench/$(BENCH_OUT)/per_seed.csv \
+	   bench/$(BENCH_OUT)/results.csv bench/$(BENCH_OUT)/*.png bench/results/

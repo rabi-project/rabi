@@ -1,5 +1,7 @@
 bin/
 dist/
+bench/out*/
+bench/det-*/
 *.test
 coverage.out
 __pycache__/
