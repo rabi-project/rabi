@@ -37,5 +37,17 @@ qctl / SDK / REST ──> internal/api (gRPC tangle.api.v1alpha1 + gateway)
 
 | Milestone | State |
 |---|---|
-| M0 scaffold | **current** |
-| M1–M8 | pending |
+| M0 scaffold | done |
+| M1 job store + API | **current** |
+| M2–M8 | pending |
+
+## Job lifecycle (M1)
+
+Admission validates the submitted document against the spec schema plus the
+normative semantic rules (deadline in future, known budget units, exactly one
+modality payload, tenant envelope consistency); a program format the fleet
+lacks is a warning condition, not a rejection. Accepted jobs persist in
+Postgres as `PENDING` with an append-only `job_events` history; every phase
+change goes through `internal/job.Transition` (the single state-machine
+authority) inside a row lock. `WatchJob` replays the event history and tails
+it, so watchers see every transition in order.

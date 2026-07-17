@@ -22,7 +22,19 @@ The same answer over REST:
 curl -H "Authorization: Bearer dev-key" http://localhost:8080/v1alpha1/targets
 ```
 
-Tear down with `make compose-down`.
+## Submit a job (M1)
 
-Simulated QPU targets, job submission, and the live demo arrive in later
-milestones; this page grows with them.
+```sh
+export TANGLE_API_KEY=dev-key
+go run ./cmd/qctl submit -f examples/bell.yaml          # prints "<job-id>  PENDING"
+go run ./cmd/qctl get <job-id>                          # full document + status
+go run ./cmd/qctl watch <job-id>                        # streams phase transitions
+go run ./cmd/qctl cancel <job-id>                       # PENDING → CANCELLED
+```
+
+Jobs are validated against the spec's JSON Schema at admission — try breaking
+`examples/bell.yaml` and the error names the exact field. With no adapters
+registered yet the job carries a `FormatAvailable: False` condition and waits
+in `PENDING`; simulated QPU targets arrive in M2.
+
+Tear down with `make compose-down`.

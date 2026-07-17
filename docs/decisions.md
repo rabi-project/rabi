@@ -62,3 +62,39 @@ Conventional defaults, overridable via `TANGLE_GRPC_ADDR`/`TANGLE_HTTP_ADDR`.
 not support comments cleanly and are covered by the repository LICENSE.
 `spec/` (vendored, upstream provenance) and `gen/` (generated from spec) are
 excluded from the check.
+
+## D-009 · 2026-07-17 · Schema embedded via `make gen` copy, sync-tested
+
+Go embed cannot reach outside a package directory, so the admission schema is
+copied to `internal/specdata/` by `make gen`. A unit test asserts the copy is
+byte-identical to `spec/schemas/quantumjob.schema.json`, and `make gen-check`
+(CI) fails when the copy is stale. The spec file remains the only source.
+
+## D-010 · 2026-07-17 · FSM details the spec diagram leaves open — SPEC QUESTION (minor)
+
+Adopted transitions beyond the base diagram: SCHEDULED→PENDING and
+SUBMITTED→PENDING (the spec allows returning to PENDING "before RUNNING" on
+quality degradation) and SUBMITTED→FAILED (adapters can reject at submission
+with e.g. INVALID_PROGRAM; the diagram only draws FAILED from RUNNING).
+Worth an editorial clarification in the spec's lifecycle section.
+
+## D-011 · 2026-07-17 · dry_run returns the validated document, no job_id
+
+`dry_run` responses carry the accepted document plus a
+`Validated/DryRun` condition, with empty `job_id` — making "nothing was
+enqueued" visible to clients. Placement simulation is deferred until a
+scheduler exists (M3+). Admission checks not implementable in the MVP are
+recorded here: tenant existence/quota headroom (no tenancy system, tenant is
+a string) and `session.maxDuration ≤ tenant policy max` (no tenant policy);
+both admit unconditionally. Known native units start as the four the spec
+names (qpu-seconds, shots, tasks, credits) and extend with adapters'
+declared `billing_units` once the fleet is non-empty.
+
+## D-012 · 2026-07-17 · Coverage floors measured over internal/
+
+The T&V plan's floors (scheduler & FSM ≥90%, store ≥85%, overall ≥75%) are
+enforced by hack/coverage-check.sh over `internal/...` — hand-written
+control-plane logic. Generated `gen/`, vendored `spec/`, and thin `cmd/`
+entrypoints are excluded; cmd binaries are exercised end-to-end by the smoke
+suites instead. Watch streams poll the append-only `job_events` table (250ms)
+for M1; LISTEN/NOTIFY wakeups arrive with the M2 dispatcher.
