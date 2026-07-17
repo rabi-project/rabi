@@ -1,0 +1,1243 @@
+{
+  "device": {
+    "backend": "fake_sherbrooke",
+    "coupling_map": [
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        9
+      ],
+      [
+        5,
+        4
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        7,
+        6
+      ],
+      [
+        8,
+        0
+      ],
+      [
+        8,
+        10
+      ],
+      [
+        10,
+        11
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        13,
+        12
+      ],
+      [
+        13,
+        14
+      ],
+      [
+        14,
+        9
+      ],
+      [
+        15,
+        14
+      ],
+      [
+        16,
+        18
+      ],
+      [
+        17,
+        18
+      ],
+      [
+        19,
+        18
+      ]
+    ],
+    "num_qubits": 20,
+    "technology": "superconducting",
+    "two_qubit_gate": "ecr"
+  },
+  "measured_at": "2026-07-01T00:00:00Z",
+  "metrics": [
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        0
+      ],
+      "unit": "us",
+      "value": 381.5685857300125
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        0
+      ],
+      "unit": "us",
+      "value": 131.70442930164933
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        0
+      ],
+      "unit": "probability",
+      "value": 0.01123046875
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        0
+      ],
+      "unit": "probability",
+      "value": 0.00028775142091170115
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        1
+      ],
+      "unit": "us",
+      "value": 233.79089869391422
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        1
+      ],
+      "unit": "us",
+      "value": 251.00498025618936
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        1
+      ],
+      "unit": "probability",
+      "value": 0.0244140625
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        1
+      ],
+      "unit": "probability",
+      "value": 0.00020148864859246516
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        2
+      ],
+      "unit": "us",
+      "value": 270.38813239310156
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        2
+      ],
+      "unit": "us",
+      "value": 230.33227118877795
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        2
+      ],
+      "unit": "probability",
+      "value": 0.021484375
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        2
+      ],
+      "unit": "probability",
+      "value": 0.0003802746030428943
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        3
+      ],
+      "unit": "us",
+      "value": 328.77490279905413
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        3
+      ],
+      "unit": "us",
+      "value": 333.42844078530067
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        3
+      ],
+      "unit": "probability",
+      "value": 0.011962890625
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        3
+      ],
+      "unit": "probability",
+      "value": 0.000577035572185192
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        4
+      ],
+      "unit": "us",
+      "value": 291.74788958364803
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        4
+      ],
+      "unit": "us",
+      "value": 192.44484206910215
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        4
+      ],
+      "unit": "probability",
+      "value": 0.020751953125
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        4
+      ],
+      "unit": "probability",
+      "value": 0.0001801879540686471
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        5
+      ],
+      "unit": "us",
+      "value": 172.75909991425792
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        5
+      ],
+      "unit": "us",
+      "value": 78.91898308667757
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        5
+      ],
+      "unit": "probability",
+      "value": 0.060546875
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        5
+      ],
+      "unit": "probability",
+      "value": 0.0008688729537230527
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        6
+      ],
+      "unit": "us",
+      "value": 237.40349651795418
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        6
+      ],
+      "unit": "us",
+      "value": 44.44146850625187
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        6
+      ],
+      "unit": "probability",
+      "value": 0.25732421875
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        6
+      ],
+      "unit": "probability",
+      "value": 0.0008037324209928146
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        7
+      ],
+      "unit": "us",
+      "value": 230.52219090722951
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        7
+      ],
+      "unit": "us",
+      "value": 18.17731355943345
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        7
+      ],
+      "unit": "probability",
+      "value": 0.0498046875
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        7
+      ],
+      "unit": "probability",
+      "value": 0.00037710738306666146
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        8
+      ],
+      "unit": "us",
+      "value": 262.62408162006733
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        8
+      ],
+      "unit": "us",
+      "value": 81.34298447117432
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        8
+      ],
+      "unit": "probability",
+      "value": 0.042724609375
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        8
+      ],
+      "unit": "probability",
+      "value": 0.0002962788794068202
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        9
+      ],
+      "unit": "us",
+      "value": 473.318692112023
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        9
+      ],
+      "unit": "us",
+      "value": 126.98098049260926
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        9
+      ],
+      "unit": "probability",
+      "value": 0.087158203125
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        9
+      ],
+      "unit": "probability",
+      "value": 0.00035573329426550915
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        10
+      ],
+      "unit": "us",
+      "value": 452.3250939237751
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        10
+      ],
+      "unit": "us",
+      "value": 21.509071792367443
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        10
+      ],
+      "unit": "probability",
+      "value": 0.054443359375
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        10
+      ],
+      "unit": "probability",
+      "value": 0.0005236219400574607
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        11
+      ],
+      "unit": "us",
+      "value": 514.8934474539833
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        11
+      ],
+      "unit": "us",
+      "value": 139.37161451797604
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        11
+      ],
+      "unit": "probability",
+      "value": 0.037109375
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        11
+      ],
+      "unit": "probability",
+      "value": 0.00018096211816853987
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        12
+      ],
+      "unit": "us",
+      "value": 324.07470321102875
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        12
+      ],
+      "unit": "us",
+      "value": 77.37102394967002
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        12
+      ],
+      "unit": "probability",
+      "value": 0.0390625
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        12
+      ],
+      "unit": "probability",
+      "value": 0.00023596188809140386
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        13
+      ],
+      "unit": "us",
+      "value": 339.1253964361067
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        13
+      ],
+      "unit": "us",
+      "value": 25.81595576911751
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        13
+      ],
+      "unit": "probability",
+      "value": 0.023193359375
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        13
+      ],
+      "unit": "probability",
+      "value": 0.0003105421132713909
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        14
+      ],
+      "unit": "us",
+      "value": 352.7649082282366
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        14
+      ],
+      "unit": "us",
+      "value": 247.76777163596196
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        14
+      ],
+      "unit": "probability",
+      "value": 0.022705078125
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        14
+      ],
+      "unit": "probability",
+      "value": 0.00011269029313020176
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        15
+      ],
+      "unit": "us",
+      "value": 110.59051310535338
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        15
+      ],
+      "unit": "us",
+      "value": 17.823362341870027
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        15
+      ],
+      "unit": "probability",
+      "value": 0.017578125
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        15
+      ],
+      "unit": "probability",
+      "value": 0.000594019606317089
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        16
+      ],
+      "unit": "us",
+      "value": 392.296976612917
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        16
+      ],
+      "unit": "us",
+      "value": 337.54651143033016
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        16
+      ],
+      "unit": "probability",
+      "value": 0.0087890625
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        16
+      ],
+      "unit": "probability",
+      "value": 0.00013159209822075592
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        17
+      ],
+      "unit": "us",
+      "value": 483.2930068570622
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        17
+      ],
+      "unit": "us",
+      "value": 116.18211758654003
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        17
+      ],
+      "unit": "probability",
+      "value": 0.04541015625
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        17
+      ],
+      "unit": "probability",
+      "value": 0.00020095549932489464
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        18
+      ],
+      "unit": "us",
+      "value": 445.65499545460233
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        18
+      ],
+      "unit": "us",
+      "value": 109.80986380099014
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        18
+      ],
+      "unit": "probability",
+      "value": 0.0498046875
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        18
+      ],
+      "unit": "probability",
+      "value": 0.0001261203291847024
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t1.us",
+      "qubits": [
+        19
+      ],
+      "unit": "us",
+      "value": 367.517545505212
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "t2.us",
+      "qubits": [
+        19
+      ],
+      "unit": "us",
+      "value": 310.9816164796847
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "readout.error",
+      "qubits": [
+        19
+      ],
+      "unit": "probability",
+      "value": 0.006591796875
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.1q.error",
+      "qubits": [
+        19
+      ],
+      "unit": "probability",
+      "value": 0.00023176497316978732
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        1,
+        0
+      ],
+      "unit": "probability",
+      "value": 0.007494257741828603
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        1,
+        2
+      ],
+      "unit": "probability",
+      "value": 0.00878800548814962
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        3,
+        2
+      ],
+      "unit": "probability",
+      "value": 0.008694694119090962
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        4,
+        3
+      ],
+      "unit": "probability",
+      "value": 0.006986008619663198
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        4,
+        9
+      ],
+      "unit": "probability",
+      "value": 0.007083786253391899
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        5,
+        4
+      ],
+      "unit": "probability",
+      "value": 0.010012484974233293
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        6,
+        5
+      ],
+      "unit": "probability",
+      "value": 1.0
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        7,
+        6
+      ],
+      "unit": "probability",
+      "value": 1.0
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        8,
+        0
+      ],
+      "unit": "probability",
+      "value": 0.007844541922166715
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        8,
+        10
+      ],
+      "unit": "probability",
+      "value": 0.008684042395406766
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        10,
+        11
+      ],
+      "unit": "probability",
+      "value": 0.01586635634658362
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        11,
+        12
+      ],
+      "unit": "probability",
+      "value": 0.004246257563143285
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        12,
+        16
+      ],
+      "unit": "probability",
+      "value": 0.006473176599650965
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        13,
+        12
+      ],
+      "unit": "probability",
+      "value": 0.009819558723137167
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        13,
+        14
+      ],
+      "unit": "probability",
+      "value": 0.009597768027566289
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        14,
+        9
+      ],
+      "unit": "probability",
+      "value": 0.0035879437665800595
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        15,
+        14
+      ],
+      "unit": "probability",
+      "value": 0.01264413227616501
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        16,
+        18
+      ],
+      "unit": "probability",
+      "value": 0.005484380240547981
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        17,
+        18
+      ],
+      "unit": "probability",
+      "value": 0.0075004597922939675
+    },
+    {
+      "confidence": 0.0,
+      "methodology": "vendor-reported",
+      "modality": "gate-model",
+      "name": "gate.2q.ecr.error",
+      "qubits": [
+        19,
+        18
+      ],
+      "unit": "probability",
+      "value": 0.004625074547017494
+    }
+  ],
+  "provenance": {
+    "extraction_script": "adapters/aer/scripts/extract_snapshots.py",
+    "note": "connected 20-qubit BFS subgraph of the real device; calibration values are the vendor-reported data for those physical qubits, remapped to logical indices 0..19",
+    "package": "qiskit-ibm-runtime",
+    "package_version": "0.48.0",
+    "physical_qubits": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      14,
+      15,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      33,
+      38,
+      39,
+      40
+    ]
+  },
+  "snapshot_id": "baseline-fake_sherbrooke-20q-v1",
+  "source": "qiskit-ibm-runtime fake backend (real historical calibration)"
+}

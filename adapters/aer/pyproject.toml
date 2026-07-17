@@ -24,6 +24,7 @@ dev = [
     "pytest>=8.0",
     "grpcio-tools>=1.62",
     "ruff>=0.4",
+    "qiskit-ibm-runtime>=0.30",
 ]
 
 [build-system]
