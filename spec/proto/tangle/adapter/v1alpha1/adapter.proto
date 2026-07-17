@@ -1,0 +1,183 @@
+// Tangle Adapter Protocol — the contract every device driver implements.
+// Spec v0.1-draft · package tangle.adapter.v1alpha1 · Apache-2.0
+//
+// An adapter is an out-of-process gRPC server exposing one or more Targets
+// (QPUs, simulators, or vendor cloud backends). Any implementation language.
+// The control plane (or site agent) is always the client; adapters never
+// call into the control plane. Streaming is server-side only, so adapters
+// work behind outbound-only site networking.
+
+syntax = "proto3";
+
+package tangle.adapter.v1alpha1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "tangle.dev/spec/gen/go/adapter/v1alpha1;adapterv1alpha1";
+
+service AdapterService {
+  // Discovery ---------------------------------------------------------------
+  rpc ListTargets(ListTargetsRequest) returns (ListTargetsResponse);
+  rpc GetCapabilities(TargetRef) returns (Capabilities);
+  // Dynamic state: status, queue, calibration snapshot. Cheap; polled or streamed.
+  rpc GetDeviceState(TargetRef) returns (DeviceState);
+  rpc WatchDeviceState(TargetRef) returns (stream DeviceState);
+
+  // Execution ---------------------------------------------------------------
+  rpc SubmitTask(SubmitTaskRequest) returns (TaskHandle);
+  rpc GetTask(TaskRef) returns (TaskStatus);
+  rpc WatchTask(TaskRef) returns (stream TaskStatus);
+  rpc CancelTask(TaskRef) returns (CancelTaskResponse);
+
+  // Sessions (only if Capabilities.sessions = true) ---------------------------
+  rpc OpenSession(OpenSessionRequest) returns (SessionHandle);
+  rpc CloseSession(SessionHandle) returns (CloseSessionResponse);
+}
+
+// ---------- discovery ----------
+
+message ListTargetsRequest {}
+message ListTargetsResponse { repeated TargetInfo targets = 1; }
+
+message TargetRef { string target_id = 1; }
+
+message TargetInfo {
+  string target_id = 1;       // stable, unique within the adapter, e.g. "iqm-q20-a"
+  string display_name = 2;
+  string vendor = 3;          // "ibm", "iqm", "pasqal", "aer-sim", ...
+  string modality = 4;        // "gate-model" | "analog-hamiltonian" | "annealing" | "pulse" | "logical"
+  bool simulator = 5;
+}
+
+message Capabilities {
+  TargetInfo target = 1;
+  uint32 num_qubits = 2;                    // 0 if not qubit-addressed (e.g. some analog)
+  repeated CouplingEdge coupling_map = 3;   // empty = all-to-all or not applicable
+  repeated string native_gates = 4;         // gate-model only
+  repeated string program_formats = 5;      // "openqasm3", "qir", "pulser", vendor-native ids
+  uint64 max_shots = 6;
+  bool sessions = 7;
+  bool cancellation = 8;                    // best-effort cancel supported
+  repeated string billing_units = 9;        // native units this target reports, e.g. "qpu-seconds","shots"
+  string coupling_class = 10;               // highest supported: "loose" | "co-located" | "real-time"
+  map<string, string> vendor_extensions = 11;
+}
+
+message CouplingEdge { uint32 a = 1; uint32 b = 2; }
+
+message DeviceState {
+  TargetRef target = 1;
+  Status status = 2;
+  // Best-effort queue visibility; UNKNOWN_QUEUE=true when the vendor hides it.
+  uint32 queue_depth = 3;
+  google.protobuf.Duration estimated_wait = 4;
+  bool unknown_queue = 5;
+  CalibrationSnapshot calibration = 6;
+  repeated MaintenanceWindow maintenance = 7;
+  google.protobuf.Timestamp observed_at = 8;
+
+  enum Status { STATUS_UNSPECIFIED = 0; ONLINE = 1; CALIBRATING = 2; MAINTENANCE = 3; DEGRADED = 4; OFFLINE = 5; }
+}
+
+// Provenance-carrying quality data. See spec/overview.md §5 — transport, not equivalence.
+message CalibrationSnapshot {
+  string snapshot_id = 1;                    // stable id; recorded in placement audit trail
+  google.protobuf.Timestamp measured_at = 2;
+  string source = 3;                         // who measured: "vendor-api", "site-daily-rb", ...
+  repeated Metric metrics = 4;
+}
+
+message Metric {
+  string name = 1;          // namespaced: "gate.2q.cz.error", "readout.error", "t1.us", "spam.error", ...
+  double value = 2;
+  string unit = 3;
+  string modality = 4;
+  string methodology = 5;   // REQUIRED free-form: "RB", "XEB", "vendor-reported", ...
+  double confidence = 6;    // 0 when unknown
+  repeated uint32 qubits = 7;  // empty = device-wide
+}
+
+message MaintenanceWindow {
+  google.protobuf.Timestamp start = 1;
+  google.protobuf.Timestamp end = 2;
+  string reason = 3;
+}
+
+// ---------- execution ----------
+
+message SubmitTaskRequest {
+  TargetRef target = 1;
+  string idempotency_key = 2;   // REQUIRED; resubmission with same key MUST NOT duplicate execution
+  Payload payload = 3;
+  uint64 shots = 4;             // 0 where not meaningful for the modality
+  string session_id = 5;        // empty = none
+  google.protobuf.Timestamp deadline = 6;      // advisory to vendor queues that support it
+  map<string, string> native_limits = 7;       // native-unit caps, e.g. {"qpu-seconds":"120"}
+  map<string, string> parameters = 8;          // modality/vendor parameters (annealing schedules, etc.)
+  string tenant_hint = 9;       // opaque; for adapters that map tenants to vendor accounts
+}
+
+message Payload {
+  string format = 1;            // must be ∈ Capabilities.program_formats
+  oneof body {
+    bytes inline = 2;           // ≤ 4 MiB
+    string uri = 3;             // control-plane-resolvable URI for larger programs
+  }
+}
+
+message TaskHandle { TargetRef target = 1; string task_id = 2; }
+message TaskRef    { TargetRef target = 1; string task_id = 2; }
+
+message TaskStatus {
+  TaskRef task = 1;
+  State state = 2;
+  ErrorDetail error = 3;                  // set iff state == FAILED
+  Result result = 4;                      // set iff state == SUCCEEDED
+  repeated UsageRecord usage = 5;         // appended as known; final at terminal state
+  google.protobuf.Timestamp updated_at = 6;
+
+  enum State { STATE_UNSPECIFIED = 0; QUEUED = 1; RUNNING = 2; SUCCEEDED = 3; FAILED = 4; CANCELLED = 5; }
+}
+
+message Result {
+  string format = 1;            // "counts-json" (normative baseline), vendor formats by capability
+  oneof body { bytes inline = 2; string uri = 3; }
+  map<string, string> metadata = 4;   // e.g. executed-circuit hash, transpilation report id
+}
+
+message UsageRecord {
+  string unit = 1;              // ∈ Capabilities.billing_units
+  double amount = 2;
+  google.protobuf.Timestamp recorded_at = 3;
+}
+
+message CancelTaskResponse { bool accepted = 1; }   // accepted ≠ guaranteed; watch for terminal state
+
+// ---------- sessions ----------
+
+message OpenSessionRequest { TargetRef target = 1; google.protobuf.Duration max_duration = 2; string tenant_hint = 3; }
+message SessionHandle { TargetRef target = 1; string session_id = 2; google.protobuf.Timestamp expires_at = 3; }
+message CloseSessionResponse {}
+
+// ---------- errors ----------
+
+// Returned in google.rpc.Status details AND in TaskStatus.error.
+message ErrorDetail {
+  Category category = 1;
+  bool retriable = 2;
+  string vendor_code = 3;
+  string vendor_message = 4;
+
+  enum Category {
+    CATEGORY_UNSPECIFIED = 0;
+    INVALID_PROGRAM = 1;
+    CAPABILITY_MISMATCH = 2;
+    DEVICE_OFFLINE = 3;
+    CALIBRATION_STALE = 4;
+    CAPACITY_EXHAUSTED = 5;
+    BUDGET_EXCEEDED = 6;
+    SESSION_LOST = 7;
+    VENDOR_ERROR = 8;
+  }
+}

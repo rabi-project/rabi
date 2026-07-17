@@ -1,0 +1,86 @@
+// Tangle Control-Plane API — client-facing surface (SDK, qctl, operators).
+// Spec v0.1-draft · package tangle.api.v1alpha1 · Apache-2.0
+//
+// Deliberately thin in v0.1: jobs, targets, and usage. Tenancy administration,
+// quota management, and accounting normalization policies are v0.2 RFC territory.
+// REST mapping: standard gRPC-gateway conventions (POST /v1alpha1/jobs, etc.).
+
+syntax = "proto3";
+
+package tangle.api.v1alpha1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+option go_package = "tangle.dev/spec/gen/go/api/v1alpha1;apiv1alpha1";
+
+service JobsService {
+  rpc SubmitJob(SubmitJobRequest) returns (Job);
+  rpc GetJob(JobRef) returns (Job);
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  rpc WatchJob(JobRef) returns (stream Job);
+  rpc CancelJob(JobRef) returns (Job);
+}
+
+service TargetsService {
+  rpc ListTargets(ListTargetsRequest) returns (ListTargetsResponse);
+  rpc GetTarget(TargetRef) returns (Target);
+}
+
+service UsageService {
+  rpc GetTenantUsage(TenantUsageRequest) returns (TenantUsageResponse);
+}
+
+// The QuantumJob document travels as structured JSON/YAML (google.protobuf.Struct),
+// validated server-side against schemas/quantumjob.schema.json. This keeps the
+// wire API stable while the schema evolves by RFC.
+message SubmitJobRequest {
+  string tenant = 1;
+  google.protobuf.Struct quantum_job = 2;   // the full QuantumJob object (apiVersion/kind/metadata/spec)
+  bool dry_run = 3;                          // validate + simulate placement, don't enqueue
+}
+
+message Job {
+  string job_id = 1;
+  string tenant = 2;
+  google.protobuf.Struct quantum_job = 3;    // spec as accepted
+  google.protobuf.Struct status = 4;         // status per spec/quantumjob.md
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message JobRef { string job_id = 1; }
+
+message ListJobsRequest {
+  string tenant = 1;
+  string phase_filter = 2;    // "", "PENDING", "RUNNING", ...
+  uint32 page_size = 3;
+  string page_token = 4;
+}
+message ListJobsResponse { repeated Job jobs = 1; string next_page_token = 2; }
+
+message TargetRef { string name = 1; }       // fleet-scoped: "<site>/<target_id>"
+
+message Target {
+  string name = 1;
+  google.protobuf.Struct capabilities = 2;   // adapter Capabilities, JSON-mapped
+  google.protobuf.Struct state = 3;          // adapter DeviceState, JSON-mapped (incl. calibration provenance)
+}
+
+message ListTargetsRequest { string modality_filter = 1; }
+message ListTargetsResponse { repeated Target targets = 1; }
+
+message TenantUsageRequest {
+  string tenant = 1;
+  google.protobuf.Timestamp from = 2;
+  google.protobuf.Timestamp to = 3;
+}
+message TenantUsageResponse {
+  // Native units, per target — normalization is an accounting policy, not an API guarantee.
+  repeated NativeUsage usage = 1;
+}
+message NativeUsage {
+  string target = 1;
+  string unit = 2;
+  double amount = 3;
+}

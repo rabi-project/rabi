@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tangle.dev/schemas/v1alpha1/quantumjob.schema.json",
+  "title": "QuantumJob",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": { "const": "tangle.dev/v1alpha1" },
+    "kind": { "const": "QuantumJob" },
+    "metadata": {
+      "type": "object",
+      "required": ["name", "tenant"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$" },
+        "tenant": { "type": "string", "minLength": 1 },
+        "labels": { "type": "object", "additionalProperties": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "spec": {
+      "type": "object",
+      "required": ["workload"],
+      "properties": {
+        "workload": {
+          "type": "object",
+          "required": ["kind"],
+          "properties": {
+            "kind": { "enum": ["gate-model", "analog-hamiltonian", "annealing", "pulse", "logical"] },
+            "gateModel": {
+              "type": "object",
+              "required": ["program", "shots"],
+              "properties": {
+                "program": { "$ref": "#/$defs/program" },
+                "shots": { "type": "integer", "minimum": 1 }
+              },
+              "additionalProperties": false
+            },
+            "analogHamiltonian": {
+              "type": "object",
+              "required": ["program"],
+              "properties": {
+                "program": { "$ref": "#/$defs/program" },
+                "repetitions": { "type": "integer", "minimum": 1 }
+              },
+              "additionalProperties": false
+            },
+            "annealing": {
+              "type": "object",
+              "required": ["program"],
+              "properties": {
+                "program": { "$ref": "#/$defs/program" },
+                "reads": { "type": "integer", "minimum": 1 },
+                "schedule": { "type": "object" }
+              },
+              "additionalProperties": false
+            },
+            "pulse": {
+              "type": "object",
+              "required": ["program"],
+              "properties": { "program": { "$ref": "#/$defs/program" }, "shots": { "type": "integer", "minimum": 1 } },
+              "additionalProperties": false
+            },
+            "logical": {
+              "type": "object",
+              "required": ["program"],
+              "properties": {
+                "program": { "$ref": "#/$defs/program" },
+                "logicalQubits": { "type": "integer", "minimum": 1 },
+                "targetLogicalErrorRate": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 }
+              },
+              "additionalProperties": false
+            }
+          },
+          "allOf": [
+            { "if": { "properties": { "kind": { "const": "gate-model" } } }, "then": { "required": ["gateModel"] } },
+            { "if": { "properties": { "kind": { "const": "analog-hamiltonian" } } }, "then": { "required": ["analogHamiltonian"] } },
+            { "if": { "properties": { "kind": { "const": "annealing" } } }, "then": { "required": ["annealing"] } },
+            { "if": { "properties": { "kind": { "const": "pulse" } } }, "then": { "required": ["pulse"] } },
+            { "if": { "properties": { "kind": { "const": "logical" } } }, "then": { "required": ["logical"] } }
+          ]
+        },
+        "requirements": {
+          "type": "object",
+          "properties": {
+            "qubits": { "type": "integer", "minimum": 1 },
+            "technology": { "type": "array", "items": { "type": "string" } },
+            "quality": {
+              "type": "object",
+              "properties": {
+                "gateModel": {
+                  "type": "object",
+                  "properties": {
+                    "twoQubitErrorMax": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+                    "readoutErrorMax": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+                    "calibrationMaxAge": { "$ref": "#/$defs/duration" }
+                  },
+                  "additionalProperties": false
+                },
+                "extensions": { "type": "object" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "coupling": { "enum": ["loose", "co-located", "real-time"], "default": "loose" },
+        "session": {
+          "type": "object",
+          "properties": {
+            "join": { "type": ["string", "null"] },
+            "maxDuration": { "$ref": "#/$defs/duration" }
+          },
+          "additionalProperties": false
+        },
+        "bundle": {
+          "type": "object",
+          "properties": {
+            "classical": {
+              "type": "object",
+              "properties": {
+                "gpus": { "type": "integer", "minimum": 0 },
+                "minimumGpuMemoryGB": { "type": "integer", "minimum": 0 }
+              },
+              "additionalProperties": false
+            },
+            "interconnect": { "enum": ["none", "datacenter", "realtime-qpu-gpu"], "default": "none" }
+          },
+          "additionalProperties": false
+        },
+        "deadline": { "type": "string", "format": "date-time" },
+        "budget": {
+          "type": "object",
+          "properties": {
+            "maxCost": {
+              "type": "object",
+              "required": ["amount", "currency"],
+              "properties": {
+                "amount": { "type": "number", "exclusiveMinimum": 0 },
+                "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+              },
+              "additionalProperties": false
+            },
+            "limits": { "type": "object", "additionalProperties": { "type": "number", "exclusiveMinimum": 0 } }
+          },
+          "additionalProperties": false
+        },
+        "backendSelector": {
+          "type": "object",
+          "properties": {
+            "preferOnPrem": { "type": "boolean" },
+            "allowCloudBurst": { "type": "array", "items": { "type": "string" } },
+            "denyTargets": { "type": "array", "items": { "type": "string" } },
+            "requireTargets": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": false
+        },
+        "retryOf": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "status": { "type": "object" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "program": {
+      "type": "object",
+      "required": ["format"],
+      "properties": {
+        "format": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "format": "uri" },
+        "inline": { "type": "string", "contentEncoding": "base64" }
+      },
+      "oneOf": [ { "required": ["source"] }, { "required": ["inline"] } ],
+      "additionalProperties": false
+    },
+    "duration": { "type": "string", "pattern": "^[0-9]+(ms|s|m|h)$" }
+  }
+}
