@@ -185,3 +185,43 @@ calibration for those physical qubits and the device's native 2q gate.
 Physical→logical qubit mapping and package version are embedded in
 bench/data/snapshots/*.json. The scheduler's 2q quality floor matches any
 `gate.2q.<gate>.error` metric.
+
+## D-021 · 2026-07-17 · ESP v0: lexical circuit profile + best-region mapping
+
+The plan allows "Python sidecar or precomputed per-target depth estimates" for
+the transpile-in-scoring-path problem; v0 takes the estimate route,
+deterministically and in-process: a lexical scan of flat OpenQASM 2/3 counts
+1q/2q gates and measured qubits (ccx/cswap via standard decompositions;
+control flow is an error, not a guess). ESP then assumes best-region mapping:
+mean of the best `Qubits` 1q errors per 1q gate, mean of the best `Qubits−1`
+2q edge errors per 2q gate, exact product over the best `MeasuredQubits`
+readout errors. No routing overhead is modeled (all fleet devices are sparse
+superconducting graphs, so the bias is similar across targets and cancels in
+ranking) — stated as a limitation in the benchmark methodology. Unprofilable
+programs fall back to a GHZ-like width-only profile. Missing metric classes
+use conservative defaults (1q 0.01, 2q 0.05, readout 0.05) so opaque targets
+never outrank measured ones.
+
+## D-022 · 2026-07-17 · calib-aware/v0 weights and baselines
+
+score = w_q·ESP − w_t·wait/(wait+60s) − w_c·0. Weight table by job intent:
+(no deadline/floor) 0.60/0.25/0.15 · (deadline) 0.45/0.45/0.10 ·
+(quality floor) 0.75/0.15/0.10 · (both) 0.55/0.35/0.10. cost_norm ≡ 0 in v0
+because pricing/normalization is an explicit MVP non-goal; the term stays in
+the formula as the post-MVP seam. static-best/v0 ranks by the device's
+advertised baseline (vendor_extensions["nominal-2q-error-median"], static
+per target, drift- and queue-blind — the Ravi et al. behavioral baseline);
+round-robin/v0 rotates a counter over the feasible set (advances once per
+job, deterministic for a deterministic job order).
+
+## D-023 · 2026-07-17 · Property tests use seeded stdlib rand, not rapid — PLAN DEVIATION
+
+The T&V plan names the `rapid` library, but rapid is MPL-2.0 and the build
+plan's license hygiene rule ("no copyleft dependencies") wins. T5.props runs
+1,200 seeded stdlib-rand cases per property instead (deterministic, no
+shrinking). Also refined: the property "tightening a quality floor never
+selects a lower-ESP target" is unsound as stated when a floor excludes the
+previous winner via its best-edge metric (a legitimately lower-ESP reroute
+follows); the tested form is the sound core — the new selection always
+satisfies the tightened floor, and while the previous winner remains
+feasible, ESP never drops.
