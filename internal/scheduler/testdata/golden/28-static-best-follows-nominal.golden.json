@@ -1,0 +1,10 @@
+{
+  "Policy": "static-best/v0",
+  "Target": "sim/a-flagship",
+  "Score": -0.005,
+  "SnapshotID": "snap-a-flagship",
+  "WaitSeconds": 0,
+  "PredictedESP": 0,
+  "Reason": "policy static-best/v0 selected sim/a-flagship (score -0.0050) among 2 feasible target(s)",
+  "Rejected": null
+}

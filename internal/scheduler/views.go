@@ -7,6 +7,7 @@
 package scheduler
 
 import (
+	"encoding/base64"
 	"fmt"
 	"sort"
 	"strings"
@@ -33,6 +34,11 @@ type TargetView struct {
 	QueueDepth  uint32
 	WaitSeconds float64
 	Maintenance []Window
+
+	// Nominal2QError is the device's advertised (baseline) median two-qubit
+	// error from vendor_extensions["nominal-2q-error-median"] — static per
+	// device, used by static-best/v0 (what users pick today). 0 = unknown.
+	Nominal2QError float64
 }
 
 // Metric is one calibration metric relevant to scheduling.
@@ -110,6 +116,16 @@ type JobView struct {
 	AllowCloudBurst []string
 	DenyTargets     []string
 	RequireTargets  []string
+
+	// Profile is the deterministic gate-count estimate of the inline program
+	// (nil when unavailable — non-gate-model workloads, source URIs, or
+	// unprofilable QASM). Policies fall back to a width-only estimate.
+	Profile *CircuitProfile
+}
+
+// HasQualityFloor reports whether the job sets any quality constraint.
+func (j *JobView) HasQualityFloor() bool {
+	return j.TwoQubitErrorMax > 0 || j.ReadoutErrorMax > 0
 }
 
 // ParseJob extracts the scheduling-relevant fields from a validated document.
@@ -130,6 +146,13 @@ func ParseJob(id, tenant string, doc map[string]any) (*JobView, error) {
 	if payload, ok := workload[payloadField].(map[string]any); ok {
 		if program, ok := payload["program"].(map[string]any); ok {
 			j.Format, _ = program["format"].(string)
+			if inline, ok := program["inline"].(string); ok && kind == "gate-model" {
+				if raw, err := base64.StdEncoding.DecodeString(inline); err == nil {
+					if profile, err := ProfileQASM(string(raw)); err == nil {
+						j.Profile = &profile
+					}
+				}
+			}
 		}
 		if s, ok := payload["shots"].(float64); ok {
 			j.Shots = uint64(s)

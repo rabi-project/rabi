@@ -1,0 +1,10 @@
+{
+  "Policy": "calib-aware/v0",
+  "Target": "sim/b-modest",
+  "Score": 0.579789983127264,
+  "SnapshotID": "snap-b-modest",
+  "WaitSeconds": 0,
+  "PredictedESP": 0.9663166385454401,
+  "Reason": "policy calib-aware/v0 selected sim/b-modest (score 0.5798) among 2 feasible target(s)",
+  "Rejected": null
+}

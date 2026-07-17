@@ -59,6 +59,18 @@ type Decision struct {
 	Rejected     []Rejection
 }
 
+// SetScorer is an optional policy extension for policies that need the whole
+// feasible set at once (e.g. round-robin rotation).
+type SetScorer interface {
+	ScoreSet(j *JobView, feasible []*TargetView, now time.Time) []float64
+}
+
+// ESPPredictor is an optional policy extension: policies that estimate a
+// success probability expose it for the placement audit record.
+type ESPPredictor interface {
+	PredictESP(j *JobView, t *TargetView) float64
+}
+
 // Schedule runs the pipeline for one job over the fleet. Targets are
 // evaluated in stable name order; ties break toward the lexicographically
 // first name, so decisions are deterministic.
@@ -68,17 +80,35 @@ func Schedule(p SchedulingPolicy, j *JobView, fleet []*TargetView, now time.Time
 	sort.Slice(sorted, func(a, b int) bool { return sorted[a].Name < sorted[b].Name })
 
 	d := Decision{Policy: p.Name()}
-	var best *TargetView
-	feasible := 0
+	var feasibleTargets []*TargetView
 	for _, t := range sorted {
 		if reason := p.Filter(j, t, now); reason != "" {
 			d.Rejected = append(d.Rejected, Rejection{Target: t.Name, Reason: reason})
 			continue
 		}
-		feasible++
-		score := p.Score(j, t, now)
-		if best == nil || score > d.Score {
-			best, d.Score = t, score
+		feasibleTargets = append(feasibleTargets, t)
+	}
+
+	var scores []float64
+	if setScorer, ok := p.(SetScorer); ok {
+		scores = setScorer.ScoreSet(j, feasibleTargets, now)
+	} else {
+		scores = make([]float64, len(feasibleTargets))
+		for i, t := range feasibleTargets {
+			scores[i] = p.Score(j, t, now)
+		}
+	}
+
+	var best *TargetView
+	feasible := len(feasibleTargets)
+	for i, t := range feasibleTargets {
+		if best == nil || scores[i] > d.Score {
+			best, d.Score = t, scores[i]
+		}
+	}
+	if best != nil {
+		if predictor, ok := p.(ESPPredictor); ok {
+			d.PredictedESP = predictor.PredictESP(j, best)
 		}
 	}
 

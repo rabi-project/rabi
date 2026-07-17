@@ -1,0 +1,10 @@
+{
+  "Policy": "calib-aware/v0",
+  "Target": "sim/b-idle",
+  "Score": 0.5678746453632,
+  "SnapshotID": "snap-b-idle",
+  "WaitSeconds": 0,
+  "PredictedESP": 0.946457742272,
+  "Reason": "policy calib-aware/v0 selected sim/b-idle (score 0.5679) among 2 feasible target(s)",
+  "Rejected": null
+}

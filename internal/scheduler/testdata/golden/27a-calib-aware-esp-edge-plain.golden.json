@@ -1,0 +1,10 @@
+{
+  "Policy": "calib-aware/v0",
+  "Target": "sim/a-better-esp",
+  "Score": 0.5756056020713677,
+  "SnapshotID": "snap-a-better-esp",
+  "WaitSeconds": 2,
+  "PredictedESP": 0.972783530334,
+  "Reason": "policy calib-aware/v0 selected sim/a-better-esp (score 0.5756) among 2 feasible target(s)",
+  "Rejected": null
+}

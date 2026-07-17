@@ -1,0 +1,163 @@
+{
+  "policy": "calib-aware/v0",
+  "now": "2026-07-17T12:00:00Z",
+  "job": {
+    "id": "job-25-calib-aware-prefers-low-error",
+    "tenant": "acme",
+    "doc": {
+      "apiVersion": "tangle.dev/v1alpha1",
+      "kind": "QuantumJob",
+      "metadata": {
+        "name": "bell",
+        "tenant": "acme"
+      },
+      "spec": {
+        "workload": {
+          "kind": "gate-model",
+          "gateModel": {
+            "program": {
+              "format": "openqasm3",
+              "inline": "T1BFTlFBU00gMy4wOwppbmNsdWRlICJzdGRnYXRlcy5pbmMiOwpxdWJpdFsyXSBxOwpiaXRbMl0gYzsKaCBxWzBdOwpjeCBxWzBdLCBxWzFdOwpjID0gbWVhc3VyZSBxOwo="
+            },
+            "shots": 1000
+          }
+        },
+        "requirements": {
+          "qubits": 2
+        }
+      }
+    }
+  },
+  "fleet": [
+    {
+      "name": "sim/a-noisy",
+      "modality": "gate-model",
+      "technology": "superconducting",
+      "qubits": 5,
+      "formats": [
+        "openqasm3"
+      ],
+      "maxShots": 100000,
+      "billing": [
+        "shots",
+        "tasks"
+      ],
+      "online": true,
+      "cloud": false,
+      "snapshotID": "snap-a-noisy",
+      "measuredAt": "2026-07-17T11:00:00Z",
+      "waitSeconds": 0.0,
+      "metrics": [
+        {
+          "name": "gate.1q.error",
+          "value": 0.0004,
+          "qubits": [
+            0
+          ]
+        },
+        {
+          "name": "gate.1q.error",
+          "value": 0.0005,
+          "qubits": [
+            1
+          ]
+        },
+        {
+          "name": "gate.2q.cx.error",
+          "value": 0.015,
+          "qubits": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "gate.2q.cx.error",
+          "value": 0.020999999999999998,
+          "qubits": [
+            1,
+            2
+          ]
+        },
+        {
+          "name": "readout.error",
+          "value": 0.03,
+          "qubits": [
+            0
+          ]
+        },
+        {
+          "name": "readout.error",
+          "value": 0.039,
+          "qubits": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sim/b-clean",
+      "modality": "gate-model",
+      "technology": "superconducting",
+      "qubits": 5,
+      "formats": [
+        "openqasm3"
+      ],
+      "maxShots": 100000,
+      "billing": [
+        "shots",
+        "tasks"
+      ],
+      "online": true,
+      "cloud": false,
+      "snapshotID": "snap-b-clean",
+      "measuredAt": "2026-07-17T11:00:00Z",
+      "waitSeconds": 0.0,
+      "metrics": [
+        {
+          "name": "gate.1q.error",
+          "value": 0.0004,
+          "qubits": [
+            0
+          ]
+        },
+        {
+          "name": "gate.1q.error",
+          "value": 0.0005,
+          "qubits": [
+            1
+          ]
+        },
+        {
+          "name": "gate.2q.cx.error",
+          "value": 0.005,
+          "qubits": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "gate.2q.cx.error",
+          "value": 0.006999999999999999,
+          "qubits": [
+            1,
+            2
+          ]
+        },
+        {
+          "name": "readout.error",
+          "value": 0.012,
+          "qubits": [
+            0
+          ]
+        },
+        {
+          "name": "readout.error",
+          "value": 0.015600000000000001,
+          "qubits": [
+            1
+          ]
+        }
+      ]
+    }
+  ]
+}

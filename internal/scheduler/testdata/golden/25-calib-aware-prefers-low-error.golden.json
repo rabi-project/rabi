@@ -1,0 +1,10 @@
+{
+  "Policy": "calib-aware/v0",
+  "Target": "sim/b-clean",
+  "Score": 0.58037327284872,
+  "SnapshotID": "snap-b-clean",
+  "WaitSeconds": 0,
+  "PredictedESP": 0.9672887880812,
+  "Reason": "policy calib-aware/v0 selected sim/b-clean (score 0.5804) among 2 feasible target(s)",
+  "Rejected": null
+}
