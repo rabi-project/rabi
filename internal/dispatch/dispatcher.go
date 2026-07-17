@@ -26,6 +26,7 @@ import (
 	adapterv1alpha1 "tangle.dev/tangle/gen/go/tangle/adapter/v1alpha1"
 	"tangle.dev/tangle/internal/job"
 	"tangle.dev/tangle/internal/registry"
+	"tangle.dev/tangle/internal/scheduler"
 	"tangle.dev/tangle/internal/store"
 )
 
@@ -39,6 +40,8 @@ const (
 type Dispatcher struct {
 	store  *store.Store
 	reg    *registry.Registry
+	policy scheduler.SchedulingPolicy
+	now    func() time.Time
 	logger *slog.Logger
 
 	mu       sync.Mutex
@@ -46,11 +49,23 @@ type Dispatcher struct {
 	wg       sync.WaitGroup
 }
 
-func New(st *store.Store, reg *registry.Registry, logger *slog.Logger) *Dispatcher {
+// New wires the dispatcher with the named scheduling policy (TANGLE_POLICY;
+// empty = fifo/v0).
+func New(st *store.Store, reg *registry.Registry, policyName string, logger *slog.Logger) (*Dispatcher, error) {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &Dispatcher{store: st, reg: reg, logger: logger, inFlight: map[string]bool{}}
+	if policyName == "" {
+		policyName = "fifo/v0"
+	}
+	policy, err := scheduler.Lookup(policyName)
+	if err != nil {
+		return nil, err
+	}
+	return &Dispatcher{
+		store: st, reg: reg, policy: policy, now: time.Now,
+		logger: logger, inFlight: map[string]bool{},
+	}, nil
 }
 
 // Run blocks until ctx is done: resume in-flight work, then cycle on job
@@ -101,64 +116,89 @@ func (d *Dispatcher) cycle(ctx context.Context) {
 }
 
 func (d *Dispatcher) dispatchOne(ctx context.Context, rec *store.JobRecord) {
-	entry, reason := d.selectTarget(rec)
-	if entry == nil {
-		// Infeasible now; the job stays PENDING and the next cycle retries.
-		d.logger.Debug("job not placeable", "job", rec.JobID, "reason", reason)
+	jobView, err := scheduler.ParseJob(rec.JobID, rec.Tenant, rec.Doc)
+	if err != nil {
+		// Admission should make this impossible; surface it, don't loop hot.
+		d.logger.Error("unparseable job document", "job", rec.JobID, "error", err)
+		_, _ = d.store.SetJobCondition(ctx, rec.JobID, map[string]any{
+			"type": "Schedulable", "status": "False", "reason": "UnparseableDocument",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	decision := scheduler.Schedule(d.policy, jobView, d.fleetViews(), d.now())
+	if decision.Target == "" {
+		// Infeasible now: the job stays PENDING with a condition explaining
+		// which constraint failed for how many targets (spec §quantumjob).
+		changed, err := d.store.SetJobCondition(ctx, rec.JobID, map[string]any{
+			"type": "Schedulable", "status": "False", "reason": "NoFeasibleTarget",
+			"message": decision.Reason,
+		})
+		if err != nil {
+			d.logger.Error("recording infeasibility", "job", rec.JobID, "error", err)
+		} else if changed {
+			d.logger.Info("job not placeable", "job", rec.JobID, "reason", decision.Reason)
+		}
 		return
 	}
 
 	taskID := uuid.NewString()
-	placement := map[string]any{
-		"policy":              "direct/v0",
-		"calibrationSnapshot": entry.State.GetCalibration().GetSnapshotId(),
-		"predicted": map[string]any{
-			"waitSeconds": entry.State.GetEstimatedWait().AsDuration().Seconds(),
-		},
-		"reason": reason,
-	}
-	bound, err := d.store.BindJob(ctx, rec.JobID, taskID, entry.Name, placement)
+	bound, err := d.store.BindJob(ctx, rec.JobID, taskID, decision.Target, decision.PlacementRecord())
 	if err != nil {
 		// Lost the race (another cycle, or a concurrent cancel): not an error.
 		d.logger.Debug("bind skipped", "job", rec.JobID, "cause", err)
 		return
 	}
-	d.logger.Info("job bound", "job", rec.JobID, "target", entry.Name, "task", taskID)
-	d.startExecutor(ctx, bound, taskID, entry.Name)
+	d.logger.Info("job bound", "job", rec.JobID, "target", decision.Target,
+		"policy", decision.Policy, "task", taskID)
+	d.startExecutor(ctx, bound, taskID, decision.Target)
 }
 
-// selectTarget is the M2 placeholder for the scheduler: first feasible wins.
-func (d *Dispatcher) selectTarget(rec *store.JobRecord) (*registry.Entry, string) {
-	workload := docPath(rec.Doc, "spec", "workload")
-	kind, _ := workload["kind"].(string)
-	format := programFormatOf(workload)
-	qubits := requiredQubits(rec.Doc)
-
-	var reasons []string
-	for _, e := range d.reg.Entries() {
-		if e.State == nil || e.State.GetStatus() != adapterv1alpha1.DeviceState_ONLINE {
-			reasons = append(reasons, e.Name+": not online")
-			continue
-		}
-		if e.Info.GetModality() != kind {
-			reasons = append(reasons, fmt.Sprintf("%s: modality %s != %s", e.Name, e.Info.GetModality(), kind))
-			continue
-		}
-		if format != "" && !contains(e.Caps.GetProgramFormats(), format) {
-			reasons = append(reasons, fmt.Sprintf("%s: format %s unsupported", e.Name, format))
-			continue
-		}
-		if qubits > 0 && uint32(qubits) > e.Caps.GetNumQubits() {
-			reasons = append(reasons, fmt.Sprintf("%s: %d qubits > %d available", e.Name, qubits, e.Caps.GetNumQubits()))
-			continue
-		}
-		reason := "first feasible target (direct/v0)"
-		if len(reasons) > 0 {
-			reason += "; rejected: " + strings.Join(reasons, "; ")
-		}
-		return e, reason
+// fleetViews converts the registry cache into the scheduler's plain values.
+func (d *Dispatcher) fleetViews() []*scheduler.TargetView {
+	entries := d.reg.Entries()
+	views := make([]*scheduler.TargetView, 0, len(entries))
+	for _, e := range entries {
+		views = append(views, entryToView(e))
 	}
-	return nil, "no feasible target: " + strings.Join(reasons, "; ")
+	return views
+}
+
+func entryToView(e *registry.Entry) *scheduler.TargetView {
+	ext := e.Caps.GetVendorExtensions()
+	v := &scheduler.TargetView{
+		Name:       e.Name,
+		Modality:   e.Info.GetModality(),
+		Technology: ext["technology"],
+		Qubits:     e.Caps.GetNumQubits(),
+		Formats:    e.Caps.GetProgramFormats(),
+		MaxShots:   e.Caps.GetMaxShots(),
+		Billing:    e.Caps.GetBillingUnits(),
+		Cloud:      ext["cloud"] == "true",
+	}
+	if state := e.State; state != nil {
+		v.Online = state.GetStatus() == adapterv1alpha1.DeviceState_ONLINE
+		v.QueueDepth = state.GetQueueDepth()
+		v.WaitSeconds = state.GetEstimatedWait().AsDuration().Seconds()
+		if cal := state.GetCalibration(); cal != nil {
+			v.SnapshotID = cal.GetSnapshotId()
+			if cal.GetMeasuredAt() != nil {
+				v.MeasuredAt = cal.GetMeasuredAt().AsTime()
+			}
+			for _, m := range cal.GetMetrics() {
+				v.Metrics = append(v.Metrics, scheduler.Metric{
+					Name: m.GetName(), Value: m.GetValue(), Qubits: m.GetQubits(),
+				})
+			}
+		}
+		for _, w := range state.GetMaintenance() {
+			v.Maintenance = append(v.Maintenance, scheduler.Window{
+				Start: w.GetStart().AsTime(), End: w.GetEnd().AsTime(),
+			})
+		}
+	}
+	return v
 }
 
 func (d *Dispatcher) startExecutor(ctx context.Context, rec *store.JobRecord, taskID, targetName string) {
@@ -387,28 +427,6 @@ func docPath(doc map[string]any, path ...string) map[string]any {
 	return cur
 }
 
-func programFormatOf(workload map[string]any) string {
-	for _, payload := range workload {
-		m, ok := payload.(map[string]any)
-		if !ok {
-			continue
-		}
-		if program, ok := m["program"].(map[string]any); ok {
-			format, _ := program["format"].(string)
-			return format
-		}
-	}
-	return ""
-}
-
-func requiredQubits(doc map[string]any) int {
-	req := docPath(doc, "spec", "requirements")
-	if q, ok := req["qubits"].(float64); ok {
-		return int(q)
-	}
-	return 0
-}
-
 // payloadFor extracts the adapter payload from the job document.
 func payloadFor(doc map[string]any) (*adapterv1alpha1.Payload, uint64, map[string]any) {
 	workload := docPath(doc, "spec", "workload")
@@ -511,11 +529,3 @@ func appendCondition(st map[string]any, condType, status, reason, message string
 	return st
 }
 
-func contains(list []string, v string) bool {
-	for _, item := range list {
-		if item == v {
-			return true
-		}
-	}
-	return false
-}

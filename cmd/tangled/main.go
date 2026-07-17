@@ -56,7 +56,11 @@ func main() {
 	}
 	reg.Start(ctx)
 
-	dispatcher := dispatch.New(st, reg, logger)
+	dispatcher, err := dispatch.New(st, reg, os.Getenv("TANGLE_POLICY"), logger)
+	if err != nil {
+		logger.Error("configuring scheduling policy", "error", err)
+		os.Exit(1)
+	}
 	go dispatcher.Run(ctx)
 
 	validator, err := job.NewValidator()

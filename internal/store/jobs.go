@@ -165,6 +165,67 @@ func (s *Store) TransitionJob(ctx context.Context, jobID string, to job.Phase,
 	return rec, nil
 }
 
+// SetJobCondition replaces the same-type condition in a job's status without
+// changing its phase, appending an event only when the condition actually
+// changed (so a PENDING job re-evaluated every cycle doesn't spam events).
+func (s *Store) SetJobCondition(ctx context.Context, jobID string, cond map[string]any) (bool, error) {
+	tx, err := s.Pool.Begin(ctx)
+	if err != nil {
+		return false, fmt.Errorf("store: begin set condition: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	rec, err := scanJob(tx.QueryRow(ctx, `
+		SELECT job_id, tenant, name, phase, doc, status, created_at, updated_at
+		FROM jobs WHERE job_id = $1 FOR UPDATE`, jobID))
+	if err != nil {
+		return false, err
+	}
+
+	condType, _ := cond["type"].(string)
+	status := rec.Status
+	if status == nil {
+		status = map[string]any{}
+	}
+	conditions, _ := status["conditions"].([]any)
+	replaced := false
+	for i, c := range conditions {
+		m, ok := c.(map[string]any)
+		if !ok || m["type"] != condType {
+			continue
+		}
+		if m["status"] == cond["status"] && m["message"] == cond["message"] {
+			return false, nil // unchanged
+		}
+		conditions[i] = cond
+		replaced = true
+		break
+	}
+	if !replaced {
+		conditions = append(conditions, cond)
+	}
+	status["conditions"] = conditions
+
+	rawStatus, err := json.Marshal(status)
+	if err != nil {
+		return false, fmt.Errorf("store: marshal condition status: %w", err)
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE jobs SET status = $2, updated_at = now() WHERE job_id = $1`,
+		jobID, rawStatus); err != nil {
+		return false, fmt.Errorf("store: set condition: %w", err)
+	}
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO job_events (job_id, phase, status) VALUES ($1, $2, $3)`,
+		jobID, string(rec.Phase), rawStatus); err != nil {
+		return false, fmt.Errorf("store: condition event: %w", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return false, fmt.Errorf("store: commit condition: %w", err)
+	}
+	return true, nil
+}
+
 // JobEventsSince returns a job's events with seq > after, in seq order.
 func (s *Store) JobEventsSince(ctx context.Context, jobID string, after int64) ([]*JobEvent, error) {
 	rows, err := s.Pool.Query(ctx, `

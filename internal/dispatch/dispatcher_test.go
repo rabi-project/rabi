@@ -58,7 +58,10 @@ func newFleet(t *testing.T, specs ...*adaptertest.TargetSpec) (*registry.Registr
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 	reg.Start(ctx)
-	d := dispatch.New(testStore, reg, nil)
+	d, err := dispatch.New(testStore, reg, "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 	go d.Run(ctx)
 	return reg, d
 }
@@ -126,9 +129,11 @@ func TestJobRunsEndToEnd(t *testing.T) {
 	rec := insertJob(t, "10000000-0000-0000-0000-000000000001", "acme", gateModelSpec(2, 500))
 	done := awaitPhase(t, rec.JobID, job.Succeeded, 15*time.Second)
 
-	// Placement audit trail (spec: recorded before submission).
+	// Placement audit trail (spec: recorded before submission; T3.audit —
+	// policy id, snapshot id, prediction, and the rejected list are all
+	// present and well-formed).
 	placement, _ := done.Status["placement"].(map[string]any)
-	if placement["policy"] != "direct/v0" || placement["calibrationSnapshot"] != "snap-abc" {
+	if placement["policy"] != "fifo/v0" || placement["calibrationSnapshot"] != "snap-abc" {
 		t.Fatalf("placement audit incomplete: %v", placement)
 	}
 	if done.Status["boundTarget"] != "sim/alpha" {
@@ -136,6 +141,13 @@ func TestJobRunsEndToEnd(t *testing.T) {
 	}
 	if reason, _ := placement["reason"].(string); reason == "" {
 		t.Fatal("placement reason empty")
+	}
+	predicted, _ := placement["predicted"].(map[string]any)
+	if _, ok := predicted["waitSeconds"]; !ok {
+		t.Fatalf("placement lacks predicted.waitSeconds: %v", placement)
+	}
+	if _, ok := placement["rejected"].([]any); !ok {
+		t.Fatalf("placement lacks rejected list: %v", placement)
 	}
 
 	// Result and usage mirrored into status.
@@ -183,6 +195,11 @@ func TestInfeasibleJobStaysPending(t *testing.T) {
 	}
 	if got.Phase != job.Pending {
 		t.Fatalf("infeasible job moved to %s", got.Phase)
+	}
+	// The job carries a condition explaining which constraint failed.
+	conditions := fmt.Sprintf("%v", got.Status["conditions"])
+	if !containsStr(conditions, "NoFeasibleTarget") || !containsStr(conditions, "requires 50 qubits") {
+		t.Fatalf("missing schedulability condition: %s", conditions)
 	}
 }
 
