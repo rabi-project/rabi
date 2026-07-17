@@ -8,7 +8,7 @@ git clone https://github.com/mAengo31/Rabi.git
 cd Rabi
 make compose-up               # 3 simulated QPUs replaying real IBM calibration + control plane
 ./deploy/compose/seed.sh      # submit the 20-job demo mix
-go run ./cmd/qctl watch --all # live fleet view (Ctrl-C to exit)
+RABI_API_KEY=dev-key go run ./cmd/qctl watch --all   # live fleet view (Ctrl-C to exit)
 ```
 
 The fleet replays **real device calibration** (20-qubit subgraphs of IBM's
