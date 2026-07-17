@@ -22,6 +22,7 @@ services:
   adapter-aer:
     build:
       context: ../../adapters/aer
+    command: ["--config", "config/three.yaml", "--listen", "[::]:50051"]
     healthcheck:
       test: ["CMD", "python", "-c", "import socket; socket.create_connection(('localhost', 50051), 2).close()"]
       interval: 3s

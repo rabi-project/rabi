@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+# M3+ fleet: three noisy Aer targets with distinct static calibration
+# snapshots (replaced by replayed vendor calibration in M4).
+targets:
+  - target_id: aer-alpha
+    display_name: "Aer alpha (5q linear)"
+    num_qubits: 5
+    coupling_map: [[0, 1], [1, 2], [2, 3], [3, 4]]
+    snapshot_file: snapshots/aer-alpha-static.json
+    noise: true
+    max_shots: 100000
+    seed: 11
+
+  - target_id: aer-beta
+    display_name: "Aer beta (7q linear, noisy)"
+    num_qubits: 7
+    coupling_map: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
+    snapshot_file: snapshots/aer-beta-static.json
+    noise: true
+    max_shots: 100000
+    seed: 12
+
+  - target_id: aer-gamma
+    display_name: "Aer gamma (16q linear, low error)"
+    num_qubits: 16
+    coupling_map: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7],
+                   [7, 8], [8, 9], [9, 10], [10, 11], [11, 12], [12, 13],
+                   [13, 14], [14, 15]]
+    snapshot_file: snapshots/aer-gamma-static.json
+    noise: true
+    max_shots: 100000
+    seed: 13

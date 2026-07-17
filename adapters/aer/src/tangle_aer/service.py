@@ -74,6 +74,7 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
             cancellation=True,
             billing_units=list(cfg.billing_units),
             coupling_class="loose",
+            vendor_extensions={"technology": cfg.technology},
         )
 
     def GetDeviceState(self, request, context):

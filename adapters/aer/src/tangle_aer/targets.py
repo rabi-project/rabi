@@ -59,6 +59,9 @@ class TargetConfig:
     noise: bool
     max_shots: int
     seed: int
+    # Device technology, exposed via Capabilities.vendor_extensions since the
+    # adapter protocol has no first-class field (spec question, D-016).
+    technology: str = "superconducting"
 
     program_formats = ("openqasm3",)
     billing_units = ("shots", "tasks")
@@ -81,6 +84,7 @@ def load_config(path: str | Path) -> list[TargetConfig]:
                 noise=bool(t.get("noise", True)),
                 max_shots=int(t.get("max_shots", 100_000)),
                 seed=int(t.get("seed", 0)),
+                technology=str(t.get("technology", "superconducting")),
             )
         )
     return targets
