@@ -49,8 +49,11 @@ jobs:
         with:
           go-version: "1.26"
       - uses: astral-sh/setup-uv@v5
+      # -p 1: parallel packages each run a Postgres testcontainer (and the
+      # conformance package spawns the Python Aer adapter); together they
+      # OOM-kill postmasters on 7GB runners. One package at a time.
       - name: go test (unit + component + adapter conformance)
-        run: go test ./...
+        run: go test -p 1 ./...
       - name: coverage floors
         run: ./hack/coverage-check.sh
 
