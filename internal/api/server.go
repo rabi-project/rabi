@@ -32,6 +32,9 @@ type Config struct {
 	Fleet     FleetViewer
 	Store     *store.Store
 	Validator *job.Validator
+	// Canceller, when set, is invoked before a CancelJob transition so
+	// in-flight adapter tasks get a best-effort cancel. Optional.
+	Canceller TaskCanceller
 }
 
 // Server runs the gRPC listener and the REST gateway.
@@ -66,10 +69,10 @@ func New(cfg Config) (*Server, error) {
 		grpc.StreamInterceptor(StreamAuthInterceptor(cfg.APIKey)),
 	)
 	apiv1alpha1.RegisterJobsServiceServer(grpcServer, &jobsService{
-		store: cfg.Store, validator: cfg.Validator, fleet: cfg.Fleet,
+		store: cfg.Store, validator: cfg.Validator, fleet: cfg.Fleet, canceller: cfg.Canceller,
 	})
 	apiv1alpha1.RegisterTargetsServiceServer(grpcServer, &targetsService{registry: cfg.Registry})
-	apiv1alpha1.RegisterUsageServiceServer(grpcServer, &usageService{})
+	apiv1alpha1.RegisterUsageServiceServer(grpcServer, &usageService{store: cfg.Store})
 
 	grpcLis, err := net.Listen("tcp", cfg.GRPCAddr)
 	if err != nil {

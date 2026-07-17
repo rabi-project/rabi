@@ -32,12 +32,18 @@ type FleetViewer interface {
 	FleetView(ctx context.Context) job.FleetView
 }
 
+// TaskCanceller propagates job cancellation to in-flight adapter tasks.
+type TaskCanceller interface {
+	CancelJob(ctx context.Context, jobID string) error
+}
+
 // jobsService implements tangle.api.v1alpha1.JobsService backed by Postgres.
 type jobsService struct {
 	apiv1alpha1.UnimplementedJobsServiceServer
 	store     *store.Store
 	validator *job.Validator
 	fleet     FleetViewer
+	canceller TaskCanceller
 }
 
 func (s *jobsService) SubmitJob(ctx context.Context, req *apiv1alpha1.SubmitJobRequest) (*apiv1alpha1.Job, error) {
@@ -194,6 +200,11 @@ func (s *jobsService) sendEvent(stream apiv1alpha1.JobsService_WatchJobServer, r
 }
 
 func (s *jobsService) CancelJob(ctx context.Context, ref *apiv1alpha1.JobRef) (*apiv1alpha1.Job, error) {
+	if s.canceller != nil {
+		if err := s.canceller.CancelJob(ctx, ref.GetJobId()); err != nil {
+			return nil, status.Errorf(codes.Internal, "cancelling task: %v", err)
+		}
+	}
 	rec, err := s.store.TransitionJob(ctx, ref.GetJobId(), job.Cancelled, func(st map[string]any) map[string]any {
 		return appendCondition(st, job.Condition{
 			Type: "Cancelled", Status: "True", Reason: "UserRequested",

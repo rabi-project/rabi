@@ -12,6 +12,7 @@ import (
 	"syscall"
 
 	"tangle.dev/tangle/internal/api"
+	"tangle.dev/tangle/internal/dispatch"
 	"tangle.dev/tangle/internal/job"
 	"tangle.dev/tangle/internal/registry"
 	"tangle.dev/tangle/internal/store"
@@ -48,7 +49,15 @@ func main() {
 	defer st.Close()
 	logger.Info("store ready", "url", dbURL)
 
-	reg := registry.New()
+	reg, err := registry.NewFromSpec(os.Getenv("TANGLE_ADAPTERS"))
+	if err != nil {
+		logger.Error("configuring adapters", "error", err)
+		os.Exit(1)
+	}
+	reg.Start(ctx)
+
+	dispatcher := dispatch.New(st, reg, logger)
+	go dispatcher.Run(ctx)
 
 	validator, err := job.NewValidator()
 	if err != nil {
@@ -64,13 +73,15 @@ func main() {
 		Fleet:     reg,
 		Store:     st,
 		Validator: validator,
+		Canceller: dispatcher,
 	})
 	if err != nil {
 		logger.Error("assembling api server", "error", err)
 		os.Exit(1)
 	}
 
-	logger.Info("tangled serving", "grpc", grpcAddr, "http", httpAddr)
+	logger.Info("tangled serving", "grpc", grpcAddr, "http", httpAddr,
+		"adapters", os.Getenv("TANGLE_ADAPTERS"))
 	if err := srv.Run(ctx); err != nil {
 		logger.Error("serving", "error", err)
 		os.Exit(1)
