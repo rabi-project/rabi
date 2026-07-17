@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
 #
-# T0.smoke — the empty stack answers over real gRPC (qctl) and real REST.
-# Assumes the compose stack is already up (make compose-up).
+# T0.smoke — the stack answers over real gRPC (qctl) and real REST, and the
+# single API key is enforced everywhere. (The original M0 "0 targets" check
+# applied to the adapterless stack; since M2 the compose fleet has targets,
+# so this asserts transport + auth invariants instead.)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -12,15 +14,15 @@ echo "--- gRPC via qctl"
 go build -o bin/qctl ./cmd/qctl
 out="$(TANGLE_API_KEY="$API_KEY" bin/qctl targets)"
 echo "$out"
-[ "$out" = "0 targets" ] || { echo "FAIL: expected '0 targets', got: $out"; exit 1; }
 
 json="$(TANGLE_API_KEY="$API_KEY" bin/qctl targets -o json)"
-[ "$json" = '{"targets":[]}' ] || { echo "FAIL: expected empty JSON list, got: $json"; exit 1; }
+echo "$json" | python3 -c 'import sys, json; json.load(sys.stdin)["targets"]' \
+  || { echo "FAIL: qctl -o json did not return a targets list"; exit 1; }
 
 echo "--- REST via curl"
 rest="$(curl -fsS -H "Authorization: Bearer $API_KEY" http://localhost:8080/v1alpha1/targets)"
-echo "$rest"
-[ "$rest" = '{"targets":[]}' ] || { echo "FAIL: expected empty JSON list from REST, got: $rest"; exit 1; }
+echo "$rest" | python3 -c 'import sys, json; json.load(sys.stdin)["targets"]' \
+  || { echo "FAIL: REST did not return a targets list"; exit 1; }
 
 echo "--- auth enforced (missing key -> 401/16)"
 code="$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/v1alpha1/targets)"

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
 #
-# M1 smoke — job lifecycle over the real stack: submit (with a fleet-format
-# warning at this milestone), get, list, cancel via qctl; dry-run enqueues
-# nothing; invalid documents rejected with precise errors.
+# M1 smoke — job lifecycle over the real stack: submit, get, list, cancel via
+# qctl; dry-run enqueues nothing; invalid documents rejected with precise
+# errors. Uses an infeasible 60-qubit ask so the job stays PENDING even with
+# live adapters (capture-then-grep everywhere: pipefail + grep -q races).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -15,15 +16,18 @@ go build -o bin/qctl ./cmd/qctl
 echo "--- dry run validates without enqueuing"
 bin/qctl submit -f examples/bell.yaml --dry-run >/dev/null
 
-echo "--- submit + get"
-out="$(bin/qctl submit -f examples/bell.yaml)"
+echo "--- submit + get (60-qubit ask: infeasible on this fleet, stays PENDING)"
+sed 's/qubits: 2$/qubits: 60/' examples/bell.yaml > bin/pending-job.yaml
+out="$(bin/qctl submit -f bin/pending-job.yaml)"
 job_id="$(echo "$out" | cut -f1)"
 phase="$(echo "$out" | cut -f2)"
 [ "$phase" = "PENDING" ] || { echo "FAIL: submit phase $phase != PENDING"; exit 1; }
-bin/qctl get "$job_id" | grep -q "phase: PENDING" || { echo "FAIL: get did not show PENDING"; exit 1; }
+got="$(bin/qctl get "$job_id")"
+echo "$got" | grep -q "phase: PENDING" || { echo "FAIL: get did not show PENDING"; exit 1; }
 
 echo "--- list shows the job"
-bin/qctl list --tenant demo | grep -q "$job_id" || { echo "FAIL: list missing job"; exit 1; }
+listing="$(bin/qctl list --tenant demo)"
+echo "$listing" | grep -q "$job_id" || { echo "FAIL: list missing job"; exit 1; }
 
 echo "--- cancel: PENDING -> CANCELLED"
 cout="$(bin/qctl cancel "$job_id")"
@@ -47,6 +51,7 @@ for i in $(seq 1 30); do
   if bin/qctl get "$job_id" >/dev/null 2>&1; then break; fi
   sleep 1
 done
-bin/qctl get "$job_id" | grep -q "phase: CANCELLED" || { echo "FAIL: job state lost across restart"; exit 1; }
+got="$(bin/qctl get "$job_id")"
+echo "$got" | grep -q "phase: CANCELLED" || { echo "FAIL: job state lost across restart"; exit 1; }
 
 echo "SMOKE-M1 OK"

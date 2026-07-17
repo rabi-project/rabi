@@ -26,6 +26,7 @@ jobs:
           buf breaking --against '.git#ref=origin/main'
       - name: SPDX headers
         run: ./hack/check-spdx.sh
+      - uses: astral-sh/setup-uv@v5
       - name: install codegen plugins
         run: |
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
@@ -33,6 +34,8 @@ jobs:
           go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.29.0
       - name: codegen matches committed
         run: make gen-check
+      - name: ruff (adapters)
+        run: cd adapters/aer && uv run --extra dev ruff check .
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
@@ -45,10 +48,19 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.26"
-      - name: go test (unit + component via testcontainers)
+      - uses: astral-sh/setup-uv@v5
+      - name: go test (unit + component + adapter conformance)
         run: go test ./...
       - name: coverage floors
         run: ./hack/coverage-check.sh
+
+  adapter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: pytest (Aer adapter — physics, idempotency, taxonomy)
+        run: cd adapters/aer && uv run --extra dev pytest -q
 
   integration:
     runs-on: ubuntu-latest
@@ -59,10 +71,12 @@ jobs:
           go-version: "1.26"
       - name: compose up
         run: make compose-up
-      - name: smoke (M0 — empty fleet over gRPC+REST)
+      - name: smoke (M0 — transport + auth over gRPC+REST)
         run: ./hack/smoke-m0.sh
       - name: smoke (M1 — job lifecycle via qctl)
         run: ./hack/smoke-m1.sh
+      - name: smoke (M2 — Bell job end-to-end with usage)
+        run: ./hack/smoke-m2.sh
       - name: compose logs (on failure)
         if: failure()
         run: docker compose -f deploy/compose/docker-compose.yml logs

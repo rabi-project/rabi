@@ -19,6 +19,15 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  adapter-aer:
+    build:
+      context: ../../adapters/aer
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('localhost', 50051), 2).close()"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
   tangled:
     build:
       context: ../..
@@ -27,11 +36,14 @@ services:
       TANGLE_DB_URL: postgres://tangle:tangle@postgres:5432/tangle?sslmode=disable
       TANGLE_GRPC_ADDR: ":9090"
       TANGLE_HTTP_ADDR: ":8080"
+      TANGLE_ADAPTERS: "sim=adapter-aer:50051"
     ports:
       - "9090:9090"
       - "8080:8080"
     depends_on:
       postgres:
+        condition: service_healthy
+      adapter-aer:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
