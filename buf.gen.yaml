@@ -10,7 +10,7 @@ managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: tangle.dev/tangle/gen/go
+      value: github.com/mAengo31/rabi/gen/go
 plugins:
   - local: protoc-gen-go
     out: gen/go

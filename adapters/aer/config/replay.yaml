@@ -4,7 +4,7 @@
 # IBM fake backends; see bench/data/snapshots/README.md for provenance).
 # Synthetic drift over the real baselines: seeded degradation walk with a
 # sawtooth reset at simulated calibration events.
-# Clock acceleration comes from TANGLE_SIM_ACCEL (1 wall second = N sim s).
+# Clock acceleration comes from RABI_SIM_ACCEL (1 wall second = N sim s).
 targets:
   - target_id: ibm-torino-r
     display_name: "fake_torino 20q replay"

@@ -8,8 +8,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-API_KEY="${TANGLE_API_KEY:-dev-key}"
-export TANGLE_API_KEY="$API_KEY"
+API_KEY="${RABI_API_KEY:-dev-key}"
+export RABI_API_KEY="$API_KEY"
 
 go build -o bin/qctl ./cmd/qctl
 
@@ -45,8 +45,8 @@ if err="$(bin/qctl submit -f bin/bad-job.yaml 2>&1)"; then
 fi
 echo "$err" | grep -q "/spec/workload/kind" || { echo "FAIL: rejection not precise: $err"; exit 1; }
 
-echo "--- restart tangled: job survives"
-docker compose -f deploy/compose/docker-compose.yml restart tangled >/dev/null 2>&1
+echo "--- restart rabi: job survives"
+docker compose -f deploy/compose/docker-compose.yml restart rabi >/dev/null 2>&1
 for i in $(seq 1 30); do
   if bin/qctl get "$job_id" >/dev/null 2>&1; then break; fi
   sleep 1

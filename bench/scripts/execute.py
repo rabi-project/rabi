@@ -87,8 +87,8 @@ def simulator_for(target_name: str, snapshot_id: str, width: int, family: str,
                   series_path_str: str):
     from qiskit_aer import AerSimulator
 
-    from tangle_aer.noise import build_noise_model
-    from tangle_aer.targets import Metric, Snapshot, TargetConfig
+    from rabi_aer.noise import build_noise_model
+    from rabi_aer.targets import Metric, Snapshot, TargetConfig
 
     series = load_series(Path(series_path_str))
     t = series[target_name]

@@ -16,9 +16,9 @@ import json
 from datetime import timedelta
 from pathlib import Path
 
-from tangle_aer.fleet import TargetRuntime, parse_rfc3339
-from tangle_aer.service import nominal_2q_median
-from tangle_aer.targets import load_config
+from rabi_aer.fleet import TargetRuntime, parse_rfc3339
+from rabi_aer.service import nominal_2q_median
+from rabi_aer.targets import load_config
 
 REPLAY_CONFIG = Path(__file__).parent.parent.parent / "adapters" / "aer" / "config" / "replay.yaml"
 

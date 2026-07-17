@@ -20,9 +20,9 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	adapterv1alpha1 "tangle.dev/tangle/gen/go/tangle/adapter/v1alpha1"
-	apiv1alpha1 "tangle.dev/tangle/gen/go/tangle/api/v1alpha1"
-	"tangle.dev/tangle/internal/job"
+	adapterv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/adapter/v1alpha1"
+	apiv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1"
+	"github.com/mAengo31/rabi/internal/job"
 )
 
 const (
@@ -65,7 +65,7 @@ func New() *Registry {
 	}
 }
 
-// NewFromSpec parses TANGLE_ADAPTERS ("site=host:port,site2=host:port") and
+// NewFromSpec parses RABI_ADAPTERS ("site=host:port,site2=host:port") and
 // dials each adapter lazily. An empty spec yields an empty fleet.
 func NewFromSpec(spec string) (*Registry, error) {
 	r := New()

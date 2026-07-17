@@ -11,10 +11,10 @@ from pathlib import Path
 import pytest
 from qiskit import transpile
 
-from tangle_aer import tasks as taskmod
-from tangle_aer.fleet import TargetRuntime
-from tangle_aer.targets import load_config
-from tangle_aer.tasks import TaskEngine
+from rabi_aer import tasks as taskmod
+from rabi_aer.fleet import TargetRuntime
+from rabi_aer.targets import load_config
+from rabi_aer.tasks import TaskEngine
 
 CONFIG = Path(__file__).parent.parent / "config" / "single.yaml"
 

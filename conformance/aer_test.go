@@ -37,13 +37,13 @@ func TestAerAdapterConformance(t *testing.T) {
 
 	port := freePort(t)
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
-	cmd := exec.Command("uv", "run", "tangle-adapter-aer",
+	cmd := exec.Command("uv", "run", "rabi-adapter-aer",
 		"--config", "config/single.yaml", "--listen", addr)
 	cmd.Dir = "../adapters/aer"
 	// uv spawns python as a child: give the tree its own process group so
 	// cleanup can kill all of it, and keep its output off the test pipes.
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	if os.Getenv("TANGLE_CONF_VERBOSE") != "" {
+	if os.Getenv("RABI_CONF_VERBOSE") != "" {
 		cmd.Stdout = os.Stderr
 		cmd.Stderr = os.Stderr
 	}

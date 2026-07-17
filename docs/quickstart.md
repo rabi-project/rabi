@@ -24,7 +24,7 @@ device can currently satisfy — with the reason recorded.
 Poke at individual jobs:
 
 ```sh
-export TANGLE_API_KEY=dev-key
+export RABI_API_KEY=dev-key
 go run ./cmd/qctl targets                 # fleet with live calibration state
 go run ./cmd/qctl list --tenant demo
 go run ./cmd/qctl get <job-id>            # full document, placement audit, counts
@@ -43,7 +43,7 @@ Off by default. With an IBM Quantum token (open-plan queue times can be
 **hours** — the demo does not wait for it):
 
 ```sh
-IBM_TOKEN=<token> TANGLE_ADAPTERS_EXTRA=",ibm=adapter-ibm:50052" \
+IBM_TOKEN=<token> RABI_ADAPTERS_EXTRA=",ibm=adapter-ibm:50052" \
   docker compose -f deploy/compose/docker-compose.yml --profile ibm up -d
 ```
 

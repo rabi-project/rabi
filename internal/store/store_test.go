@@ -13,8 +13,8 @@ import (
 
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	"tangle.dev/tangle/internal/job"
-	"tangle.dev/tangle/internal/store"
+	"github.com/mAengo31/rabi/internal/job"
+	"github.com/mAengo31/rabi/internal/store"
 )
 
 var (

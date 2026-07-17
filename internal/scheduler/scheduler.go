@@ -18,7 +18,7 @@ type SchedulingPolicy interface {
 }
 
 // factories build policies by name; the process-wide singletons used by
-// tangled are cached separately (stateful policies like round-robin need
+// rabi are cached separately (stateful policies like round-robin need
 // fresh instances in benchmark runs).
 var (
 	factories  = map[string]func() SchedulingPolicy{}

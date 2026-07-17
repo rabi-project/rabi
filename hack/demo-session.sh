@@ -7,7 +7,7 @@
 # GIF with:     agg --speed 1.4 docs/demo.cast docs/demo.gif
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export TANGLE_API_KEY="${TANGLE_API_KEY:-dev-key}"
+export RABI_API_KEY="${RABI_API_KEY:-dev-key}"
 
 say() { printf '\n\033[1;36m$ %s\033[0m\n' "$*"; sleep 1; }
 run() { say "$*"; "$@"; sleep 2; }

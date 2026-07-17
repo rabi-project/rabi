@@ -10,7 +10,7 @@ and vendor cloud queues, using each device's *current calibration* to decide
 where the job will actually succeed. Every placement is recorded with a
 human-readable reason, so scheduling is arguable instead of magic.
 
-Under the hood: one control-plane binary (`tangled`) backed by PostgreSQL, a
+Under the hood: one control-plane binary (`rabi`) backed by PostgreSQL, a
 gRPC adapter protocol any vendor can implement out of process, a `qctl` CLI,
 and a calibration-replay simulator fleet that reproduces real device drift
 offline — the same machinery behind our public benchmark of calibration-aware
@@ -28,7 +28,7 @@ seeded synthetic drift, exact simulator ground truth, byte-identical reruns.
 
 **Naming:** the project is **Rabi**; the wire contracts it implements come
 from the vendored [Tangle spec](spec/) (`tangle.adapter.v1alpha1`,
-`tangle.api.v1alpha1`, the `tangled` binary) — the spec is law, so
+`tangle.api.v1alpha1`, proto packages) — the spec is law, so
 spec-derived identifiers keep their names (docs/decisions.md D-028).
 
 **Status:** pre-v0.1, building toward the MVP milestones in

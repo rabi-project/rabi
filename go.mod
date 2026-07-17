@@ -1,4 +1,4 @@
-module tangle.dev/tangle
+module github.com/mAengo31/rabi
 
 go 1.26.5
 

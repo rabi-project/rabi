@@ -3,9 +3,9 @@
 See `spec/spec/overview.md` for the normative four-plane picture. This page
 describes how this repository implements it; it grows with each milestone.
 
-## The one binary: `tangled`
+## The one binary: `rabi`
 
-`cmd/tangled` contains the entire control plane — API server, scheduler,
+`cmd/rabi` contains the entire control plane — API server, scheduler,
 target registry, and accounting. PostgreSQL 15 is the only stateful
 dependency: job dispatch uses `FOR UPDATE SKIP LOCKED` work queues with
 `LISTEN/NOTIFY` wakeups. There is no message broker and no other service.
@@ -43,8 +43,8 @@ qctl / SDK / REST ──> internal/api (gRPC tangle.api.v1alpha1 + gateway)
 | M3 scheduler skeleton | done |
 | M4 calibration replay | done |
 | M5 calib-aware/v0 policy | done |
-| M6 benchmark (Artifact B) | **current** |
-| M7 demo polish (Artifact A) | in progress |
+| M6 benchmark (Artifact B) | done |
+| M7 demo polish (Artifact A) | done |
 | M8 operator (stretch) | pending |
 
 ## Scheduling policies (M5)
@@ -70,13 +70,13 @@ The compose fleet replays real device calibration: three 20-qubit subgraphs
 of IBM fake backends (`bench/data/snapshots/`, provenance embedded) with
 seeded synthetic drift — strictly-degrading walks capped at +30%, sawtooth
 reset at per-target calibration periods — over a fleet-wide simulated clock
-(`TANGLE_SIM_ACCEL`, default 600× in compose: 1 s wall = 10 min sim). The
+(`RABI_SIM_ACCEL`, default 600× in compose: 1 s wall = 10 min sim). The
 adapter's noise model is built from exactly the snapshot `GetDeviceState`
 reports, so the scheduler always sees what the physics does.
 
 ## Execution path (M2)
 
-The registry dials adapters from `TANGLE_ADAPTERS` (site=host:port), caches
+The registry dials adapters from `RABI_ADAPTERS` (site=host:port), caches
 capabilities, and polls device state every 5s. The dispatcher claims PENDING
 jobs from the Postgres work queue (`FOR UPDATE SKIP LOCKED`, woken by
 `LISTEN/NOTIFY` on submit), binds them with a placement audit record, submits

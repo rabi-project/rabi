@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// The MVP has exactly one auth path: a static API key from TANGLE_API_KEY,
+// The MVP has exactly one auth path: a static API key from RABI_API_KEY,
 // presented as "Authorization: Bearer <key>" (mvp-build-plan.md §2). The REST
 // gateway forwards the header under grpc-gateway's permanent-header prefix,
 // so both metadata keys are accepted.

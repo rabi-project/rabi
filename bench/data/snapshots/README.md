@@ -27,5 +27,5 @@ time series: a seeded, strictly-degrading random walk on error metrics
 (bounded at +30% relative to baseline; T1/T2 degrade inversely) with a
 sawtooth reset at simulated calibration events. This is **synthetic drift
 over real calibration baselines**, disclosed as such in the benchmark
-methodology (`adapters/aer/src/tangle_aer/replay.py` is the authoritative
+methodology (`adapters/aer/src/rabi_aer/replay.py` is the authoritative
 implementation).

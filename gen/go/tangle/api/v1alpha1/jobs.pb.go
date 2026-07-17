@@ -759,8 +759,8 @@ const file_tangle_api_v1alpha1_jobs_proto_rawDesc = "" +
 	"\vListTargets\x12'.tangle.api.v1alpha1.ListTargetsRequest\x1a(.tangle.api.v1alpha1.ListTargetsResponse\x12H\n" +
 	"\tGetTarget\x12\x1e.tangle.api.v1alpha1.TargetRef\x1a\x1b.tangle.api.v1alpha1.Target2s\n" +
 	"\fUsageService\x12c\n" +
-	"\x0eGetTenantUsage\x12'.tangle.api.v1alpha1.TenantUsageRequest\x1a(.tangle.api.v1alpha1.TenantUsageResponseB\xcc\x01\n" +
-	"\x17com.tangle.api.v1alpha1B\tJobsProtoP\x01Z8tangle.dev/tangle/gen/go/tangle/api/v1alpha1;apiv1alpha1\xa2\x02\x03TAX\xaa\x02\x13Tangle.Api.V1alpha1\xca\x02\x13Tangle\\Api\\V1alpha1\xe2\x02\x1fTangle\\Api\\V1alpha1\\GPBMetadata\xea\x02\x15Tangle::Api::V1alpha1b\x06proto3"
+	"\x0eGetTenantUsage\x12'.tangle.api.v1alpha1.TenantUsageRequest\x1a(.tangle.api.v1alpha1.TenantUsageResponseB\xd3\x01\n" +
+	"\x17com.tangle.api.v1alpha1B\tJobsProtoP\x01Z?github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1;apiv1alpha1\xa2\x02\x03TAX\xaa\x02\x13Tangle.Api.V1alpha1\xca\x02\x13Tangle\\Api\\V1alpha1\xe2\x02\x1fTangle\\Api\\V1alpha1\\GPBMetadata\xea\x02\x15Tangle::Api::V1alpha1b\x06proto3"
 
 var (
 	file_tangle_api_v1alpha1_jobs_proto_rawDescOnce sync.Once

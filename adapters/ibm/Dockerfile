@@ -7,4 +7,4 @@ COPY adapters/ibm/pyproject.toml ./
 COPY adapters/ibm/src ./src
 RUN pip install --no-cache-dir /app/adapters/aer && pip install --no-cache-dir .
 EXPOSE 50052
-ENTRYPOINT ["tangle-adapter-ibm"]
+ENTRYPOINT ["rabi-adapter-ibm"]

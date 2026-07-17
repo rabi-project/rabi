@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-// Package api hosts the client-facing surface of tangled: the
+// Package api hosts the client-facing surface of rabi: the
 // tangle.api.v1alpha1 gRPC services and the REST gateway mapped by
 // api-config.yaml. There is exactly one control-plane binary
 // (mvp-build-plan.md §2); this package is its front door.
@@ -18,9 +18,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	apiv1alpha1 "tangle.dev/tangle/gen/go/tangle/api/v1alpha1"
-	"tangle.dev/tangle/internal/job"
-	"tangle.dev/tangle/internal/store"
+	apiv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1"
+	"github.com/mAengo31/rabi/internal/job"
+	"github.com/mAengo31/rabi/internal/store"
 )
 
 // Config carries everything the API server needs.
@@ -49,7 +49,7 @@ type Server struct {
 // (so tests may use ":0" and read GRPCAddr). Nothing serves until Run.
 func New(cfg Config) (*Server, error) {
 	if cfg.APIKey == "" {
-		return nil, errors.New("api: APIKey must be set (TANGLE_API_KEY)")
+		return nil, errors.New("api: APIKey must be set (RABI_API_KEY)")
 	}
 	if cfg.Registry == nil {
 		return nil, errors.New("api: Registry must be set")

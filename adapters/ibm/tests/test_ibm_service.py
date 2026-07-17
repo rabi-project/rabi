@@ -13,7 +13,7 @@ import pytest
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from tangle.adapter.v1alpha1 import adapter_pb2 as pb
 
-from tangle_ibm.service import IBMAdapterService, target_metrics
+from rabi_ibm.service import IBMAdapterService, target_metrics
 
 BELL = b"""
 OPENQASM 3.0;

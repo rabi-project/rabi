@@ -1244,6 +1244,46 @@ wheels = [
 ]
 
 [[package]]
+name = "rabi-adapter-aer"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "googleapis-common-protos" },
+    { name = "grpcio" },
+    { name = "grpcio-status" },
+    { name = "protobuf" },
+    { name = "pyyaml" },
+    { name = "qiskit" },
+    { name = "qiskit-aer" },
+    { name = "qiskit-qasm3-import" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "grpcio-tools" },
+    { name = "pytest" },
+    { name = "qiskit-ibm-runtime" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "googleapis-common-protos", specifier = ">=1.63" },
+    { name = "grpcio", specifier = ">=1.62" },
+    { name = "grpcio-status", specifier = ">=1.62" },
+    { name = "grpcio-tools", marker = "extra == 'dev'", specifier = ">=1.62" },
+    { name = "protobuf", specifier = ">=5.26" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "qiskit", specifier = ">=1.1" },
+    { name = "qiskit-aer", specifier = ">=0.14" },
+    { name = "qiskit-ibm-runtime", marker = "extra == 'dev'", specifier = ">=0.30" },
+    { name = "qiskit-qasm3-import", specifier = ">=0.5" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
+]
+provides-extras = ["dev"]
+
+[[package]]
 name = "requests"
 version = "2.34.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1510,46 +1550,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/d7/dd/04d56c2a5232358df
 wheels = [
     { url = "https://files.pythonhosted.org/packages/62/8d/008761f6e1000600e5303db30d05724bdcf3d2d186cbb59fac79b52e39ed/stevedore-5.9.0-py3-none-any.whl", hash = "sha256:e520945d4c257700eddc1eb1d79df04b2ea578eef185e0e3fa5b442fc848d3f7", size = 54463, upload-time = "2026-07-02T11:38:07.43Z" },
 ]
-
-[[package]]
-name = "tangle-adapter-aer"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "googleapis-common-protos" },
-    { name = "grpcio" },
-    { name = "grpcio-status" },
-    { name = "protobuf" },
-    { name = "pyyaml" },
-    { name = "qiskit" },
-    { name = "qiskit-aer" },
-    { name = "qiskit-qasm3-import" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "grpcio-tools" },
-    { name = "pytest" },
-    { name = "qiskit-ibm-runtime" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "googleapis-common-protos", specifier = ">=1.63" },
-    { name = "grpcio", specifier = ">=1.62" },
-    { name = "grpcio-status", specifier = ">=1.62" },
-    { name = "grpcio-tools", marker = "extra == 'dev'", specifier = ">=1.62" },
-    { name = "protobuf", specifier = ">=5.26" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
-    { name = "pyyaml", specifier = ">=6.0" },
-    { name = "qiskit", specifier = ">=1.1" },
-    { name = "qiskit-aer", specifier = ">=0.14" },
-    { name = "qiskit-ibm-runtime", marker = "extra == 'dev'", specifier = ">=0.30" },
-    { name = "qiskit-qasm3-import", specifier = ">=0.5" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
-]
-provides-extras = ["dev"]
 
 [[package]]
 name = "typing-extensions"

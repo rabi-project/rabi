@@ -9,5 +9,5 @@ RUN pip install --no-cache-dir .
 COPY adapters/aer/config ./config
 COPY bench/data /app/bench/data
 EXPOSE 50051
-ENTRYPOINT ["tangle-adapter-aer"]
+ENTRYPOINT ["rabi-adapter-aer"]
 CMD ["--config", "config/replay.yaml", "--listen", "[::]:50051"]

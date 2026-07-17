@@ -11,7 +11,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"tangle.dev/tangle/internal/job"
+	"github.com/mAengo31/rabi/internal/job"
 )
 
 // ErrNotFound is returned when a job id does not exist.

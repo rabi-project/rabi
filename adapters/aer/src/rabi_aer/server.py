@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""tangle-adapter-aer: serve tangle.adapter.v1alpha1 over Qiskit Aer."""
+"""rabi-adapter-aer: serve tangle.adapter.v1alpha1 over Qiskit Aer."""
 
 from __future__ import annotations
 
@@ -19,15 +19,15 @@ from .replay import ReplayClock
 from .service import AdapterService
 from .targets import load_config
 
-log = logging.getLogger("tangle_aer")
+log = logging.getLogger("rabi_aer")
 
 
 def serve(config_path: str, listen: str) -> grpc.Server:
     targets = load_config(config_path)
 
-    # Fleet-wide replay clock: 1 wall second = TANGLE_SIM_ACCEL sim seconds,
+    # Fleet-wide replay clock: 1 wall second = RABI_SIM_ACCEL sim seconds,
     # anchored at the earliest calibration baseline (mvp-build-plan.md §4).
-    accel = float(os.environ.get("TANGLE_SIM_ACCEL", "1"))
+    accel = float(os.environ.get("RABI_SIM_ACCEL", "1"))
     epoch = min(parse_rfc3339(t.snapshot.measured_at) for t in targets)
     clock = ReplayClock(epoch=epoch, accel=accel)
     if any(t.drift for t in targets):

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-// tangled is the single control-plane binary: API server, scheduler, target
+// rabi is the single control-plane binary: API server, scheduler, target
 // registry, and accounting (mvp-build-plan.md §2 — no other services).
 package main
 
@@ -11,11 +11,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"tangle.dev/tangle/internal/api"
-	"tangle.dev/tangle/internal/dispatch"
-	"tangle.dev/tangle/internal/job"
-	"tangle.dev/tangle/internal/registry"
-	"tangle.dev/tangle/internal/store"
+	"github.com/mAengo31/rabi/internal/api"
+	"github.com/mAengo31/rabi/internal/dispatch"
+	"github.com/mAengo31/rabi/internal/job"
+	"github.com/mAengo31/rabi/internal/registry"
+	"github.com/mAengo31/rabi/internal/store"
 )
 
 func envOr(key, fallback string) string {
@@ -29,14 +29,14 @@ func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 	slog.SetDefault(logger)
 
-	apiKey := os.Getenv("TANGLE_API_KEY")
+	apiKey := os.Getenv("RABI_API_KEY")
 	if apiKey == "" {
-		logger.Error("TANGLE_API_KEY must be set")
+		logger.Error("RABI_API_KEY must be set")
 		os.Exit(1)
 	}
-	dbURL := envOr("TANGLE_DB_URL", "postgres://tangle:tangle@localhost:5432/tangle?sslmode=disable")
-	grpcAddr := envOr("TANGLE_GRPC_ADDR", ":9090")
-	httpAddr := envOr("TANGLE_HTTP_ADDR", ":8080")
+	dbURL := envOr("RABI_DB_URL", "postgres://rabi:rabi@localhost:5432/rabi?sslmode=disable")
+	grpcAddr := envOr("RABI_GRPC_ADDR", ":9090")
+	httpAddr := envOr("RABI_HTTP_ADDR", ":8080")
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -49,14 +49,14 @@ func main() {
 	defer st.Close()
 	logger.Info("store ready", "url", dbURL)
 
-	reg, err := registry.NewFromSpec(os.Getenv("TANGLE_ADAPTERS"))
+	reg, err := registry.NewFromSpec(os.Getenv("RABI_ADAPTERS"))
 	if err != nil {
 		logger.Error("configuring adapters", "error", err)
 		os.Exit(1)
 	}
 	reg.Start(ctx)
 
-	dispatcher, err := dispatch.New(st, reg, os.Getenv("TANGLE_POLICY"), logger)
+	dispatcher, err := dispatch.New(st, reg, os.Getenv("RABI_POLICY"), logger)
 	if err != nil {
 		logger.Error("configuring scheduling policy", "error", err)
 		os.Exit(1)
@@ -84,11 +84,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Info("tangled serving", "grpc", grpcAddr, "http", httpAddr,
-		"adapters", os.Getenv("TANGLE_ADAPTERS"))
+	logger.Info("rabi serving", "grpc", grpcAddr, "http", httpAddr,
+		"adapters", os.Getenv("RABI_ADAPTERS"))
 	if err := srv.Run(ctx); err != nil {
 		logger.Error("serving", "error", err)
 		os.Exit(1)
 	}
-	logger.Info("tangled stopped")
+	logger.Info("rabi stopped")
 }

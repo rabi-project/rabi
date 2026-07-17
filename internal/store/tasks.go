@@ -11,12 +11,12 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"tangle.dev/tangle/internal/job"
+	"github.com/mAengo31/rabi/internal/job"
 )
 
 // jobsChannel is the LISTEN/NOTIFY channel that wakes the dispatcher when a
 // job lands (mvp-build-plan.md §2: Postgres work queue + NOTIFY wakeups).
-const jobsChannel = "tangle_jobs"
+const jobsChannel = "rabi_jobs"
 
 // TaskRecord is one adapter submission owned by a job.
 type TaskRecord struct {

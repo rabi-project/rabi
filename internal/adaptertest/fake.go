@@ -21,7 +21,7 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	adapterv1alpha1 "tangle.dev/tangle/gen/go/tangle/adapter/v1alpha1"
+	adapterv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/adapter/v1alpha1"
 )
 
 // TargetSpec configures one fake target.

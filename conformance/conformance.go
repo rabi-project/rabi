@@ -23,7 +23,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
-	adapterv1alpha1 "tangle.dev/tangle/gen/go/tangle/adapter/v1alpha1"
+	adapterv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/adapter/v1alpha1"
 )
 
 // T is the subset of *testing.T the suite needs (keeps the package usable
@@ -47,7 +47,7 @@ cx q[0], q[1];
 c = measure q;
 `
 	invalidQASM = "OPENQASM 3.0; definitely not a program;"
-	delayParam  = "tangle.sim/delay-ms"
+	delayParam  = "rabi.sim/delay-ms"
 )
 
 // Suite drives the categories against one target of one adapter.

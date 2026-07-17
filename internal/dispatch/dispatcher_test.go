@@ -16,12 +16,12 @@ import (
 
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	adapterv1alpha1 "tangle.dev/tangle/gen/go/tangle/adapter/v1alpha1"
-	"tangle.dev/tangle/internal/adaptertest"
-	"tangle.dev/tangle/internal/dispatch"
-	"tangle.dev/tangle/internal/job"
-	"tangle.dev/tangle/internal/registry"
-	"tangle.dev/tangle/internal/store"
+	adapterv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/adapter/v1alpha1"
+	"github.com/mAengo31/rabi/internal/adaptertest"
+	"github.com/mAengo31/rabi/internal/dispatch"
+	"github.com/mAengo31/rabi/internal/job"
+	"github.com/mAengo31/rabi/internal/registry"
+	"github.com/mAengo31/rabi/internal/store"
 )
 
 var testStore *store.Store

@@ -26,7 +26,7 @@ type Store struct {
 	Pool *pgxpool.Pool
 }
 
-// Open connects to Postgres, retrying until the deadline so tangled tolerates
+// Open connects to Postgres, retrying until the deadline so rabi tolerates
 // compose startup ordering, and runs pending migrations.
 func Open(ctx context.Context, databaseURL string) (*Store, error) {
 	pool, err := pgxpool.New(ctx, databaseURL)

@@ -6,8 +6,8 @@ import (
 	"context"
 	"testing"
 
-	"tangle.dev/tangle/internal/adaptertest"
-	"tangle.dev/tangle/internal/registry"
+	"github.com/mAengo31/rabi/internal/adaptertest"
+	"github.com/mAengo31/rabi/internal/registry"
 )
 
 func TestEmptyRegistry(t *testing.T) {

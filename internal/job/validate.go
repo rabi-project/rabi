@@ -12,7 +12,7 @@ import (
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 
-	"tangle.dev/tangle/internal/specdata"
+	"github.com/mAengo31/rabi/internal/specdata"
 )
 
 // specKnownUnits are the native units named by spec/spec/overview.md §6.

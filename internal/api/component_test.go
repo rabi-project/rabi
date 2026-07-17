@@ -24,11 +24,11 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"sigs.k8s.io/yaml"
 
-	apiv1alpha1 "tangle.dev/tangle/gen/go/tangle/api/v1alpha1"
-	"tangle.dev/tangle/internal/api"
-	"tangle.dev/tangle/internal/job"
-	"tangle.dev/tangle/internal/registry"
-	"tangle.dev/tangle/internal/store"
+	apiv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1"
+	"github.com/mAengo31/rabi/internal/api"
+	"github.com/mAengo31/rabi/internal/job"
+	"github.com/mAengo31/rabi/internal/registry"
+	"github.com/mAengo31/rabi/internal/store"
 )
 
 const testAPIKey = "component-test-key"
@@ -290,7 +290,7 @@ func TestSubmitRejectsInvalid(t *testing.T) {
 	}
 }
 
-// A restart of tangled loses nothing: a second server over the same Postgres
+// A restart of rabi loses nothing: a second server over the same Postgres
 // sees every job (T1.api / M1 acceptance).
 func TestRestartLosesNothing(t *testing.T) {
 	c, ctx := client(t)

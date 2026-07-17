@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 [project]
-name = "tangle-bench"
+name = "rabi-bench"
 version = "0.1.0"
-description = "Tangle benchmark: workload physics, analysis, report generation"
+description = "Rabi benchmark: workload physics, analysis, report generation"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 dependencies = [
-    "tangle-adapter-aer",
+    "rabi-adapter-aer",
     "numpy>=1.26",
     "matplotlib>=3.8",
 ]
@@ -17,7 +17,7 @@ gen = [
 ]
 
 [tool.uv.sources]
-tangle-adapter-aer = { path = "../adapters/aer", editable = true }
+rabi-adapter-aer = { path = "../adapters/aer", editable = true }
 
 [build-system]
 requires = ["hatchling"]

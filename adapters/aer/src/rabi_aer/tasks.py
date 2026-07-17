@@ -51,7 +51,7 @@ class _CancelledDuringRun(Exception):
 
 # Test-only knob: lets suites hold a task in the queue/running state long
 # enough to exercise cancellation deterministically.
-DELAY_PARAM = "tangle.sim/delay-ms"
+DELAY_PARAM = "rabi.sim/delay-ms"
 
 
 @dataclass

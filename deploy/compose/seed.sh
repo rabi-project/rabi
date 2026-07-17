@@ -7,11 +7,11 @@
 # and cancellations. End state: SUCCEEDED, FAILED (with category), CANCELLED,
 # and PENDING-infeasible (with recorded reason) all present (T7.seed).
 #
-# Usage: ./deploy/compose/seed.sh   (stack must be up; TANGLE_API_KEY set or dev-key)
+# Usage: ./deploy/compose/seed.sh   (stack must be up; RABI_API_KEY set or dev-key)
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
-export TANGLE_API_KEY="${TANGLE_API_KEY:-dev-key}"
+export RABI_API_KEY="${RABI_API_KEY:-dev-key}"
 QCTL="bin/qctl"
 go build -o "$QCTL" ./cmd/qctl
 

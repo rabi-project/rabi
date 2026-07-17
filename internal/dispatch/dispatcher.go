@@ -24,11 +24,11 @@ import (
 
 	"github.com/google/uuid"
 
-	adapterv1alpha1 "tangle.dev/tangle/gen/go/tangle/adapter/v1alpha1"
-	"tangle.dev/tangle/internal/job"
-	"tangle.dev/tangle/internal/registry"
-	"tangle.dev/tangle/internal/scheduler"
-	"tangle.dev/tangle/internal/store"
+	adapterv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/adapter/v1alpha1"
+	"github.com/mAengo31/rabi/internal/job"
+	"github.com/mAengo31/rabi/internal/registry"
+	"github.com/mAengo31/rabi/internal/scheduler"
+	"github.com/mAengo31/rabi/internal/store"
 )
 
 const (
@@ -37,7 +37,7 @@ const (
 	watchBackoff = time.Second
 )
 
-// Dispatcher owns the job execution loop. One instance per tangled process.
+// Dispatcher owns the job execution loop. One instance per rabi process.
 type Dispatcher struct {
 	store  *store.Store
 	reg    *registry.Registry
@@ -50,7 +50,7 @@ type Dispatcher struct {
 	wg       sync.WaitGroup
 }
 
-// New wires the dispatcher with the named scheduling policy (TANGLE_POLICY;
+// New wires the dispatcher with the named scheduling policy (RABI_POLICY;
 // empty = fifo/v0).
 func New(st *store.Store, reg *registry.Registry, policyName string, logger *slog.Logger) (*Dispatcher, error) {
 	if logger == nil {

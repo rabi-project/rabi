@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""tangle-adapter-ibm: serve tangle.adapter.v1alpha1 over IBM Quantum.
+"""rabi-adapter-ibm: serve tangle.adapter.v1alpha1 over IBM Quantum.
 
 Requires IBM_TOKEN (feature flag — the compose profile `ibm` is off by
 default). Backends come from IBM_BACKENDS (comma-separated names, default:
@@ -20,7 +20,7 @@ from tangle.adapter.v1alpha1 import adapter_pb2_grpc as pb_grpc
 
 from .service import IBMAdapterService
 
-log = logging.getLogger("tangle_ibm")
+log = logging.getLogger("rabi_ibm")
 
 
 def main() -> None:

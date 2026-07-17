@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	apiv1alpha1 "tangle.dev/tangle/gen/go/tangle/api/v1alpha1"
+	apiv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1"
 )
 
 func newTargetsCmd() *cobra.Command {

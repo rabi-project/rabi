@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"tangle.dev/tangle/internal/job"
-	"tangle.dev/tangle/internal/store"
+	"github.com/mAengo31/rabi/internal/job"
+	"github.com/mAengo31/rabi/internal/store"
 )
 
 func TestBindJobLifecycle(t *testing.T) {

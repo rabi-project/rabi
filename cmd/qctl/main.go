@@ -29,9 +29,9 @@ func main() {
 		SilenceErrors: true,
 	}
 	root.PersistentFlags().StringVar(&flagServer, "server",
-		envOr("TANGLE_SERVER", "localhost:9090"), "tangled gRPC address (env TANGLE_SERVER)")
+		envOr("RABI_SERVER", "localhost:9090"), "rabi gRPC address (env RABI_SERVER)")
 	root.PersistentFlags().StringVar(&flagAPIKey, "api-key",
-		os.Getenv("TANGLE_API_KEY"), "API key (env TANGLE_API_KEY)")
+		os.Getenv("RABI_API_KEY"), "API key (env RABI_API_KEY)")
 	root.PersistentFlags().StringVarP(&flagOutput, "output", "o", "table", "output format: table|json")
 
 	root.AddCommand(newTargetsCmd(), newSubmitCmd(), newGetCmd(), newListCmd(),
@@ -53,7 +53,7 @@ func envOr(key, fallback string) string {
 // dial opens the client connection and returns a context carrying auth.
 func dial(ctx context.Context) (*grpc.ClientConn, context.Context, error) {
 	if flagAPIKey == "" {
-		return nil, nil, fmt.Errorf("no API key: set --api-key or TANGLE_API_KEY")
+		return nil, nil, fmt.Errorf("no API key: set --api-key or RABI_API_KEY")
 	}
 	conn, err := grpc.NewClient(flagServer, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
