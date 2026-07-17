@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -172,11 +174,20 @@ func newListCmd() *cobra.Command {
 }
 
 func newWatchCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "watch JOB_ID",
-		Short: "Stream a job's phase transitions until it is terminal",
-		Args:  cobra.ExactArgs(1),
+	var all bool
+	var tenant string
+	var interval time.Duration
+	cmd := &cobra.Command{
+		Use:   "watch [JOB_ID]",
+		Short: "Stream a job's phase transitions until terminal, or --all for a live fleet view",
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if all {
+				return watchAll(tenant, interval)
+			}
+			if len(args) != 1 {
+				return fmt.Errorf("provide a JOB_ID or --all")
+			}
 			// Watching has no client-side deadline: jobs may run long.
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -205,6 +216,92 @@ func newWatchCmd() *cobra.Command {
 			}
 		},
 	}
+	cmd.Flags().BoolVar(&all, "all", false, "live view of every job (refreshes until interrupted)")
+	cmd.Flags().StringVar(&tenant, "tenant", "", "filter --all view by tenant")
+	cmd.Flags().DurationVar(&interval, "interval", 2*time.Second, "refresh interval for --all")
+	return cmd
+}
+
+// watchAll renders a refreshing fleet-wide job table (the demo's live view).
+// The spec API has per-job watch streams only, so this polls ListJobs.
+func watchAll(tenant string, interval time.Duration) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	conn, ctx, err := dial(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = conn.Close() }()
+	client := apiv1alpha1.NewJobsServiceClient(conn)
+
+	for {
+		resp, err := client.ListJobs(ctx, &apiv1alpha1.ListJobsRequest{
+			Tenant: tenant, PageSize: 500,
+		})
+		if err != nil {
+			return err
+		}
+		counts := map[string]int{}
+		var b strings.Builder
+		w := tabwriter.NewWriter(&b, 2, 4, 2, ' ', 0)
+		_, _ = fmt.Fprintln(w, "JOB_ID\tNAME\tTENANT\tPHASE\tTARGET\tDETAIL")
+		for _, j := range resp.GetJobs() {
+			st := j.GetStatus().AsMap()
+			phase, _ := st["phase"].(string)
+			counts[phase]++
+			target, _ := st["boundTarget"].(string)
+			if target == "" {
+				target = "-"
+			}
+			doc := j.GetQuantumJob().AsMap()
+			_, _ = fmt.Fprintf(w, "%.8s…\t%v\t%s\t%s\t%s\t%s\n",
+				j.GetJobId(), lookup(doc, "metadata", "name"), j.GetTenant(),
+				phase, target, jobDetail(st))
+		}
+		_ = w.Flush()
+
+		fmt.Print("\033[H\033[2J") // clear screen
+		fmt.Printf("tangle fleet — %s\n\n%s\n", phaseSummary(counts), b.String())
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(interval):
+		}
+	}
+}
+
+// jobDetail extracts the most informative one-liner from a job's status.
+func jobDetail(st map[string]any) string {
+	if placement, ok := st["placement"].(map[string]any); ok {
+		if reason, _ := placement["reason"].(string); reason != "" {
+			return truncate(reason, 80)
+		}
+	}
+	if conditions, ok := st["conditions"].([]any); ok && len(conditions) > 0 {
+		last, _ := conditions[len(conditions)-1].(map[string]any)
+		if msg, _ := last["message"].(string); msg != "" {
+			return truncate(msg, 80)
+		}
+	}
+	return ""
+}
+
+func phaseSummary(counts map[string]int) string {
+	order := []string{"PENDING", "SCHEDULED", "SUBMITTED", "RUNNING", "SUCCEEDED", "FAILED", "CANCELLED"}
+	parts := make([]string, 0, len(order))
+	for _, p := range order {
+		if counts[p] > 0 {
+			parts = append(parts, fmt.Sprintf("%s %d", p, counts[p]))
+		}
+	}
+	return strings.Join(parts, " · ")
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n-1] + "…"
 }
 
 func newCancelCmd() *cobra.Command {
