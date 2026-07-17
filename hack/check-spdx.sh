@@ -14,7 +14,8 @@ while IFS= read -r f; do
   fi
 done < <(git ls-files -- '*.go' '*.py' '*.sh' '*.sql' '*.yml' '*.yaml' 'Dockerfile*' 'Makefile' \
   | grep -v '^spec/' | grep -v '^gen/' | grep -v '^.github/' \
-  | grep -v '^adapters/aer/src/tangle/')  # generated python stubs (make gen-python)
+  | grep -v '^adapters/aer/src/tangle/' \
+  | grep -v '/testdata/')  # generated stubs + machine-written test fixtures
 
 if [ "$fail" -ne 0 ]; then
   echo "SPDX check failed"

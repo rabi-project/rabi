@@ -129,3 +129,27 @@ recording is idempotent via UNIQUE (task_id, unit) on the append-only ledger.
 M2's target selection is `direct/v0` (first feasible target, rejection
 reasons recorded); M3 replaces exactly that function with the policy
 pipeline.
+
+## D-016 · 2026-07-17 · Scheduler filter semantics — two SPEC QUESTIONS
+
+(a) **Device technology has no field in the adapter protocol** although
+`requirements.technology` participates in filtering. Adapters expose it via
+`Capabilities.vendor_extensions["technology"]` for now; the protocol should
+grow a first-class field by RFC. Likewise `vendor_extensions["cloud"]="true"`
+marks cloud-queue targets for `allowCloudBurst` filtering.
+(b) **Quality floors are evaluated against the device's best (minimum) metric
+value** — a device is feasible when at least one qubit/edge meets the floor,
+since transpilation can steer toward the good region. The spec says floors
+are "evaluated against a specific calibration snapshot" without fixing the
+aggregate; best-value is the least surprising choice and is documented in
+every rejection string ("best two-qubit error ... exceeds floor ...").
+
+## D-017 · 2026-07-17 · Placement decisions are deterministic by construction
+
+Targets are evaluated in lexicographic name order; score ties break toward
+the first name; reason strings have fixed formats. The golden suite
+(`internal/scheduler/testdata/golden/`, 24 scenarios) locks decisions
+byte-for-byte; changing any golden requires the `golden-change` PR label
+(CI-enforced) plus a per-scenario justification. Infeasible jobs stay PENDING
+with a `Schedulable: False` condition that is re-written only when the reason
+changes, so retry cycles do not spam the event history.

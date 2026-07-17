@@ -54,6 +54,25 @@ jobs:
       - name: coverage floors
         run: ./hack/coverage-check.sh
 
+  golden-gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: golden changes require the golden-change label
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD -- \
+            'internal/scheduler/testdata/golden/*.golden.json' | wc -l)
+          if [ "$changed" -gt 0 ] && ! echo "$LABELS" | grep -q 'golden-change'; then
+            echo "::error::golden placement files changed without the 'golden-change' label (T&V plan rule 5)"
+            exit 1
+          fi
+
   adapter:
     runs-on: ubuntu-latest
     steps:
