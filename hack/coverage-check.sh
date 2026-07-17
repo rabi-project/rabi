@@ -13,7 +13,10 @@ cd "$(dirname "$0")/.."
 
 profile="bin/coverage.out"
 mkdir -p bin
-if ! go test -count=1 -coverprofile="$profile" -coverpkg=./internal/... ./internal/... > bin/coverage-test.log 2>&1; then
+# -p 1: coverage-instrumented packages each start their own Postgres
+# testcontainer; running them in parallel OOM-killed a container on 7GB CI
+# runners. One package (and one container) at a time.
+if ! go test -p 1 -count=1 -coverprofile="$profile" -coverpkg=./internal/... ./internal/... > bin/coverage-test.log 2>&1; then
   echo "coverage test run FAILED:"
   cat bin/coverage-test.log
   exit 1
