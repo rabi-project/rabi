@@ -153,3 +153,35 @@ byte-for-byte; changing any golden requires the `golden-change` PR label
 (CI-enforced) plus a per-scenario justification. Infeasible jobs stay PENDING
 with a `Schedulable: False` condition that is re-written only when the reason
 changes, so retry cycles do not spam the event history.
+
+## D-018 · 2026-07-17 · Replay clock: sim world inside, wall clock outside
+
+The fleet-wide replay clock (1 wall second = `TANGLE_SIM_ACCEL` sim seconds,
+anchored at the earliest calibration baseline) lives entirely inside the
+adapter. Control-plane-facing timestamps (`measured_at`, `observed_at`) are
+mapped back to the wall timeline, so tangled and the scheduler stay
+sim-agnostic. Consequence: in replay mode drift steps are seconds apart in
+wall time, so `calibrationMaxAge` rarely triggers there — its filter
+semantics are exercised against static-snapshot targets instead.
+
+## D-019 · 2026-07-17 · Drift model: strictly-degrading seeded walk, +30% cap
+
+Each drift step adds `degradation_per_hour·Δt + |N(0, σ)|` to a cumulative
+walk per metric — strictly non-decreasing within a calibration period, so
+"drifted is never better than fresh" holds by construction (T4.drift needs
+the direction across all seeds). Error metrics scale by (1+walk) capped at
++30% over baseline; T1/T2 scale by 1/(1+walk). Sawtooth reset at calibration
+events (period per target). Every value is a pure function of (seed, metric,
+cycle, step) — stateless, deterministic, and identical for concurrent
+readers. Disclosed in the benchmark report as synthetic drift over real
+calibration baselines.
+
+## D-020 · 2026-07-17 · Real baselines are 20-qubit subgraphs of fake backends
+
+Aer cannot noise-simulate 127+ qubits, so each replay target is a connected
+20-qubit BFS subgraph of a real device (fake_torino/cz,
+fake_sherbrooke/ecr, fake_brisbane/ecr), carrying the vendor-reported
+calibration for those physical qubits and the device's native 2q gate.
+Physical→logical qubit mapping and package version are embedded in
+bench/data/snapshots/*.json. The scheduler's 2q quality floor matches any
+`gate.2q.<gate>.error` metric.

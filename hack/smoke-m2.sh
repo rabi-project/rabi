@@ -16,10 +16,10 @@ echo "--- fleet has the Aer target"
 targets=""
 for i in $(seq 1 30); do
   targets="$(bin/qctl targets)"
-  if echo "$targets" | grep -q "sim/aer-alpha"; then break; fi
+  if echo "$targets" | grep -q "sim/ibm-torino-r"; then break; fi
   sleep 1
 done
-echo "$targets" | grep -q "sim/aer-alpha" || { echo "FAIL: target never registered"; exit 1; }
+echo "$targets" | grep -q "sim/ibm-torino-r" || { echo "FAIL: target never registered"; exit 1; }
 
 echo "--- submit Bell job and wait for SUCCEEDED"
 job_id="$(bin/qctl submit -f examples/bell.yaml | cut -f1)"
@@ -50,14 +50,15 @@ print(f"counts OK: {counts} (bell fraction {bell/shots:.3f})")
 print(f"placement: {placement['policy']} on {job['status']['boundTarget']}: {placement['reason']}")
 EOF
 
-echo "--- usage recorded (shots >= 1000; ledger accumulates across runs)"
+echo "--- usage recorded (shots >= 1000 on the bound target)"
 bin/qctl usage --tenant demo -o json > bin/usage.json
 python3 - <<'EOF'
 import json
+bound = json.load(open("bin/job.json"))["status"]["boundTarget"]
 usage = json.load(open("bin/usage.json"))["usage"]
-shots = sum(u["amount"] for u in usage if u["unit"] == "shots" and u["target"] == "sim/aer-alpha")
-assert shots >= 1000, f"expected >= 1000 shots recorded, got {shots}"
-print(f"usage OK: {shots} shots on sim/aer-alpha")
+shots = sum(u["amount"] for u in usage if u["unit"] == "shots" and u["target"] == bound)
+assert shots >= 1000, f"expected >= 1000 shots recorded on {bound}, got {shots}"
+print(f"usage OK: {shots} shots on {bound}")
 EOF
 
 echo "SMOKE-M2 OK"

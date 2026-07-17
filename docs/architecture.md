@@ -39,8 +39,20 @@ qctl / SDK / REST ──> internal/api (gRPC tangle.api.v1alpha1 + gateway)
 |---|---|
 | M0 scaffold | done |
 | M1 job store + API | done |
-| M2 adapter protocol + Aer adapter | **current** |
-| M3–M8 | pending |
+| M2 adapter protocol + Aer adapter | done |
+| M3 scheduler skeleton | done |
+| M4 calibration replay | **current** |
+| M5–M8 | pending |
+
+## Calibration replay (M4)
+
+The compose fleet replays real device calibration: three 20-qubit subgraphs
+of IBM fake backends (`bench/data/snapshots/`, provenance embedded) with
+seeded synthetic drift — strictly-degrading walks capped at +30%, sawtooth
+reset at per-target calibration periods — over a fleet-wide simulated clock
+(`TANGLE_SIM_ACCEL`, default 600× in compose: 1 s wall = 10 min sim). The
+adapter's noise model is built from exactly the snapshot `GetDeviceState`
+reports, so the scheduler always sees what the physics does.
 
 ## Execution path (M2)
 

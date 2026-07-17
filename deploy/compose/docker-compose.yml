@@ -21,8 +21,12 @@ services:
 
   adapter-aer:
     build:
-      context: ../../adapters/aer
-    command: ["--config", "config/three.yaml", "--listen", "[::]:50051"]
+      context: ../..
+      dockerfile: adapters/aer/Dockerfile
+    command: ["--config", "config/replay.yaml", "--listen", "[::]:50051"]
+    environment:
+      # 1 wall second = 10 sim minutes: a demo session spans days of drift.
+      TANGLE_SIM_ACCEL: ${TANGLE_SIM_ACCEL:-600}
     healthcheck:
       test: ["CMD", "python", "-c", "import socket; socket.create_connection(('localhost', 50051), 2).close()"]
       interval: 3s
