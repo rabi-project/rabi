@@ -9,9 +9,10 @@ build:
 gen:
 	buf generate
 	buf generate --template buf.gen.gateway.yaml --path spec/proto/tangle/api
+	cp spec/schemas/quantumjob.schema.json internal/specdata/quantumjob.schema.json
 
 gen-check: gen
-	@git diff --exit-code -- gen/ || (echo "ERROR: generated code out of date; run 'make gen' and commit" && exit 1)
+	@git diff --exit-code -- gen/ internal/specdata/ || (echo "ERROR: generated code out of date; run 'make gen' and commit" && exit 1)
 
 lint:
 	buf lint
