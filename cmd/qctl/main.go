@@ -34,7 +34,7 @@ func main() {
 		os.Getenv("TANGLE_API_KEY"), "API key (env TANGLE_API_KEY)")
 	root.PersistentFlags().StringVarP(&flagOutput, "output", "o", "table", "output format: table|json")
 
-	root.AddCommand(newTargetsCmd())
+	root.AddCommand(newTargetsCmd(), newSubmitCmd(), newGetCmd(), newListCmd(), newWatchCmd(), newCancelCmd())
 
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "qctl:", err)

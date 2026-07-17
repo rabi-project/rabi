@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+# A Bell pair: the canonical smoke-test QuantumJob.
+# Program (base64-decoded):
+#   OPENQASM 3.0;
+#   include "stdgates.inc";
+#   qubit[2] q; bit[2] c;
+#   h q[0]; cx q[0], q[1];
+#   c = measure q;
+apiVersion: tangle.dev/v1alpha1
+kind: QuantumJob
+metadata:
+  name: bell-smoke
+  tenant: demo
+spec:
+  workload:
+    kind: gate-model
+    gateModel:
+      program:
+        format: openqasm3
+        inline: T1BFTlFBU00gMy4wOwppbmNsdWRlICJzdGRnYXRlcy5pbmMiOwpxdWJpdFsyXSBxOwpiaXRbMl0gYzsKaCBxWzBdOwpjeCBxWzBdLCBxWzFdOwpjID0gbWVhc3VyZSBxOwo=
+      shots: 1000
+  requirements:
+    qubits: 2
