@@ -7,10 +7,10 @@ reported gate errors, readout error from reported readout error, and T1/T2
 thermal relaxation where present.
 
 Metric vocabulary (namespaced per spec/spec/overview.md §5):
-  gate.1q.error   [q]     one-qubit gate error probability
-  gate.2q.cx.error[a,b]   two-qubit (cx) gate error probability
-  readout.error   [q]     readout assignment error probability
-  t1.us / t2.us   [q]     relaxation/dephasing times, microseconds
+  gate.1q.error       [q]     one-qubit gate error probability
+  gate.2q.<gate>.error[a,b]   two-qubit gate error probability (cx/cz/ecr/...)
+  readout.error       [q]     readout assignment error probability
+  t1.us / t2.us       [q]     relaxation/dephasing times, microseconds
 """
 
 from __future__ import annotations
@@ -22,25 +22,26 @@ from qiskit_aer.noise import (
     thermal_relaxation_error,
 )
 
-from .targets import TargetConfig
+from .targets import Snapshot, TargetConfig
 
 # Fixed gate durations for the relaxation channel (IBM-typical orders).
 GATE_1Q_NS = 35.0
 GATE_2Q_NS = 300.0
 
 ONE_QUBIT_GATES = ("sx", "x")
-TWO_QUBIT_GATES = ("cx",)
 
 
-def build_noise_model(target: TargetConfig) -> NoiseModel | None:
-    """Noise model from the target's current snapshot; None when noise=false."""
+def build_noise_model(target: TargetConfig, snapshot: Snapshot | None = None) -> NoiseModel | None:
+    """Noise model from the given snapshot (default: the target's static
+    snapshot); None when the target is configured noiseless."""
     if not target.noise:
         return None
-    snap = target.snapshot
+    snap = snapshot if snapshot is not None else target.snapshot
+    twoq = target.two_qubit_gate
     model = NoiseModel(basis_gates=list(target.native_gates))
 
     e1 = snap.values("gate.1q.error")
-    e2 = snap.values("gate.2q.cx.error")
+    e2 = snap.values(f"gate.2q.{twoq}.error")
     ero = snap.values("readout.error")
     t1s = snap.values("t1.us")
     t2s = snap.values("t2.us")
@@ -50,7 +51,7 @@ def build_noise_model(target: TargetConfig) -> NoiseModel | None:
         t1 = t1s.get((q,))
         t2 = t2s.get((q,))
         if t1 is not None and t2 is not None:
-            # Physical constraint: T2 ≤ 2·T1.
+            # Physical constraint: T2 <= 2*T1.
             t2 = min(t2, 2 * t1)
         error = None
         if err1 is not None:
@@ -65,7 +66,12 @@ def build_noise_model(target: TargetConfig) -> NoiseModel | None:
         if ro is not None:
             model.add_readout_error(ReadoutError([[1 - ro, ro], [ro, 1 - ro]]), [q])
 
+    seen_edges = set()
     for (a, b), err2 in e2.items():
+        edge = (min(a, b), max(a, b))
+        if edge in seen_edges:  # snapshots may list both directions
+            continue
+        seen_edges.add(edge)
         error = depolarizing_error(err2, 2)
         if (a,) in t1s and (a,) in t2s and (b,) in t1s and (b,) in t2s:
             relax_a = thermal_relaxation_error(
@@ -75,8 +81,7 @@ def build_noise_model(target: TargetConfig) -> NoiseModel | None:
                 t1s[(b,)] * 1000, min(t2s[(b,)], 2 * t1s[(b,)]) * 1000, GATE_2Q_NS
             )
             error = error.compose(relax_a.expand(relax_b))
-        for gate in TWO_QUBIT_GATES:
-            model.add_quantum_error(error, [gate], [a, b])
-            model.add_quantum_error(error, [gate], [b, a])
+        model.add_quantum_error(error, [twoq], [a, b])
+        model.add_quantum_error(error, [twoq], [b, a])
 
     return model

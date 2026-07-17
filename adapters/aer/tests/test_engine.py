@@ -12,6 +12,7 @@ import pytest
 from qiskit import transpile
 
 from tangle_aer import tasks as taskmod
+from tangle_aer.fleet import TargetRuntime
 from tangle_aer.targets import load_config
 from tangle_aer.tasks import TaskEngine
 
@@ -48,7 +49,7 @@ def noisy_cfg():
 
 @pytest.fixture()
 def engine(noisy_cfg):
-    return TaskEngine({noisy_cfg.target_id: noisy_cfg})
+    return TaskEngine({noisy_cfg.target_id: TargetRuntime(noisy_cfg)})
 
 
 @pytest.fixture()
@@ -73,7 +74,7 @@ def tvd(counts: dict[str, int], ideal: dict[str, float], shots: int) -> float:
 
 # T2.physics-0 — noise disabled: TVD from ideal ≤ 0.01 for Bell and GHZ(5).
 def test_physics0_noise_off(ideal_cfg):
-    engine = TaskEngine({ideal_cfg.target_id: ideal_cfg})
+    engine = TaskEngine({ideal_cfg.target_id: TargetRuntime(ideal_cfg)})
     shots = 20_000
 
     done = run_to_terminal(engine, ideal_cfg.target_id, BELL, shots, key="bell")
@@ -214,8 +215,8 @@ def test_watch_states_move_forward(noisy_cfg, engine):
 
 
 def test_determinism_same_key_same_counts(noisy_cfg):
-    e1 = TaskEngine({noisy_cfg.target_id: noisy_cfg})
-    e2 = TaskEngine({noisy_cfg.target_id: noisy_cfg})
+    e1 = TaskEngine({noisy_cfg.target_id: TargetRuntime(noisy_cfg)})
+    e2 = TaskEngine({noisy_cfg.target_id: TargetRuntime(noisy_cfg)})
     d1 = run_to_terminal(e1, noisy_cfg.target_id, BELL, 1000, key="det")
     d2 = run_to_terminal(e2, noisy_cfg.target_id, BELL, 1000, key="det")
     assert d1.result["counts"] == d2.result["counts"]

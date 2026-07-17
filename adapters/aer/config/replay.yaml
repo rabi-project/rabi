@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: Apache-2.0
+# The calibration-replay fleet (mvp-build-plan.md §4): three simulated QPUs
+# whose noise and calibration replay real device data (20-qubit subgraphs of
+# IBM fake backends; see bench/data/snapshots/README.md for provenance).
+# Synthetic drift over the real baselines: seeded degradation walk with a
+# sawtooth reset at simulated calibration events.
+# Clock acceleration comes from TANGLE_SIM_ACCEL (1 wall second = N sim s).
+targets:
+  - target_id: ibm-torino-r
+    display_name: "fake_torino 20q replay"
+    baseline_file: ../../../bench/data/snapshots/fake_torino_20q.json
+    max_shots: 100000
+    seed: 41
+    drift:
+      seed: 1041
+      calibration_period_h: 24
+      step_minutes: 10
+
+  - target_id: ibm-sherbrooke-r
+    display_name: "fake_sherbrooke 20q replay"
+    baseline_file: ../../../bench/data/snapshots/fake_sherbrooke_20q.json
+    max_shots: 100000
+    seed: 42
+    drift:
+      seed: 1042
+      calibration_period_h: 18
+      step_minutes: 10
+
+  - target_id: ibm-brisbane-r
+    display_name: "fake_brisbane 20q replay"
+    baseline_file: ../../../bench/data/snapshots/fake_brisbane_20q.json
+    max_shots: 100000
+    seed: 43
+    drift:
+      seed: 1043
+      calibration_period_h: 30
+      step_minutes: 10

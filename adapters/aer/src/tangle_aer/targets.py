@@ -55,17 +55,23 @@ class TargetConfig:
     display_name: str
     num_qubits: int
     coupling_map: list[tuple[int, int]]
-    snapshot: Snapshot
+    snapshot: Snapshot  # static snapshot, or the replay baseline when drift is set
     noise: bool
     max_shots: int
     seed: int
     # Device technology, exposed via Capabilities.vendor_extensions since the
     # adapter protocol has no first-class field (spec question, D-016).
     technology: str = "superconducting"
+    two_qubit_gate: str = "cx"
+    # Drift config (see replay.DriftConfig) enables calibration replay.
+    drift: dict | None = None
 
     program_formats = ("openqasm3",)
     billing_units = ("shots", "tasks")
-    native_gates = ("cx", "sx", "x", "rz")
+
+    @property
+    def native_gates(self) -> tuple[str, ...]:
+        return ("rz", "sx", "x", self.two_qubit_gate)
 
 
 def load_config(path: str | Path) -> list[TargetConfig]:
@@ -73,6 +79,9 @@ def load_config(path: str | Path) -> list[TargetConfig]:
     raw = yaml.safe_load(path.read_text())
     targets = []
     for t in raw["targets"]:
+        if "baseline_file" in t:
+            targets.append(_load_replay_target(path.parent, t))
+            continue
         snapshot_path = path.parent / t["snapshot_file"]
         targets.append(
             TargetConfig(
@@ -85,6 +94,28 @@ def load_config(path: str | Path) -> list[TargetConfig]:
                 max_shots=int(t.get("max_shots", 100_000)),
                 seed=int(t.get("seed", 0)),
                 technology=str(t.get("technology", "superconducting")),
+                two_qubit_gate=str(t.get("two_qubit_gate", "cx")),
             )
         )
     return targets
+
+
+def _load_replay_target(base: Path, t: dict) -> TargetConfig:
+    """A replay target: device shape and calibration baseline come from the
+    extracted snapshot file (bench/data/snapshots/*.json), drift from config."""
+    baseline_path = (base / t["baseline_file"]).resolve()
+    raw = json.loads(baseline_path.read_text())
+    device = raw["device"]
+    return TargetConfig(
+        target_id=t["target_id"],
+        display_name=t.get("display_name", f"{device['backend']} replay ({device['num_qubits']}q)"),
+        num_qubits=int(device["num_qubits"]),
+        coupling_map=[tuple(e) for e in device["coupling_map"]],
+        snapshot=Snapshot.load(baseline_path),
+        noise=bool(t.get("noise", True)),
+        max_shots=int(t.get("max_shots", 100_000)),
+        seed=int(t.get("seed", 0)),
+        technology=str(device.get("technology", "superconducting")),
+        two_qubit_gate=str(device["two_qubit_gate"]),
+        drift=dict(t["drift"]) if "drift" in t else None,
+    )

@@ -26,9 +26,8 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 
 from qiskit import transpile
-from qiskit_aer import AerSimulator
 
-from .noise import build_noise_model
+from .fleet import TargetRuntime
 from .targets import TargetConfig
 
 # States mirror tangle.adapter.v1alpha1.TaskStatus.State.
@@ -83,8 +82,9 @@ class Task:
 class TaskEngine:
     """Owns every task for one adapter process (all its targets)."""
 
-    def __init__(self, targets: dict[str, TargetConfig]):
-        self._targets = targets
+    def __init__(self, runtimes: dict[str, TargetRuntime]):
+        self._runtimes = runtimes
+        self._targets: dict[str, TargetConfig] = {tid: rt.cfg for tid, rt in runtimes.items()}
         self._lock = threading.Lock()
         self._changed = threading.Condition(self._lock)
         self._tasks: dict[str, Task] = {}
@@ -92,12 +92,8 @@ class TaskEngine:
         # One worker per target: an honest queue with visible depth.
         self._pools = {
             tid: ThreadPoolExecutor(max_workers=1, thread_name_prefix=f"aer-{tid}")
-            for tid in targets
+            for tid in runtimes
         }
-        self._simulators: dict[str, AerSimulator] = {}
-        for tid, cfg in targets.items():
-            noise = build_noise_model(cfg)
-            self._simulators[tid] = AerSimulator(noise_model=noise) if noise else AerSimulator()
 
     # -- submission ---------------------------------------------------------
 
@@ -184,7 +180,12 @@ class TaskEngine:
                         # Best-effort running-cancel honored: nothing executed,
                         # so usage stays empty and state becomes CANCELLED.
                         raise _CancelledDuringRun()
-                simulator = self._simulators[task.target_id]
+                # The snapshot in effect *now*: the replay clock may have
+                # advanced since submission, and the physics must match what
+                # GetDeviceState reports at execution time.
+                runtime = self._runtimes[task.target_id]
+                snapshot, _ = runtime.current_snapshot()
+                simulator = runtime.simulator_for(snapshot)
                 transpiled = transpile(
                     circuit,
                     basis_gates=list(cfg.native_gates),

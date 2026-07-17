@@ -13,6 +13,8 @@ from tangle.adapter.v1alpha1 import adapter_pb2 as pb
 from tangle.adapter.v1alpha1 import adapter_pb2_grpc as pb_grpc
 
 from . import tasks as taskmod
+from .fleet import TargetRuntime
+from .replay import ReplayClock
 from .targets import TargetConfig
 from .tasks import TaskEngine
 
@@ -50,9 +52,10 @@ def _rfc3339_ts(text: str) -> timestamp_pb2.Timestamp:
 
 
 class AdapterService(pb_grpc.AdapterServiceServicer):
-    def __init__(self, targets: list[TargetConfig]):
+    def __init__(self, targets: list[TargetConfig], clock: ReplayClock | None = None):
         self._targets = {t.target_id: t for t in targets}
-        self._engine = TaskEngine(self._targets)
+        self._runtimes = {t.target_id: TargetRuntime(t, clock) for t in targets}
+        self._engine = TaskEngine(self._runtimes)
 
     # -- discovery ----------------------------------------------------------
 
@@ -91,7 +94,8 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
         depth = self._engine.queue_depth(cfg.target_id)
         wait = duration_pb2.Duration()
         wait.FromNanoseconds(int(depth * EST_SECONDS_PER_TASK * 1e9))
-        snap = cfg.snapshot
+        # The same snapshot the noise model consumes (T4.single-source).
+        snap, measured_wall = self._runtimes[cfg.target_id].current_snapshot()
         return pb.DeviceState(
             target=pb.TargetRef(target_id=cfg.target_id),
             status=pb.DeviceState.Status.ONLINE,
@@ -100,7 +104,7 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
             unknown_queue=False,
             calibration=pb.CalibrationSnapshot(
                 snapshot_id=snap.snapshot_id,
-                measured_at=_rfc3339_ts(snap.measured_at),
+                measured_at=_ts(measured_wall),
                 source=snap.source,
                 metrics=[
                     pb.Metric(
