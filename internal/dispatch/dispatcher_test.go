@@ -188,19 +188,28 @@ func TestInfeasibleJobStaysPending(t *testing.T) {
 		ID: "small", Qubits: 3, Formats: []string{"openqasm3"}, SnapshotID: "s"})
 
 	rec := insertJob(t, "10000000-0000-0000-0000-000000000002", "acme", gateModelSpec(50, 100))
-	time.Sleep(1 * time.Second) // several dispatch cycles
-	got, err := testStore.GetJob(t.Context(), rec.JobID)
-	if err != nil {
-		t.Fatal(err)
+
+	// A job inserted between dispatch cycles is picked up by the 5s fallback
+	// tick (the LISTEN window reopens per cycle by design), so poll with a
+	// generous deadline instead of a fixed sleep — while asserting the job
+	// never leaves PENDING.
+	deadline := time.Now().Add(20 * time.Second)
+	var conditions string
+	for time.Now().Before(deadline) {
+		got, err := testStore.GetJob(context.Background(), rec.JobID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got.Phase != job.Pending {
+			t.Fatalf("infeasible job moved to %s", got.Phase)
+		}
+		conditions = fmt.Sprintf("%v", got.Status["conditions"])
+		if containsStr(conditions, "NoFeasibleTarget") && containsStr(conditions, "requires 50 qubits") {
+			return
+		}
+		time.Sleep(200 * time.Millisecond)
 	}
-	if got.Phase != job.Pending {
-		t.Fatalf("infeasible job moved to %s", got.Phase)
-	}
-	// The job carries a condition explaining which constraint failed.
-	conditions := fmt.Sprintf("%v", got.Status["conditions"])
-	if !containsStr(conditions, "NoFeasibleTarget") || !containsStr(conditions, "requires 50 qubits") {
-		t.Fatalf("missing schedulability condition: %s", conditions)
-	}
+	t.Fatalf("missing schedulability condition after 20s: %s", conditions)
 }
 
 func TestAdapterFailureMapsToFailedJob(t *testing.T) {
