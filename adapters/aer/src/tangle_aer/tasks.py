@@ -186,10 +186,15 @@ class TaskEngine:
                 runtime = self._runtimes[task.target_id]
                 snapshot, _ = runtime.current_snapshot()
                 simulator = runtime.simulator_for(snapshot)
+                # initial_layout pins the identity mapping: Qiskit's seeded
+                # layout search is not run-to-run deterministic (wall-clock
+                # budgets inside VF2), and adapter replays must be
+                # bit-identical per idempotency key (D-025).
                 transpiled = transpile(
                     circuit,
                     basis_gates=list(cfg.native_gates),
                     coupling_map=[list(e) for e in cfg.coupling_map] or None,
+                    initial_layout=list(range(circuit.num_qubits)),
                     optimization_level=1,
                     seed_transpiler=cfg.seed,
                 )
