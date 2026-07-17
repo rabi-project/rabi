@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: Apache-2.0
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+      - name: buf lint
+        run: buf lint
+      - name: buf breaking (vs main)
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin main --depth=1
+          buf breaking --against '.git#ref=origin/main'
+      - name: SPDX headers
+        run: ./hack/check-spdx.sh
+      - name: install codegen plugins
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.29.0
+      - name: codegen matches committed
+        run: make gen-check
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.12
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: go test
+        run: go test ./...
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: compose up
+        run: make compose-up
+      - name: smoke
+        run: ./hack/smoke-m0.sh
+      - name: compose logs (on failure)
+        if: failure()
+        run: docker compose -f deploy/compose/docker-compose.yml logs
+      - name: compose down
+        if: always()
+        run: make compose-down
