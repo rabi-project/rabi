@@ -1,0 +1,81 @@
+// SPDX-License-Identifier: MIT
+// Source: MQT Bench v2.2.3 — benchmark 'bv', 16 qubits,
+// level INDEP, random_parameters=False; decomposed to rz/sx/x/cx
+// (optimization_level=1, seed_transpiler=7) by
+// bench/scripts/generate_circuits.py. MQT Bench: Quetschlich,
+// Burgholzer, Wille, Quantum 7, 1062 (2023). MIT license.
+OPENQASM 3.0;
+include "stdgates.inc";
+bit[15] c;
+qubit[16] q;
+rz(pi/2) q[0];
+sx q[0];
+rz(-pi/2) q[0];
+rz(pi/2) q[2];
+sx q[2];
+rz(pi/2) q[2];
+cx q[2], q[0];
+rz(pi/2) q[2];
+sx q[2];
+rz(pi/2) q[2];
+rz(pi/2) q[4];
+sx q[4];
+rz(pi/2) q[4];
+cx q[4], q[0];
+rz(pi/2) q[4];
+sx q[4];
+rz(pi/2) q[4];
+rz(pi/2) q[6];
+sx q[6];
+rz(pi/2) q[6];
+cx q[6], q[0];
+rz(pi/2) q[6];
+sx q[6];
+rz(pi/2) q[6];
+rz(pi/2) q[8];
+sx q[8];
+rz(pi/2) q[8];
+cx q[8], q[0];
+rz(pi/2) q[8];
+sx q[8];
+rz(pi/2) q[8];
+rz(pi/2) q[10];
+sx q[10];
+rz(pi/2) q[10];
+cx q[10], q[0];
+rz(pi/2) q[10];
+sx q[10];
+rz(pi/2) q[10];
+rz(pi/2) q[12];
+sx q[12];
+rz(pi/2) q[12];
+cx q[12], q[0];
+rz(pi/2) q[12];
+sx q[12];
+rz(pi/2) q[12];
+rz(pi/2) q[14];
+sx q[14];
+rz(pi/2) q[14];
+cx q[14], q[0];
+rz(pi/2) q[0];
+sx q[0];
+rz(pi/2) q[0];
+rz(pi/2) q[14];
+sx q[14];
+rz(pi/2) q[14];
+c[0] = measure q[1];
+c[1] = measure q[2];
+c[2] = measure q[3];
+c[3] = measure q[4];
+c[4] = measure q[5];
+c[5] = measure q[6];
+c[6] = measure q[7];
+c[7] = measure q[8];
+c[8] = measure q[9];
+c[9] = measure q[10];
+c[10] = measure q[11];
+c[11] = measure q[12];
+c[12] = measure q[13];
+c[13] = measure q[14];
+c[14] = measure q[15];
+

@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+[project]
+name = "tangle-bench"
+version = "0.1.0"
+description = "Tangle benchmark: workload physics, analysis, report generation"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+    "tangle-adapter-aer",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+gen = [
+    "mqt.bench>=1.1",
+]
+
+[tool.uv.sources]
+tangle-adapter-aer = { path = "../adapters/aer", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+bypass-selection = true
+
+[tool.ruff]
+line-length = 100
