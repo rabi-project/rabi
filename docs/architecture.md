@@ -41,8 +41,28 @@ qctl / SDK / REST ──> internal/api (gRPC tangle.api.v1alpha1 + gateway)
 | M1 job store + API | done |
 | M2 adapter protocol + Aer adapter | done |
 | M3 scheduler skeleton | done |
-| M4 calibration replay | **current** |
-| M5–M8 | pending |
+| M4 calibration replay | done |
+| M5 calib-aware/v0 policy | done |
+| M6 benchmark (Artifact B) | **current** |
+| M7 demo polish (Artifact A) | in progress |
+| M8 operator (stretch) | pending |
+
+## Scheduling policies (M5)
+
+Four policies register behind one interface: `fifo/v0` (arrival order),
+`static-best/v0` (advertised nominal quality — the current-practice
+baseline), `round-robin/v0` (load spreading), and `calib-aware/v0`
+(live-calibration ESP scoring with intent-derived weights). Baseline
+policies filter on capability only — they cannot act on calibration intent,
+which is what the benchmark quantifies.
+
+## The benchmark (M6)
+
+`make bench` runs a deterministic discrete-event simulation over the same
+policy code, executes the physics on Aer with noise from the same replayed
+snapshot series, and generates `bench/out/report.md` with bootstrap CIs,
+effect sizes, and a full methodology/limitations section. Byte-identical
+reruns are CI-enforced.
 
 ## Calibration replay (M4)
 

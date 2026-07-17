@@ -15,10 +15,20 @@ and a calibration-replay simulator fleet that reproduces real device drift
 offline — the same machinery behind our public benchmark of calibration-aware
 placement against today's static device selection.
 
-**Status:** pre-v0.1, building toward the MVP milestones in
-`spec/mvp-build-plan.md`. Current milestone: **M0 — scaffold**.
+![demo](docs/demo.gif)
 
-- [Quickstart](docs/quickstart.md) — clone to running stack in 4 commands
+**Five-minute demo:** `make compose-up && ./deploy/compose/seed.sh` starts a
+control plane managing three simulated QPUs that replay **real IBM device
+calibration** (drifting at 600× wall time) and routes a 20-job mix across
+them by live calibration quality — watch it with `qctl watch --all`.
+**The number:** `make bench` reproduces our benchmark of calibration-aware
+placement against static best-device selection — real calibration baselines,
+seeded synthetic drift, exact simulator ground truth, byte-identical reruns.
+
+**Status:** pre-v0.1, building toward the MVP milestones in
+`spec/mvp-build-plan.md`.
+
+- [Quickstart](docs/quickstart.md) — clone to routed jobs in 5 commands
 - [Architecture](docs/architecture.md)
 - [Decisions log](docs/decisions.md)
 - Spec (vendored, read-only): [`spec/`](spec/)
