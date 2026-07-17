@@ -1,0 +1,23 @@
+{
+  "Policy": "fifo/v0",
+  "Target": "",
+  "Score": 0,
+  "SnapshotID": "",
+  "WaitSeconds": 0,
+  "PredictedESP": 0,
+  "Reason": "policy fifo/v0 found no feasible target among 3; filtered: sim/aer-alpha (requires 6 qubits, target has 5); sim/aer-beta (best two-qubit error 0.012 exceeds floor 0.007); sim/aer-gamma (excluded by backendSelector.denyTargets)",
+  "Rejected": [
+    {
+      "Target": "sim/aer-alpha",
+      "Reason": "requires 6 qubits, target has 5"
+    },
+    {
+      "Target": "sim/aer-beta",
+      "Reason": "best two-qubit error 0.012 exceeds floor 0.007"
+    },
+    {
+      "Target": "sim/aer-gamma",
+      "Reason": "excluded by backendSelector.denyTargets"
+    }
+  ]
+}

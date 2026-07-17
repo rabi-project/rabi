@@ -1,0 +1,19 @@
+{
+  "Policy": "fifo/v0",
+  "Target": "sim/aer-beta",
+  "Score": 0,
+  "SnapshotID": "snap-aer-beta",
+  "WaitSeconds": 2,
+  "PredictedESP": 0,
+  "Reason": "policy fifo/v0 selected sim/aer-beta (score 0.0000) among 1 feasible target(s); filtered: sim/aer-alpha (not in backendSelector.requireTargets); sim/aer-gamma (not in backendSelector.requireTargets)",
+  "Rejected": [
+    {
+      "Target": "sim/aer-alpha",
+      "Reason": "not in backendSelector.requireTargets"
+    },
+    {
+      "Target": "sim/aer-gamma",
+      "Reason": "not in backendSelector.requireTargets"
+    }
+  ]
+}

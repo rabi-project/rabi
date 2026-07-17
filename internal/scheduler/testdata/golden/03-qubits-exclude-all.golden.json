@@ -1,0 +1,23 @@
+{
+  "Policy": "fifo/v0",
+  "Target": "",
+  "Score": 0,
+  "SnapshotID": "",
+  "WaitSeconds": 0,
+  "PredictedESP": 0,
+  "Reason": "policy fifo/v0 found no feasible target among 3; filtered: sim/aer-alpha (requires 60 qubits, target has 5); sim/aer-beta (requires 60 qubits, target has 7); sim/aer-gamma (requires 60 qubits, target has 16)",
+  "Rejected": [
+    {
+      "Target": "sim/aer-alpha",
+      "Reason": "requires 60 qubits, target has 5"
+    },
+    {
+      "Target": "sim/aer-beta",
+      "Reason": "requires 60 qubits, target has 7"
+    },
+    {
+      "Target": "sim/aer-gamma",
+      "Reason": "requires 60 qubits, target has 16"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "Policy": "fifo/v0",
+  "Target": "",
+  "Score": 0,
+  "SnapshotID": "",
+  "WaitSeconds": 0,
+  "PredictedESP": 0,
+  "Reason": "policy fifo/v0 found no feasible target among 3; filtered: sim/aer-alpha (budget limit unit qpu-seconds not metered by target (bills: shots, tasks)); sim/aer-beta (budget limit unit qpu-seconds not metered by target (bills: shots, tasks)); sim/aer-gamma (budget limit unit qpu-seconds not metered by target (bills: shots, tasks))",
+  "Rejected": [
+    {
+      "Target": "sim/aer-alpha",
+      "Reason": "budget limit unit qpu-seconds not metered by target (bills: shots, tasks)"
+    },
+    {
+      "Target": "sim/aer-beta",
+      "Reason": "budget limit unit qpu-seconds not metered by target (bills: shots, tasks)"
+    },
+    {
+      "Target": "sim/aer-gamma",
+      "Reason": "budget limit unit qpu-seconds not metered by target (bills: shots, tasks)"
+    }
+  ]
+}

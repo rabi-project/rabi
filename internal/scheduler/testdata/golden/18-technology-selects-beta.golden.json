@@ -1,0 +1,19 @@
+{
+  "Policy": "fifo/v0",
+  "Target": "sim/aer-beta",
+  "Score": 0,
+  "SnapshotID": "snap-aer-beta",
+  "WaitSeconds": 2,
+  "PredictedESP": 0,
+  "Reason": "policy fifo/v0 selected sim/aer-beta (score 0.0000) among 1 feasible target(s); filtered: sim/aer-alpha (technology superconducting not in required set [trapped-ion]); sim/aer-gamma (technology superconducting not in required set [trapped-ion])",
+  "Rejected": [
+    {
+      "Target": "sim/aer-alpha",
+      "Reason": "technology superconducting not in required set [trapped-ion]"
+    },
+    {
+      "Target": "sim/aer-gamma",
+      "Reason": "technology superconducting not in required set [trapped-ion]"
+    }
+  ]
+}

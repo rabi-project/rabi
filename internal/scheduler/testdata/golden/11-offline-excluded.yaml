@@ -1,0 +1,186 @@
+{
+  "policy": "fifo/v0",
+  "now": "2026-07-17T12:00:00Z",
+  "job": {
+    "id": "job-11-offline-excluded",
+    "tenant": "acme",
+    "doc": {
+      "apiVersion": "tangle.dev/v1alpha1",
+      "kind": "QuantumJob",
+      "metadata": {
+        "name": "j",
+        "tenant": "acme"
+      },
+      "spec": {
+        "workload": {
+          "kind": "gate-model",
+          "gateModel": {
+            "program": {
+              "format": "openqasm3",
+              "inline": "T1BFTlFBU00="
+            },
+            "shots": 1000
+          }
+        },
+        "requirements": {
+          "qubits": 2
+        }
+      }
+    }
+  },
+  "fleet": [
+    {
+      "name": "sim/aer-alpha",
+      "modality": "gate-model",
+      "technology": "superconducting",
+      "qubits": 5,
+      "formats": [
+        "openqasm3"
+      ],
+      "maxShots": 100000,
+      "billing": [
+        "shots",
+        "tasks"
+      ],
+      "online": false,
+      "cloud": false,
+      "snapshotID": "snap-aer-alpha",
+      "measuredAt": "2026-07-17T11:00:00Z",
+      "waitSeconds": 2.0,
+      "metrics": [
+        {
+          "name": "gate.2q.cx.error",
+          "value": 0.008,
+          "qubits": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "gate.2q.cx.error",
+          "value": 0.012,
+          "qubits": [
+            1,
+            2
+          ]
+        },
+        {
+          "name": "readout.error",
+          "value": 0.02,
+          "qubits": [
+            0
+          ]
+        },
+        {
+          "name": "readout.error",
+          "value": 0.027999999999999997,
+          "qubits": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sim/aer-beta",
+      "modality": "gate-model",
+      "technology": "superconducting",
+      "qubits": 7,
+      "formats": [
+        "openqasm3"
+      ],
+      "maxShots": 100000,
+      "billing": [
+        "shots",
+        "tasks"
+      ],
+      "online": true,
+      "cloud": false,
+      "snapshotID": "snap-aer-beta",
+      "measuredAt": "2026-07-17T11:00:00Z",
+      "waitSeconds": 2.0,
+      "metrics": [
+        {
+          "name": "gate.2q.cx.error",
+          "value": 0.012,
+          "qubits": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "gate.2q.cx.error",
+          "value": 0.018000000000000002,
+          "qubits": [
+            1,
+            2
+          ]
+        },
+        {
+          "name": "readout.error",
+          "value": 0.03,
+          "qubits": [
+            0
+          ]
+        },
+        {
+          "name": "readout.error",
+          "value": 0.041999999999999996,
+          "qubits": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sim/aer-gamma",
+      "modality": "gate-model",
+      "technology": "superconducting",
+      "qubits": 16,
+      "formats": [
+        "openqasm3"
+      ],
+      "maxShots": 100000,
+      "billing": [
+        "shots",
+        "tasks"
+      ],
+      "online": true,
+      "cloud": false,
+      "snapshotID": "snap-aer-gamma",
+      "measuredAt": "2026-07-17T11:00:00Z",
+      "waitSeconds": 2.0,
+      "metrics": [
+        {
+          "name": "gate.2q.cx.error",
+          "value": 0.006,
+          "qubits": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "gate.2q.cx.error",
+          "value": 0.009000000000000001,
+          "qubits": [
+            1,
+            2
+          ]
+        },
+        {
+          "name": "readout.error",
+          "value": 0.015,
+          "qubits": [
+            0
+          ]
+        },
+        {
+          "name": "readout.error",
+          "value": 0.020999999999999998,
+          "qubits": [
+            1
+          ]
+        }
+      ]
+    }
+  ]
+}

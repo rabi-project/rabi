@@ -1,0 +1,10 @@
+{
+  "Policy": "fifo/v0",
+  "Target": "sim/aer-alpha",
+  "Score": 0,
+  "SnapshotID": "snap-aer-alpha",
+  "WaitSeconds": 2,
+  "PredictedESP": 0,
+  "Reason": "policy fifo/v0 selected sim/aer-alpha (score 0.0000) among 3 feasible target(s)",
+  "Rejected": null
+}

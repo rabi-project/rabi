@@ -1,0 +1,15 @@
+{
+  "Policy": "fifo/v0",
+  "Target": "sim/aer-beta",
+  "Score": 0,
+  "SnapshotID": "snap-aer-beta",
+  "WaitSeconds": 2,
+  "PredictedESP": 0,
+  "Reason": "policy fifo/v0 selected sim/aer-beta (score 0.0000) among 1 feasible target(s); filtered: sim/aer-alpha (requires 150000 shots, target caps at 100000)",
+  "Rejected": [
+    {
+      "Target": "sim/aer-alpha",
+      "Reason": "requires 150000 shots, target caps at 100000"
+    }
+  ]
+}

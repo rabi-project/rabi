@@ -1,0 +1,10 @@
+{
+  "Policy": "fifo/v0",
+  "Target": "",
+  "Score": 0,
+  "SnapshotID": "",
+  "WaitSeconds": 0,
+  "PredictedESP": 0,
+  "Reason": "policy fifo/v0 found no feasible target among 0",
+  "Rejected": null
+}

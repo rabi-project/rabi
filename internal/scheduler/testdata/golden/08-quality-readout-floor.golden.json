@@ -1,0 +1,19 @@
+{
+  "Policy": "fifo/v0",
+  "Target": "sim/aer-gamma",
+  "Score": 0,
+  "SnapshotID": "snap-aer-gamma",
+  "WaitSeconds": 2,
+  "PredictedESP": 0,
+  "Reason": "policy fifo/v0 selected sim/aer-gamma (score 0.0000) among 1 feasible target(s); filtered: sim/aer-alpha (best readout error 0.02 exceeds floor 0.018); sim/aer-beta (best readout error 0.03 exceeds floor 0.018)",
+  "Rejected": [
+    {
+      "Target": "sim/aer-alpha",
+      "Reason": "best readout error 0.02 exceeds floor 0.018"
+    },
+    {
+      "Target": "sim/aer-beta",
+      "Reason": "best readout error 0.03 exceeds floor 0.018"
+    }
+  ]
+}

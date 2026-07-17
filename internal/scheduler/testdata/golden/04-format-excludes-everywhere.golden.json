@@ -1,0 +1,23 @@
+{
+  "Policy": "fifo/v0",
+  "Target": "",
+  "Score": 0,
+  "SnapshotID": "",
+  "WaitSeconds": 0,
+  "PredictedESP": 0,
+  "Reason": "policy fifo/v0 found no feasible target among 3; filtered: sim/aer-alpha (program format qir not supported (offers: openqasm3)); sim/aer-beta (program format qir not supported (offers: openqasm3)); sim/aer-gamma (program format qir not supported (offers: openqasm3))",
+  "Rejected": [
+    {
+      "Target": "sim/aer-alpha",
+      "Reason": "program format qir not supported (offers: openqasm3)"
+    },
+    {
+      "Target": "sim/aer-beta",
+      "Reason": "program format qir not supported (offers: openqasm3)"
+    },
+    {
+      "Target": "sim/aer-gamma",
+      "Reason": "program format qir not supported (offers: openqasm3)"
+    }
+  ]
+}

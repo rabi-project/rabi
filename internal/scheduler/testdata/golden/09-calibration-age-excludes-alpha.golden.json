@@ -1,0 +1,15 @@
+{
+  "Policy": "fifo/v0",
+  "Target": "sim/aer-beta",
+  "Score": 0,
+  "SnapshotID": "snap-aer-beta",
+  "WaitSeconds": 2,
+  "PredictedESP": 0,
+  "Reason": "policy fifo/v0 selected sim/aer-beta (score 0.0000) among 2 feasible target(s); filtered: sim/aer-alpha (calibration age 10h0m0s exceeds calibrationMaxAge 6h0m0s)",
+  "Rejected": [
+    {
+      "Target": "sim/aer-alpha",
+      "Reason": "calibration age 10h0m0s exceeds calibrationMaxAge 6h0m0s"
+    }
+  ]
+}

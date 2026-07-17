@@ -1,0 +1,23 @@
+{
+  "Policy": "fifo/v0",
+  "Target": "",
+  "Score": 0,
+  "SnapshotID": "",
+  "WaitSeconds": 0,
+  "PredictedESP": 0,
+  "Reason": "policy fifo/v0 found no feasible target among 3; filtered: sim/aer-alpha (best two-qubit error 0.008 exceeds floor 0.001); sim/aer-beta (best two-qubit error 0.012 exceeds floor 0.001); sim/aer-gamma (best two-qubit error 0.006 exceeds floor 0.001)",
+  "Rejected": [
+    {
+      "Target": "sim/aer-alpha",
+      "Reason": "best two-qubit error 0.008 exceeds floor 0.001"
+    },
+    {
+      "Target": "sim/aer-beta",
+      "Reason": "best two-qubit error 0.012 exceeds floor 0.001"
+    },
+    {
+      "Target": "sim/aer-gamma",
+      "Reason": "best two-qubit error 0.006 exceeds floor 0.001"
+    }
+  ]
+}
