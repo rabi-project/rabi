@@ -1,0 +1,10 @@
+bin/
+dist/
+*.test
+coverage.out
+__pycache__/
+*.pyc
+.venv/
+.ruff_cache/
+.pytest_cache/
+.DS_Store
