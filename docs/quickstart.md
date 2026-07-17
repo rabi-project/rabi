@@ -50,6 +50,22 @@ IBM_TOKEN=<token> RABI_ADAPTERS_EXTRA=",ibm=adapter-ibm:50052" \
 The IBM target then appears in `qctl targets` (vendor `ibm`, `cloud=true`);
 jobs reach it only when `backendSelector.allowCloudBurst` lists it.
 
+## Kubernetes: quantum jobs as custom resources
+
+With the compose stack up and [kind](https://kind.sigs.k8s.io/) installed:
+
+```sh
+kind create cluster
+kubectl apply -f operator/config/crd.yaml
+(cd operator && go build -o ../bin/rabi-operator . )
+RABI_API_KEY=dev-key RABI_API_ADDR=localhost:9090 bin/rabi-operator &
+kubectl apply -f operator/examples/bell.yaml
+kubectl -n demo get quantumjobs -w      # bell ... SUCCEEDED  sim/...
+```
+
+The CR's namespace is the tenant; deleting a CR cancels its job. The full
+kind-based e2e is `./hack/e2e-operator.sh`.
+
 ## The benchmark (Artifact B)
 
 ```sh

@@ -272,6 +272,23 @@ duplicates stay visible in usage), and `GetDeviceState` snapshot ids hash
 the live vendor metrics. Compose keeps it dormant behind the `ibm` profile +
 `TANGLE_ADAPTERS_EXTRA`, so the default stack provably never dials it.
 
+## D-030 · 2026-07-18 · Operator: lean controller-runtime, namespace-as-tenant
+
+M8 is a hand-rolled controller-runtime operator in a separate Go module
+(`operator/`, `replace`-linked) — kubebuilder's CLI scaffold and
+controller-gen would be the only consumers of their own boilerplate, so the
+CRD manifest and deepcopy methods are written by hand (the types are tiny).
+The CRD reuses the spec document's own GVK (`tangle.dev/v1alpha1
+QuantumJob`) — the document was already shaped like a Kubernetes resource —
+with the CR spec passed verbatim and validated by rabi's admission (the CRD
+schema is deliberately permissive; one validator, not two). Tenant = the CR
+namespace, overridable via the `tangle.dev/tenant` annotation. A finalizer
+cancels the control-plane job on CR deletion. Crash-safety between
+SubmitJob and the status write uses adoption: before submitting, the
+reconciler searches the tenant's jobs for one whose document name matches
+the CR (SubmitJob has no idempotency key in the v0.1 API — worth an
+upstream RFC). Status resyncs every 2s while non-terminal (T8's <5s lag).
+
 ## D-028 · 2026-07-17 · Project renamed to Rabi; spec-derived identifiers unchanged
 
 The project is now **Rabi** (after the Rabi oscillation), hosted at

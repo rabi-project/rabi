@@ -45,7 +45,17 @@ qctl / SDK / REST ──> internal/api (gRPC tangle.api.v1alpha1 + gateway)
 | M5 calib-aware/v0 policy | done |
 | M6 benchmark (Artifact B) | done |
 | M7 demo polish (Artifact A) | done |
-| M8 operator (stretch) | pending |
+| M8 operator (stretch) | done |
+
+## Kubernetes operator (M8)
+
+`operator/` is a controller-runtime operator: `kubectl apply` a
+`QuantumJob` custom resource (same group/version/kind as the wire document)
+and the controller submits it to rabi, mirrors phase/target/placement-reason
+into the CR status every 2s, and cancels the control-plane job when the CR
+is deleted (finalizer). The namespace is the tenant; the
+`tangle.dev/tenant` annotation overrides. See `operator/examples/bell.yaml`
+and `hack/e2e-operator.sh` (kind-based e2e).
 
 ## Scheduling policies (M5)
 
