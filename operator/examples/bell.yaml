@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+# kubectl apply -f examples/bell.yaml
+# kubectl -n demo get quantumjobs        →  bell  SUCCEEDED  sim/...
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo
+---
+apiVersion: tangle.dev/v1alpha1
+kind: QuantumJob
+metadata:
+  name: bell
+  namespace: demo   # namespace is the tenant (annotation tangle.dev/tenant overrides)
+  labels:
+    experiment: k8s-demo
+spec:
+  workload:
+    kind: gate-model
+    gateModel:
+      program:
+        format: openqasm3
+        inline: T1BFTlFBU00gMy4wOwppbmNsdWRlICJzdGRnYXRlcy5pbmMiOwpxdWJpdFsyXSBxOwpiaXRbMl0gYzsKaCBxWzBdOwpjeCBxWzBdLCBxWzFdOwpjID0gbWVhc3VyZSBxOwo=
+      shots: 1000
+  requirements:
+    qubits: 2

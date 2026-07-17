@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: Apache-2.0
+# QuantumJob CRD — group/version/kind identical to the spec document's
+# apiVersion, so a wire document and a cluster resource are the same shape.
+# Spec validation is delegated to rabi's admission (JSON Schema + semantic
+# rules); the CRD schema stays permissive by design (D-030).
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: quantumjobs.tangle.dev
+spec:
+  group: tangle.dev
+  names:
+    kind: QuantumJob
+    listKind: QuantumJobList
+    plural: quantumjobs
+    singular: quantumjob
+    shortNames: [qj]
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Target
+          type: string
+          jsonPath: .status.boundTarget
+        - name: Job
+          type: string
+          jsonPath: .status.jobId
+          priority: 1
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          required: [spec]
+          properties:
+            spec:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+              description: >-
+                The QuantumJob document's spec, passed verbatim to the rabi
+                control plane and validated there against the Tangle JSON
+                Schema (workload, requirements, deadline, budget,
+                backendSelector, ...).
+            status:
+              type: object
+              properties:
+                jobId: { type: string }
+                phase: { type: string }
+                boundTarget: { type: string }
+                placementReason: { type: string }
+                message: { type: string }
+                syncedAt: { type: string, format: date-time }
