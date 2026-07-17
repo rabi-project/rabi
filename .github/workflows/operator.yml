@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+# T8: operator unit tests + kind-based e2e (CRD lifecycle against the real
+# compose stack). Runs on operator changes and on main.
+name: operator
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "operator/**"
+      - "hack/e2e-operator.sh"
+      - ".github/workflows/operator.yml"
+  pull_request:
+    paths:
+      - "operator/**"
+      - "hack/e2e-operator.sh"
+      - ".github/workflows/operator.yml"
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: operator unit tests
+        run: cd operator && go test ./... && go vet ./...
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - uses: helm/kind-action@v1
+        with:
+          install_only: true
+      - name: kind e2e — apply CR, watch SUCCEEDED, delete cancels
+        run: ./hack/e2e-operator.sh
