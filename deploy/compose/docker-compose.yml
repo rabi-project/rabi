@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Artifact A: the five-minute demo stack. M0 boots tangled + Postgres only;
+# replay adapters join in M2–M7.
+name: tangle
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: tangle
+      POSTGRES_PASSWORD: tangle
+      POSTGRES_DB: tangle
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tangle -d tangle"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  tangled:
+    build:
+      context: ../..
+    environment:
+      TANGLE_API_KEY: ${TANGLE_API_KEY:-dev-key}
+      TANGLE_DB_URL: postgres://tangle:tangle@postgres:5432/tangle?sslmode=disable
+      TANGLE_GRPC_ADDR: ":9090"
+      TANGLE_HTTP_ADDR: ":8080"
+    ports:
+      - "9090:9090"
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:
