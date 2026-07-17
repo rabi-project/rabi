@@ -22,11 +22,21 @@ type fifoPolicy struct{ standardFilter }
 func (fifoPolicy) Name() string                                   { return "fifo/v0" }
 func (fifoPolicy) Score(*JobView, *TargetView, time.Time) float64 { return 0 }
 
+// capabilityFilter is what the baseline policies see: hard capability and
+// selector constraints, but no calibration-derived dimensions — current
+// practice cannot act on calibration intent (D-024). The benchmark measures
+// exactly that gap.
+type capabilityFilter struct{}
+
+func (capabilityFilter) Filter(j *JobView, t *TargetView, now time.Time) string {
+	return FilterCapabilityOnly(j, t, now)
+}
+
 // staticBestPolicy — the benchmark baseline modeling documented current
 // practice (Ravi et al.): always the nominally best device, judged by its
 // advertised baseline two-qubit error, blind to current calibration and
 // queue depth.
-type staticBestPolicy struct{ standardFilter }
+type staticBestPolicy struct{ capabilityFilter }
 
 func (staticBestPolicy) Name() string { return "static-best/v0" }
 
@@ -42,7 +52,7 @@ func (staticBestPolicy) Score(_ *JobView, t *TargetView, _ time.Time) float64 {
 // blind to everything. Rotation state advances once per job (ScoreSet),
 // which is deterministic for a deterministic job order.
 type roundRobinPolicy struct {
-	standardFilter
+	capabilityFilter
 	counter atomic.Uint64
 }
 
@@ -125,8 +135,8 @@ func profileFor(j *JobView) CircuitProfile {
 }
 
 func init() {
-	Register(fifoPolicy{})
-	Register(staticBestPolicy{})
-	Register(&roundRobinPolicy{})
-	Register(calibAwarePolicy{})
+	Register("fifo/v0", func() SchedulingPolicy { return fifoPolicy{} })
+	Register("static-best/v0", func() SchedulingPolicy { return staticBestPolicy{} })
+	Register("round-robin/v0", func() SchedulingPolicy { return &roundRobinPolicy{} })
+	Register("calib-aware/v0", func() SchedulingPolicy { return calibAwarePolicy{} })
 }

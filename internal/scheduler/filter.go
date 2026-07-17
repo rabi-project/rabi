@@ -21,6 +21,18 @@ type Rejection struct {
 // rejection reason. Every dimension has a fixed reason format — golden tests
 // and T3.filter assert these strings.
 func FilterTarget(j *JobView, t *TargetView, now time.Time) string {
+	return filterTarget(j, t, now, true)
+}
+
+// FilterCapabilityOnly checks the hard capability/selector dimensions but
+// skips calibration-derived ones (quality floors, calibrationMaxAge). The
+// baseline policies use it: current practice cannot act on calibration
+// intent, which is precisely what the benchmark measures (D-024).
+func FilterCapabilityOnly(j *JobView, t *TargetView, now time.Time) string {
+	return filterTarget(j, t, now, false)
+}
+
+func filterTarget(j *JobView, t *TargetView, now time.Time, quality bool) string {
 	if !t.Online {
 		return "target not online"
 	}
@@ -46,6 +58,35 @@ func FilterTarget(j *JobView, t *TargetView, now time.Time) string {
 	}
 
 	// Quality floors are evaluated against the current calibration snapshot.
+	if quality {
+		if reason := qualityFloors(j, t, now); reason != "" {
+			return reason
+		}
+	}
+
+	// backendSelector narrows the feasible set; it can never widen it.
+	if slices.Contains(j.DenyTargets, t.Name) {
+		return "excluded by backendSelector.denyTargets"
+	}
+	if len(j.RequireTargets) > 0 && !slices.Contains(j.RequireTargets, t.Name) {
+		return "not in backendSelector.requireTargets"
+	}
+	if t.Cloud && !slices.Contains(j.AllowCloudBurst, t.Name) {
+		return "cloud target not in backendSelector.allowCloudBurst"
+	}
+
+	// Budget-unit sanity: a native-unit cap the target cannot meter is not
+	// enforceable there.
+	for _, unit := range j.BudgetUnits {
+		if !slices.Contains(t.Billing, unit) {
+			return fmt.Sprintf("budget limit unit %s not metered by target (bills: %s)",
+				unit, strings.Join(t.Billing, ", "))
+		}
+	}
+	return ""
+}
+
+func qualityFloors(j *JobView, t *TargetView, now time.Time) string {
 	if j.TwoQubitErrorMax > 0 {
 		v, ok := t.MinTwoQubitError()
 		if !ok {
@@ -69,26 +110,6 @@ func FilterTarget(j *JobView, t *TargetView, now time.Time) string {
 		if t.MeasuredAt.IsZero() || age > j.CalibrationMaxAge {
 			return fmt.Sprintf("calibration age %s exceeds calibrationMaxAge %s",
 				age.Truncate(time.Minute), j.CalibrationMaxAge)
-		}
-	}
-
-	// backendSelector narrows the feasible set; it can never widen it.
-	if slices.Contains(j.DenyTargets, t.Name) {
-		return "excluded by backendSelector.denyTargets"
-	}
-	if len(j.RequireTargets) > 0 && !slices.Contains(j.RequireTargets, t.Name) {
-		return "not in backendSelector.requireTargets"
-	}
-	if t.Cloud && !slices.Contains(j.AllowCloudBurst, t.Name) {
-		return "cloud target not in backendSelector.allowCloudBurst"
-	}
-
-	// Budget-unit sanity: a native-unit cap the target cannot meter is not
-	// enforceable there.
-	for _, unit := range j.BudgetUnits {
-		if !slices.Contains(t.Billing, unit) {
-			return fmt.Sprintf("budget limit unit %s not metered by target (bills: %s)",
-				unit, strings.Join(t.Billing, ", "))
 		}
 	}
 	return ""

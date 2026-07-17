@@ -17,29 +17,47 @@ type SchedulingPolicy interface {
 	Score(j *JobView, t *TargetView, now time.Time) float64
 }
 
-// registry of policies by name.
-var policies = map[string]SchedulingPolicy{}
+// factories build policies by name; the process-wide singletons used by
+// tangled are cached separately (stateful policies like round-robin need
+// fresh instances in benchmark runs).
+var (
+	factories  = map[string]func() SchedulingPolicy{}
+	singletons = map[string]SchedulingPolicy{}
+)
 
-// Register adds a policy; duplicate names are a programming error.
-func Register(p SchedulingPolicy) {
-	if _, dup := policies[p.Name()]; dup {
-		panic(fmt.Sprintf("scheduler: duplicate policy %q", p.Name()))
+// Register adds a policy factory; duplicate names are a programming error.
+func Register(name string, factory func() SchedulingPolicy) {
+	if _, dup := factories[name]; dup {
+		panic(fmt.Sprintf("scheduler: duplicate policy %q", name))
 	}
-	policies[p.Name()] = p
+	factories[name] = factory
 }
 
-// Lookup returns a registered policy.
-func Lookup(name string) (SchedulingPolicy, error) {
-	p, ok := policies[name]
+// NewPolicy returns a fresh instance of the named policy.
+func NewPolicy(name string) (SchedulingPolicy, error) {
+	f, ok := factories[name]
 	if !ok {
 		var known []string
-		for n := range policies {
+		for n := range factories {
 			known = append(known, n)
 		}
 		sort.Strings(known)
 		return nil, fmt.Errorf("scheduler: unknown policy %q (registered: %s)",
 			name, strings.Join(known, ", "))
 	}
+	return f(), nil
+}
+
+// Lookup returns the process-wide singleton of the named policy.
+func Lookup(name string) (SchedulingPolicy, error) {
+	if p, ok := singletons[name]; ok {
+		return p, nil
+	}
+	p, err := NewPolicy(name)
+	if err != nil {
+		return nil, err
+	}
+	singletons[name] = p
 	return p, nil
 }
 
