@@ -33,6 +33,20 @@ services:
       timeout: 5s
       retries: 30
 
+  # IBM Quantum adapter — feature-flagged OFF by default. Enable with:
+  #   IBM_TOKEN=... TANGLE_ADAPTERS_EXTRA=",ibm=adapter-ibm:50052" \
+  #     docker compose --profile ibm up -d
+  # Open-plan queue times can be hours; see docs/quickstart.md.
+  adapter-ibm:
+    profiles: ["ibm"]
+    build:
+      context: ../..
+      dockerfile: adapters/ibm/Dockerfile
+    command: ["--listen", "[::]:50052"]
+    environment:
+      IBM_TOKEN: ${IBM_TOKEN:-}
+      IBM_BACKENDS: ${IBM_BACKENDS:-}
+
   tangled:
     build:
       context: ../..
@@ -41,7 +55,7 @@ services:
       TANGLE_DB_URL: postgres://tangle:tangle@postgres:5432/tangle?sslmode=disable
       TANGLE_GRPC_ADDR: ":9090"
       TANGLE_HTTP_ADDR: ":8080"
-      TANGLE_ADAPTERS: "sim=adapter-aer:50051"
+      TANGLE_ADAPTERS: "sim=adapter-aer:50051${TANGLE_ADAPTERS_EXTRA:-}"
       TANGLE_POLICY: ${TANGLE_POLICY:-calib-aware/v0}
     ports:
       - "9090:9090"
