@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# REST gateway codegen for the client-facing API only. Invoked as:
+#   buf generate --template buf.gen.gateway.yaml --path spec/proto/tangle/api
+# HTTP bindings come from api-config.yaml, not proto annotations, so the
+# vendored spec stays byte-identical to tangle-spec.
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: tangle.dev/tangle/gen/go
+plugins:
+  - local: protoc-gen-grpc-gateway
+    out: gen/go
+    opt:
+      - paths=source_relative
+      - grpc_api_configuration=api-config.yaml

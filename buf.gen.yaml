@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Code generation from the vendored spec (spec/proto). The spec is law and is
+# never edited here; managed mode rewrites only go_package so generated code
+# lives inside this module (see docs/decisions.md D-002).
+# The REST gateway is generated separately (buf.gen.gateway.yaml) because its
+# HTTP rules apply only to the client-facing API protos.
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: tangle.dev/tangle/gen/go
+plugins:
+  - local: protoc-gen-go
+    out: gen/go
+    opt: paths=source_relative
+  - local: protoc-gen-go-grpc
+    out: gen/go
+    opt: paths=source_relative

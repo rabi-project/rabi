@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# gRPC API Configuration for the REST gateway (grpc-gateway conventions per
+# spec/proto/tangle/api/v1alpha1/jobs.proto header). Kept outside the spec so
+# the vendored protos stay byte-identical to tangle-spec.
+type: google.api.Service
+config_version: 3
+http:
+  rules:
+    - selector: tangle.api.v1alpha1.JobsService.SubmitJob
+      post: /v1alpha1/jobs
+      body: "*"
+    - selector: tangle.api.v1alpha1.JobsService.GetJob
+      get: /v1alpha1/jobs/{job_id}
+    - selector: tangle.api.v1alpha1.JobsService.ListJobs
+      get: /v1alpha1/jobs
+    - selector: tangle.api.v1alpha1.JobsService.WatchJob
+      get: /v1alpha1/jobs/{job_id}/watch
+    - selector: tangle.api.v1alpha1.JobsService.CancelJob
+      post: /v1alpha1/jobs/{job_id}/cancel
+    - selector: tangle.api.v1alpha1.TargetsService.ListTargets
+      get: /v1alpha1/targets
+    # {name=*/**} (not {name=**}): the mux tries later-registered patterns
+    # first, and a bare ** would swallow GET /v1alpha1/targets with name="".
+    # Target names are fleet-scoped "<site>/<target_id>", always ≥ 1 segment.
+    - selector: tangle.api.v1alpha1.TargetsService.GetTarget
+      get: /v1alpha1/targets/{name=*/**}
+    - selector: tangle.api.v1alpha1.UsageService.GetTenantUsage
+      get: /v1alpha1/usage
