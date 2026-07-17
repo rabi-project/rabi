@@ -261,7 +261,7 @@ func watchAll(tenant string, interval time.Duration) error {
 		_ = w.Flush()
 
 		fmt.Print("\033[H\033[2J") // clear screen
-		fmt.Printf("tangle fleet — %s\n\n%s\n", phaseSummary(counts), b.String())
+		fmt.Printf("rabi fleet — %s\n\n%s\n", phaseSummary(counts), b.String())
 		select {
 		case <-ctx.Done():
 			return nil

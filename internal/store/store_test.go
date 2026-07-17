@@ -25,9 +25,9 @@ var (
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 	pg, err := tcpostgres.Run(ctx, "postgres:15-alpine",
-		tcpostgres.WithDatabase("tangle"),
-		tcpostgres.WithUsername("tangle"),
-		tcpostgres.WithPassword("tangle"),
+		tcpostgres.WithDatabase("rabi"),
+		tcpostgres.WithUsername("rabi"),
+		tcpostgres.WithPassword("rabi"),
 		tcpostgres.BasicWaitStrategies(),
 	)
 	if err != nil {
