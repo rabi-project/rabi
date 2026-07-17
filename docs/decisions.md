@@ -271,3 +271,14 @@ the idempotency key→job map is in-memory (an adapter restart may resubmit —
 duplicates stay visible in usage), and `GetDeviceState` snapshot ids hash
 the live vendor metrics. Compose keeps it dormant behind the `ibm` profile +
 `TANGLE_ADAPTERS_EXTRA`, so the default stack provably never dials it.
+
+## D-028 · 2026-07-17 · Project renamed to Rabi; spec-derived identifiers unchanged
+
+The project is now **Rabi** (after the Rabi oscillation), hosted at
+github.com/mAengo31/Rabi. Branding (README, docs, demo) is renamed; every
+spec-derived identifier stays as published because the spec is law and never
+edited here: proto packages `tangle.adapter.v1alpha1`/`tangle.api.v1alpha1`,
+the `tangled` binary name (a hard constraint in mvp-build-plan.md §2), the
+`tangle.dev/tangle` Go module path (baked into committed generated code),
+`qctl`, env vars `TANGLE_*`, and the schema `$id`. Renaming wire contracts
+or the binary would be a normative spec change requiring an upstream RFC.

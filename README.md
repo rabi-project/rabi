@@ -1,10 +1,11 @@
-# Tangle
+# Rabi
 
-[![ci](https://github.com/tangle-dev/tangle/actions/workflows/ci.yml/badge.svg)](https://github.com/tangle-dev/tangle/actions/workflows/ci.yml)
+[![ci](https://github.com/mAengo31/Rabi/actions/workflows/ci.yml/badge.svg)](https://github.com/mAengo31/Rabi/actions/workflows/ci.yml)
 
-Tangle is an open-source control plane for quantum compute fleets. You declare
+Rabi (named for the Rabi oscillation) is an open-source control plane for
+quantum compute fleets, implementing the Tangle specification. You declare
 a `QuantumJob` — what to run, how good the result must be, by when, and at what
-cost — and Tangle places it across a heterogeneous fleet of QPUs, simulators,
+cost — and Rabi places it across a heterogeneous fleet of QPUs, simulators,
 and vendor cloud queues, using each device's *current calibration* to decide
 where the job will actually succeed. Every placement is recorded with a
 human-readable reason, so scheduling is arguable instead of magic.
@@ -24,6 +25,11 @@ them by live calibration quality — watch it with `qctl watch --all`.
 **The number:** `make bench` reproduces our benchmark of calibration-aware
 placement against static best-device selection — real calibration baselines,
 seeded synthetic drift, exact simulator ground truth, byte-identical reruns.
+
+**Naming:** the project is **Rabi**; the wire contracts it implements come
+from the vendored [Tangle spec](spec/) (`tangle.adapter.v1alpha1`,
+`tangle.api.v1alpha1`, the `tangled` binary) — the spec is law, so
+spec-derived identifiers keep their names (docs/decisions.md D-028).
 
 **Status:** pre-v0.1, building toward the MVP milestones in
 `spec/mvp-build-plan.md`.

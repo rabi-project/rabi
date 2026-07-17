@@ -1,4 +1,4 @@
-# Contributing to Tangle
+# Contributing to Rabi
 
 - **License:** Apache-2.0. Every source file carries an
   `SPDX-License-Identifier: Apache-2.0` header (CI-enforced).

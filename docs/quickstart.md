@@ -4,8 +4,8 @@ Clone to a routed-jobs view in 5 commands. Requires Docker with Compose and
 Go ≥1.22.
 
 ```sh
-git clone https://github.com/tangle-dev/tangle.git
-cd tangle
+git clone https://github.com/mAengo31/Rabi.git
+cd Rabi
 make compose-up               # 3 simulated QPUs replaying real IBM calibration + control plane
 ./deploy/compose/seed.sh      # submit the 20-job demo mix
 go run ./cmd/qctl watch --all # live fleet view (Ctrl-C to exit)

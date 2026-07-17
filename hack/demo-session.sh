@@ -12,7 +12,7 @@ export TANGLE_API_KEY="${TANGLE_API_KEY:-dev-key}"
 say() { printf '\n\033[1;36m$ %s\033[0m\n' "$*"; sleep 1; }
 run() { say "$*"; "$@"; sleep 2; }
 
-printf '\033[1mTangle — an open-source control plane for quantum compute fleets\033[0m\n'
+printf '\033[1mRabi — an open-source control plane for quantum compute fleets\033[0m\n'
 printf 'Three simulated QPUs replaying real IBM calibration, drifting at 600x wall time.\n'
 sleep 2
 
@@ -51,5 +51,5 @@ sleep 3
 
 run bin/qctl usage --tenant demo
 
-printf '\n\033[1mEvery placement recorded and arguable. github.com/tangle-dev/tangle\033[0m\n'
+printf '\n\033[1mEvery placement recorded and arguable. github.com/mAengo31/Rabi\033[0m\n'
 sleep 2
