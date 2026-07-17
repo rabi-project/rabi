@@ -47,7 +47,7 @@ func FilterTarget(j *JobView, t *TargetView, now time.Time) string {
 
 	// Quality floors are evaluated against the current calibration snapshot.
 	if j.TwoQubitErrorMax > 0 {
-		v, ok := t.MinMetric("gate.2q.cx.error")
+		v, ok := t.MinTwoQubitError()
 		if !ok {
 			return "no two-qubit error metric in calibration snapshot"
 		}

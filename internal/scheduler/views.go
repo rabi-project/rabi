@@ -9,6 +9,7 @@ package scheduler
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -53,6 +54,22 @@ func (t *TargetView) MinMetric(name string) (float64, bool) {
 	best, found := 0.0, false
 	for _, m := range t.Metrics {
 		if m.Name != name {
+			continue
+		}
+		if !found || m.Value < best {
+			best, found = m.Value, true
+		}
+	}
+	return best, found
+}
+
+// MinTwoQubitError is the device-best two-qubit gate error regardless of the
+// native gate: it matches any "gate.2q.<gate>.error" metric (cx, cz, ecr, …)
+// per D-020.
+func (t *TargetView) MinTwoQubitError() (float64, bool) {
+	best, found := 0.0, false
+	for _, m := range t.Metrics {
+		if !strings.HasPrefix(m.Name, "gate.2q.") || !strings.HasSuffix(m.Name, ".error") {
 			continue
 		}
 		if !found || m.Value < best {

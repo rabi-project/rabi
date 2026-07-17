@@ -85,6 +85,10 @@ func TestFilterDimensions(t *testing.T) {
 		{"two-qubit floor met (best edge)", func(j *JobView) { j.TwoQubitErrorMax = 0.01 }, nil, ""},
 		{"two-qubit floor without metric", func(j *JobView) { j.TwoQubitErrorMax = 0.01 },
 			func(tv *TargetView) { tv.Metrics = nil }, "no two-qubit error metric"},
+		{"two-qubit floor matches any native gate", func(j *JobView) { j.TwoQubitErrorMax = 0.01 },
+			func(tv *TargetView) {
+				tv.Metrics = []Metric{{Name: "gate.2q.ecr.error", Value: 0.005, Qubits: []uint32{0, 1}}}
+			}, ""},
 
 		{"readout floor excluded", func(j *JobView) { j.ReadoutErrorMax = 0.01 }, nil,
 			"best readout error 0.02 exceeds floor 0.01"},
