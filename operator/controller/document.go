@@ -9,8 +9,8 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	apiv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1"
-	tanglev1alpha1 "github.com/mAengo31/rabi/operator/api/v1alpha1"
+	apiv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/api/v1alpha1"
+	tanglev1alpha1 "github.com/rabi-project/rabi/operator/api/v1alpha1"
 )
 
 // tenantFor maps a CR to its control-plane tenant: the tangle.dev/tenant

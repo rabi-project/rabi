@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mAengo31/rabi/internal/scheduler"
+	"github.com/rabi-project/rabi/internal/scheduler"
 )
 
 // Workload shape (documented in the report's methodology):

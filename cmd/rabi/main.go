@@ -11,11 +11,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/mAengo31/rabi/internal/api"
-	"github.com/mAengo31/rabi/internal/dispatch"
-	"github.com/mAengo31/rabi/internal/job"
-	"github.com/mAengo31/rabi/internal/registry"
-	"github.com/mAengo31/rabi/internal/store"
+	"github.com/rabi-project/rabi/internal/api"
+	"github.com/rabi-project/rabi/internal/dispatch"
+	"github.com/rabi-project/rabi/internal/job"
+	"github.com/rabi-project/rabi/internal/registry"
+	"github.com/rabi-project/rabi/internal/store"
 )
 
 func envOr(key, fallback string) string {

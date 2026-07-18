@@ -10,8 +10,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	apiv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1"
-	tanglev1alpha1 "github.com/mAengo31/rabi/operator/api/v1alpha1"
+	apiv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/api/v1alpha1"
+	tanglev1alpha1 "github.com/rabi-project/rabi/operator/api/v1alpha1"
 )
 
 func cr(name, namespace string, annotations, labels map[string]string, spec string) *tanglev1alpha1.QuantumJob {

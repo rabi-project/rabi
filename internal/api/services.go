@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	apiv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1"
-	"github.com/mAengo31/rabi/internal/store"
+	apiv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/api/v1alpha1"
+	"github.com/rabi-project/rabi/internal/store"
 )
 
 // TargetLister is the registry surface the API needs.

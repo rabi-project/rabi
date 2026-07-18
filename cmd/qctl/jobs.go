@@ -18,7 +18,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"sigs.k8s.io/yaml"
 
-	apiv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1"
+	apiv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/api/v1alpha1"
 )
 
 func printProto(m proto.Message) error {

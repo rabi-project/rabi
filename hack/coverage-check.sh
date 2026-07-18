@@ -50,10 +50,10 @@ check() { # name pct floor
 }
 
 check "internal (total)" "$(pkg_pct "")" 75
-check "internal/job (fsm + validation)" "$(pkg_pct github.com/mAengo31/rabi/internal/job)" 90
-check "internal/store" "$(pkg_pct github.com/mAengo31/rabi/internal/store)" 85
+check "internal/job (fsm + validation)" "$(pkg_pct github.com/rabi-project/rabi/internal/job)" 90
+check "internal/store" "$(pkg_pct github.com/rabi-project/rabi/internal/store)" 85
 if [ -d internal/scheduler ]; then
-  check "internal/scheduler" "$(pkg_pct github.com/mAengo31/rabi/internal/scheduler)" 90
+  check "internal/scheduler" "$(pkg_pct github.com/rabi-project/rabi/internal/scheduler)" 90
 fi
 
 exit $fail

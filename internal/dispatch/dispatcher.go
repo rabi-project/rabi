@@ -24,11 +24,11 @@ import (
 
 	"github.com/google/uuid"
 
-	adapterv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/adapter/v1alpha1"
-	"github.com/mAengo31/rabi/internal/job"
-	"github.com/mAengo31/rabi/internal/registry"
-	"github.com/mAengo31/rabi/internal/scheduler"
-	"github.com/mAengo31/rabi/internal/store"
+	adapterv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/adapter/v1alpha1"
+	"github.com/rabi-project/rabi/internal/job"
+	"github.com/rabi-project/rabi/internal/registry"
+	"github.com/rabi-project/rabi/internal/scheduler"
+	"github.com/rabi-project/rabi/internal/store"
 )
 
 const (

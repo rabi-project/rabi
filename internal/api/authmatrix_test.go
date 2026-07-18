@@ -18,7 +18,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 
-	apiv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1"
+	apiv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/api/v1alpha1"
 )
 
 func TestAuthMatrix(t *testing.T) {

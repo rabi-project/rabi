@@ -18,9 +18,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	apiv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1"
-	"github.com/mAengo31/rabi/internal/job"
-	"github.com/mAengo31/rabi/internal/store"
+	apiv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/api/v1alpha1"
+	"github.com/rabi-project/rabi/internal/job"
+	"github.com/rabi-project/rabi/internal/store"
 )
 
 // Config carries everything the API server needs.

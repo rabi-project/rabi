@@ -16,9 +16,9 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	apiv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1"
-	"github.com/mAengo31/rabi/internal/job"
-	"github.com/mAengo31/rabi/internal/store"
+	apiv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/api/v1alpha1"
+	"github.com/rabi-project/rabi/internal/job"
+	"github.com/rabi-project/rabi/internal/store"
 )
 
 const (

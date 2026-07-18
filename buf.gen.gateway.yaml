@@ -9,7 +9,7 @@ managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: github.com/mAengo31/rabi/gen/go
+      value: github.com/rabi-project/rabi/gen/go
 plugins:
   - local: protoc-gen-grpc-gateway
     out: gen/go

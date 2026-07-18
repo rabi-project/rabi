@@ -1909,8 +1909,8 @@ const file_tangle_adapter_v1alpha1_adapter_proto_rawDesc = "" +
 	"\n" +
 	"CancelTask\x12 .tangle.adapter.v1alpha1.TaskRef\x1a+.tangle.adapter.v1alpha1.CancelTaskResponse\x12b\n" +
 	"\vOpenSession\x12+.tangle.adapter.v1alpha1.OpenSessionRequest\x1a&.tangle.adapter.v1alpha1.SessionHandle\x12e\n" +
-	"\fCloseSession\x12&.tangle.adapter.v1alpha1.SessionHandle\x1a-.tangle.adapter.v1alpha1.CloseSessionResponseB\xf2\x01\n" +
-	"\x1bcom.tangle.adapter.v1alpha1B\fAdapterProtoP\x01ZGgithub.com/mAengo31/rabi/gen/go/tangle/adapter/v1alpha1;adapterv1alpha1\xa2\x02\x03TAX\xaa\x02\x17Tangle.Adapter.V1alpha1\xca\x02\x17Tangle\\Adapter\\V1alpha1\xe2\x02#Tangle\\Adapter\\V1alpha1\\GPBMetadata\xea\x02\x19Tangle::Adapter::V1alpha1b\x06proto3"
+	"\fCloseSession\x12&.tangle.adapter.v1alpha1.SessionHandle\x1a-.tangle.adapter.v1alpha1.CloseSessionResponseB\xf6\x01\n" +
+	"\x1bcom.tangle.adapter.v1alpha1B\fAdapterProtoP\x01ZKgithub.com/rabi-project/rabi/gen/go/tangle/adapter/v1alpha1;adapterv1alpha1\xa2\x02\x03TAX\xaa\x02\x17Tangle.Adapter.V1alpha1\xca\x02\x17Tangle\\Adapter\\V1alpha1\xe2\x02#Tangle\\Adapter\\V1alpha1\\GPBMetadata\xea\x02\x19Tangle::Adapter::V1alpha1b\x06proto3"
 
 var (
 	file_tangle_adapter_v1alpha1_adapter_proto_rawDescOnce sync.Once

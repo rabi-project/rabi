@@ -1,6 +1,6 @@
 # Rabi
 
-[![ci](https://github.com/mAengo31/Rabi/actions/workflows/ci.yml/badge.svg)](https://github.com/mAengo31/Rabi/actions/workflows/ci.yml)
+[![ci](https://github.com/rabi-project/rabi/actions/workflows/ci.yml/badge.svg)](https://github.com/rabi-project/rabi/actions/workflows/ci.yml)
 
 Rabi (named for the Rabi oscillation) is an open-source control plane for
 quantum compute fleets, implementing the Tangle specification. You declare

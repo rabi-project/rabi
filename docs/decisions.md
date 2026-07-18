@@ -292,13 +292,13 @@ upstream RFC). Status resyncs every 2s while non-terminal (T8's <5s lag).
 ## D-028 · 2026-07-17 · Project renamed to Rabi; spec-derived identifiers unchanged
 
 The project is now **Rabi** (after the Rabi oscillation), hosted at
-github.com/mAengo31/Rabi. Initially only branding was renamed; D-029
+github.com/rabi-project/rabi. Initially only branding was renamed; D-029
 extended the rename to all project-owned identifiers on explicit request.
 
 ## D-029 · 2026-07-17 · Full rename of project-owned identifiers — plan overrides noted
 
 On Edward's request, every identifier this project owns now says rabi:
-Go module `github.com/mAengo31/rabi` (resolvable; generated code
+Go module `github.com/rabi-project/rabi` (resolvable; generated code
 regenerated), control-plane binary `tangled` → `rabi` (overriding the
 mvp-build-plan §2 naming — the plan author asked for the rename), env vars
 `TANGLE_*` → `RABI_*`, compose project/service/db `tangle` → `rabi`, Python

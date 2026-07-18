@@ -11,7 +11,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/mAengo31/rabi/internal/job"
+	"github.com/rabi-project/rabi/internal/job"
 )
 
 // jobsChannel is the LISTEN/NOTIFY channel that wakes the dispatcher when a

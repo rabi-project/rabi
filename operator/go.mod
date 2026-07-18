@@ -1,9 +1,9 @@
-module github.com/mAengo31/rabi/operator
+module github.com/rabi-project/rabi/operator
 
 go 1.26.5
 
 require (
-	github.com/mAengo31/rabi v0.1.0
+	github.com/rabi-project/rabi v0.1.0
 	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.11
 	k8s.io/apimachinery v0.34.0
@@ -72,4 +72,4 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace github.com/mAengo31/rabi => ../
+replace github.com/rabi-project/rabi => ../

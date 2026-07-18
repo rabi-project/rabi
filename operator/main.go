@@ -14,8 +14,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	tanglev1alpha1 "github.com/mAengo31/rabi/operator/api/v1alpha1"
-	"github.com/mAengo31/rabi/operator/controller"
+	tanglev1alpha1 "github.com/rabi-project/rabi/operator/api/v1alpha1"
+	"github.com/rabi-project/rabi/operator/controller"
 )
 
 func envOr(key, fallback string) string {

@@ -51,5 +51,5 @@ sleep 3
 
 run bin/qctl usage --tenant demo
 
-printf '\n\033[1mEvery placement recorded and arguable. github.com/mAengo31/Rabi\033[0m\n'
+printf '\n\033[1mEvery placement recorded and arguable. github.com/rabi-project/rabi\033[0m\n'
 sleep 2

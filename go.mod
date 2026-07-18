@@ -1,4 +1,4 @@
-module github.com/mAengo31/rabi
+module github.com/rabi-project/rabi
 
 go 1.26.5
 

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mAengo31/rabi/internal/job"
-	"github.com/mAengo31/rabi/internal/store"
+	"github.com/rabi-project/rabi/internal/job"
+	"github.com/rabi-project/rabi/internal/store"
 )
 
 func TestBindJobLifecycle(t *testing.T) {

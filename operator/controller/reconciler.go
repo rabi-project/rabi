@@ -24,8 +24,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	apiv1alpha1 "github.com/mAengo31/rabi/gen/go/tangle/api/v1alpha1"
-	tanglev1alpha1 "github.com/mAengo31/rabi/operator/api/v1alpha1"
+	apiv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/api/v1alpha1"
+	tanglev1alpha1 "github.com/rabi-project/rabi/operator/api/v1alpha1"
 )
 
 // resyncEvery keeps status lag well under the 5s bar (T8.e2e).
