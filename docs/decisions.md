@@ -342,3 +342,42 @@ private repo on a free org plan; either make the repo public (consistent
 with the open-source mission — his call, outward-facing) or upgrade the
 plan; (b) org-level IBM_TOKEN secret needs `admin:org` scope
 (`gh auth refresh -h github.com -s admin:org`) or the org settings UI.
+
+## D-033 · 2026-07-19 · P1-M1 — SPEC QUESTION: admin surface is implementation-defined
+
+Token lifecycle (create/rotate/revoke) and WhoAmI live in a new
+`rabi.admin.v1alpha1.AdminService` under `proto/` — outside the vendored
+spec, gRPC-only (no REST mapping; qctl is the client). The spec's client
+API covers jobs/targets/usage and its own header calls tenancy
+administration "RFC territory", which v0.2 did not claim. **SPEC
+QUESTION:** should token/tenancy administration be standardized in a v0.3
+RFC so qctl works across implementations? Until then this surface is
+explicitly implementation-defined and excluded from conformance. Matrix
+rationale: reads = viewer+, job mutations = member+, token inventory =
+operator+, token lifecycle = admin.
+
+## D-034 · 2026-07-19 · P1-M1 — auth model boring choices
+
+- Bootstrap token (`RABI_BOOTSTRAP_TOKEN`): an admin principal through the
+  same interceptor path (no side door); for compose/dev and first-admin
+  setup, documented to be rotated away. Replaces the deleted RABI_API_KEY.
+- API tokens are `rabi_<id>_<secret>`; at rest only SHA-256(full token) —
+  unsalted is fine because the secret is 32 random bytes, and determinism
+  gives O(1) lookup by the cleartext id half.
+- OIDC: group→role map defaults to rabi-admin/-operator/-member/-viewer,
+  overridable via `RABI_OIDC_GROUP_ROLES`; unmatched users get
+  `RABI_OIDC_DEFAULT_ROLE` (default viewer = read-only).
+- Scoping rule: roles gate verbs, a token's project gates nouns. OIDC
+  users stay project-unscoped until M2 memberships exist.
+- Client env var is `RABI_TOKEN` (any bearer: API token, JWT, bootstrap).
+
+## D-035 · 2026-07-19 · P1-M1 — audit + e2e mechanics
+
+Audit inserts are best-effort: a deny stands even if the audit write
+fails (logged loudly) — an audit outage must not take down the API.
+`audit_log`/`api_tokens` are append-only by code discipline until the M3
+DB-grant pattern covers them. The dex e2e drives the real
+authorization-code flow against the mockCallback connector (headless —
+it approves without a form and its identity carries groups=[authors]);
+mockPassword was rejected because its identity has no groups, which
+would leave role mapping untested.
