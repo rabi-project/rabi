@@ -10,6 +10,7 @@ import "testing"
 var legal = map[[2]Phase]bool{
 	{Pending, Scheduled}:   true,
 	{Pending, Cancelled}:   true,
+	{Pending, Failed}:      true, // RFC-0003 onConflict=reject at the horizon
 	{Scheduled, Submitted}: true,
 	{Scheduled, Pending}:   true,
 	{Scheduled, Failed}:    true,

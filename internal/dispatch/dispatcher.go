@@ -130,6 +130,9 @@ func (d *Dispatcher) dispatchOne(ctx context.Context, rec *store.JobRecord) {
 
 	decision := scheduler.Schedule(d.policy, jobView, d.fleetViews(), d.now())
 	if decision.Target == "" {
+		if d.resolveConflict(ctx, rec, jobView, decision) {
+			return
+		}
 		// Infeasible now: the job stays PENDING with a condition explaining
 		// which constraint failed for how many targets (spec §quantumjob).
 		changed, err := d.store.SetJobCondition(ctx, rec.JobID, map[string]any{

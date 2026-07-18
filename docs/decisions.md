@@ -445,3 +445,27 @@ would leave role mapping untested.
   cluster-level, and without it a restored instance refuses to boot (SET
   ROLE fails) — the drill exercises exactly this. Restore order: postgres
   → roles → database → rabi (never boot rabi against an empty DB first).
+
+## D-039 · 2026-07-19 · P1-M5 — spec v0.2 semantics implemented
+
+- RFC-0002: floor evaluation aggregates (best default | median | worst) in
+  the scheduler; deterministic lower-middle median; rejection strings name
+  aggregate + winning value + floor (normative format). Golden suite
+  unchanged — default path byte-identical.
+- RFC-0001: dispatcher reads TargetInfo.technology /
+  Capabilities.cloud_queue first-class; vendor_extensions fallback stays
+  until spec v0.3 (then delete + reserve keys). Both in-tree adapters set
+  the fields; conformance cat-1 fails empty technology, warns on
+  non-registry strings (spec §2a registry mirrored in conformance).
+- RFC-0003: onConflict resolved in the dispatcher when floors are the
+  binding constraint (relaxed pass feasible + violations non-empty).
+  Decision horizon = deadline − predicted wait, zero execution estimate —
+  implementation-defined but recorded in the audit (horizonModel), per the
+  RFC's unresolved-question resolution. prefer-deadline binds at the
+  horizon with floorsRelaxed + per-floor limit/actual/aggregate;
+  reject FAILs with CAPABILITY_MISMATCH retriable=true and condition
+  UnsatisfiableBeforeDeadline; prefer-quality keeps v0 behavior and adds
+  condition DeadlineExceededWaitingForQuality once the deadline passes.
+- FSM: PENDING→FAILED edge added — required by RFC-0003 reject. SPEC
+  QUESTION: spec/spec/overview.md §3's diagram still lacks this edge;
+  needs a v0.3 editorial pass.

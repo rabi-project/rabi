@@ -26,9 +26,11 @@ var Phases = []Phase{Pending, Scheduled, Submitted, Running, Succeeded, Failed, 
 // (spec/spec/overview.md §3). SCHEDULED/SUBMITTED may return to PENDING
 // (policy-controlled reschedule before RUNNING); FAILED is reachable from
 // SCHEDULED (bind-time payload/adapter failures), SUBMITTED, and RUNNING
-// (see docs/decisions.md D-010); terminal states are immutable.
+// (see docs/decisions.md D-010), and from PENDING via RFC-0003
+// onConflict=reject at the decision horizon (D-039); terminal states are
+// immutable.
 var transitions = map[Phase]map[Phase]bool{
-	Pending:   {Scheduled: true, Cancelled: true},
+	Pending:   {Scheduled: true, Failed: true, Cancelled: true},
 	Scheduled: {Submitted: true, Pending: true, Failed: true, Cancelled: true},
 	Submitted: {Running: true, Pending: true, Failed: true, Cancelled: true},
 	Running:   {Succeeded: true, Failed: true, Cancelled: true},
