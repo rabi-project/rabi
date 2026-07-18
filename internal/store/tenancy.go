@@ -135,6 +135,30 @@ func (s *Store) SetProjectWeight(ctx context.Context, tenant string, weight int)
 	return nil
 }
 
+// ProjectWeights returns fair-share weights for the given tenants; tenants
+// without a project row default to weight 1.
+func (s *Store) ProjectWeights(ctx context.Context, tenants []string) (map[string]int, error) {
+	rows, err := s.Pool.Query(ctx, `
+		SELECT tenant, weight FROM projects WHERE tenant = ANY($1)`, tenants)
+	if err != nil {
+		return nil, fmt.Errorf("project weights: %w", err)
+	}
+	defer rows.Close()
+	out := make(map[string]int, len(tenants))
+	for _, t := range tenants {
+		out[t] = 1
+	}
+	for rows.Next() {
+		var tenant string
+		var weight int
+		if err := rows.Scan(&tenant, &weight); err != nil {
+			return nil, fmt.Errorf("scan weight: %w", err)
+		}
+		out[tenant] = weight
+	}
+	return out, rows.Err()
+}
+
 // SetQuota sets (or with limit < 0 removes) a per-unit quota.
 func (s *Store) SetQuota(ctx context.Context, tenant, unit string, limit float64) error {
 	if limit < 0 {

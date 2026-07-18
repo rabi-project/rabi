@@ -111,7 +111,7 @@ func (d *Dispatcher) cycle(ctx context.Context) {
 		d.logger.Error("listing pending jobs", "error", err)
 		return
 	}
-	for _, rec := range pending {
+	for _, rec := range d.orderPending(ctx, pending) {
 		d.dispatchOne(ctx, rec)
 	}
 }
