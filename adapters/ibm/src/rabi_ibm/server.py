@@ -27,21 +27,34 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--listen", default="[::]:50052")
+    parser.add_argument(
+        "--fake",
+        action="store_true",
+        help="serve qiskit-ibm-runtime fake backends (tokenless; for "
+        "conformance certification in CI — reports carry a fake-mode note)",
+    )
     args = parser.parse_args()
 
-    token = os.environ.get("IBM_TOKEN")
-    if not token:
-        raise SystemExit("IBM_TOKEN is required (this adapter is feature-flagged off without it)")
+    if args.fake:
+        from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
-    from qiskit_ibm_runtime import QiskitRuntimeService
-
-    service = QiskitRuntimeService(channel="ibm_quantum_platform", token=token)
-    names = [n for n in os.environ.get("IBM_BACKENDS", "").split(",") if n]
-    if names:
-        backends = {n: service.backend(n) for n in names}
+        backends = {"fake-manila": FakeManilaV2()}
     else:
-        least_busy = service.least_busy(operational=True, simulator=False)
-        backends = {least_busy.name: least_busy}
+        token = os.environ.get("IBM_TOKEN")
+        if not token:
+            raise SystemExit(
+                "IBM_TOKEN is required (this adapter is feature-flagged off without it)"
+            )
+
+        from qiskit_ibm_runtime import QiskitRuntimeService
+
+        service = QiskitRuntimeService(channel="ibm_quantum_platform", token=token)
+        names = [n for n in os.environ.get("IBM_BACKENDS", "").split(",") if n]
+        if names:
+            backends = {n: service.backend(n) for n in names}
+        else:
+            least_busy = service.least_busy(operational=True, simulator=False)
+            backends = {least_busy.name: least_busy}
     log.info("serving IBM backends: %s (open-plan queue times may be hours)",
              list(backends))
 

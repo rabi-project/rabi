@@ -489,3 +489,27 @@ would leave role mapping untested.
   fail the TASK with categorized SESSION_LOST (a precheck_error hook in
   the engine), never a bare gRPC abort. Conformance cat 8 covers declared
   adapters: open→submit→close→SESSION_LOST + unknown-session loss.
+
+## D-041 · 2026-07-19 · P1-M7 — conformance harness extraction
+
+- The suite's T abstraction gets a Recorder implementation, so the same
+  category code runs under `go test` and the new `rabi-conformance run
+  --target <addr>` CLI. Reports: canonical JSON (the signed document,
+  ed25519 — --key PKCS#8 PEM, else ephemeral key + emitted pubkey),
+  markdown rendering, harness+spec versions, capability summary, and
+  free-form notes that never soften failures.
+- Self-test: adaptertest.Fake became honest-by-default (format/shots/
+  session checks, provenance methodology) plus broken-fixture knobs
+  (IgnoreMaxShots → cat1, BrokenSessions → cat8); the self-test asserts
+  each knob fails exactly its category and nothing else.
+- Extraction immediately caught three real conformance bugs in our IBM
+  adapter (fake-backend mode): parse failures surfaced as VENDOR_ERROR
+  (openqasm3 raises QASM3ParsingError, not QASM3ImporterError — _parse
+  now maps all parse failures to INVALID_PROGRAM), max_shots declared but
+  unenforced, and cancellation unexercisable because tasks ran instantly
+  and concurrently. Fix for the last: a per-backend single-worker queue
+  (honest emulation of IBM's per-backend queueing) + rabi.sim/delay-ms
+  honored as a hold-in-QUEUED simulator hint.
+- IBM certification in CI runs `--fake` (FakeManilaV2, tokenless,
+  deterministic) with an explicit report note; live certification remains
+  nightly/token-gated. ci.yml publishes both reports as artifacts.

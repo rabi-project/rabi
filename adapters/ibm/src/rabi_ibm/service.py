@@ -80,6 +80,8 @@ class _Task:
         self.shots = shots
         self.runtime_job = None
         self.failed: pb.ErrorDetail | None = None  # pre-submission failure
+        self.cancel_requested = False
+        self.cancelled_before_run = False
         self.updated_at = time.time()
 
 
@@ -87,6 +89,9 @@ class IBMAdapterService(pb_grpc.AdapterServiceServicer):
     """Serves one or more IBM backends. `backends` maps target_id → BackendV2."""
 
     def __init__(self, backends: dict[str, object]):
+        from concurrent.futures import ThreadPoolExecutor as _TPE
+
+        self._queues = {name: _TPE(max_workers=1) for name in backends}
         self._backends = backends
         self._lock = threading.Lock()
         self._tasks: dict[str, _Task] = {}
@@ -101,8 +106,11 @@ class IBMAdapterService(pb_grpc.AdapterServiceServicer):
         return backend
 
     def _info(self, target_id: str) -> pb.TargetInfo:
+        # RFC-0001 first-class technology field; the vendor_extensions copy
+        # stays until spec v0.3 (deprecation window).
         return pb.TargetInfo(target_id=target_id, display_name=target_id,
-                             vendor=VENDOR, modality=MODALITY, simulator=False)
+                             vendor=VENDOR, modality=MODALITY, simulator=False,
+                             technology="superconducting")
 
     def ListTargets(self, request, context):
         return pb.ListTargetsResponse(targets=[self._info(t) for t in self._backends])
@@ -132,7 +140,6 @@ class IBMAdapterService(pb_grpc.AdapterServiceServicer):
             coupling_class="loose",
             cloud_queue=True,  # RFC-0001: tasks traverse IBM's shared queue
             vendor_extensions={"technology": "superconducting", "cloud": "true"},
-            technology="superconducting",
         )
 
     def GetDeviceState(self, request, context):
@@ -186,36 +193,75 @@ class IBMAdapterService(pb_grpc.AdapterServiceServicer):
             self._tasks[task.task_id] = task
             self._by_key[key] = task.task_id
 
-        try:
-            if request.payload.format not in PROGRAM_FORMATS:
-                raise _Categorized(pb.ErrorDetail.Category.CAPABILITY_MISMATCH,
-                                   f"format {request.payload.format!r} unsupported")
-            circuit = self._parse(request.payload.inline)
-            if circuit.num_qubits > backend.target.num_qubits:
-                raise _Categorized(pb.ErrorDetail.Category.CAPABILITY_MISMATCH,
-                                   f"needs {circuit.num_qubits} qubits, backend has "
-                                   f"{backend.target.num_qubits}")
-            transpiled = transpile(circuit, backend=backend, optimization_level=1,
-                                   seed_transpiler=7)
-            sampler = SamplerV2(mode=backend)
-            job = sampler.run([transpiled], shots=request.shots or 1024)
-            with self._lock:
-                task.runtime_job = job
-                task.updated_at = time.time()
-        except _Categorized as exc:
-            with self._lock:
-                task.failed = exc.detail
-                task.updated_at = time.time()
-        except Exception as exc:  # noqa: BLE001 — map to taxonomy, never bare
-            category = pb.ErrorDetail.Category.INVALID_PROGRAM \
-                if isinstance(exc, (ValueError, qasm3.QASM3ImporterError)) \
-                else pb.ErrorDetail.Category.VENDOR_ERROR
-            with self._lock:
-                task.failed = pb.ErrorDetail(
-                    category=category, retriable=False,
-                    vendor_code=type(exc).__name__, vendor_message=str(exc)[:500])
-                task.updated_at = time.time()
+        payload_format = request.payload.format
+        payload_inline = request.payload.inline
+        shots = request.shots
+        max_shots = getattr(backend, "max_shots", 100_000) or 100_000
 
+        def start() -> None:
+            with self._lock:
+                if task.cancel_requested:
+                    task.cancelled_before_run = True
+                    task.updated_at = time.time()
+                    return
+            try:
+                if payload_format not in PROGRAM_FORMATS:
+                    raise _Categorized(pb.ErrorDetail.Category.CAPABILITY_MISMATCH,
+                                       f"format {payload_format!r} unsupported")
+                if shots and shots > max_shots:
+                    raise _Categorized(pb.ErrorDetail.Category.CAPABILITY_MISMATCH,
+                                       f"{shots} shots exceeds declared max_shots {max_shots}")
+                circuit = self._parse(payload_inline)
+                if circuit.num_qubits > backend.target.num_qubits:
+                    raise _Categorized(pb.ErrorDetail.Category.CAPABILITY_MISMATCH,
+                                       f"needs {circuit.num_qubits} qubits, backend has "
+                                       f"{backend.target.num_qubits}")
+                transpiled = transpile(circuit, backend=backend, optimization_level=1,
+                                       seed_transpiler=7)
+                sampler = SamplerV2(mode=backend)
+                job = sampler.run([transpiled], shots=shots or 1024)
+                with self._lock:
+                    task.runtime_job = job
+                    task.updated_at = time.time()
+                    if task.cancel_requested:
+                        try:
+                            job.cancel()
+                        except Exception:  # noqa: BLE001 — best-effort by contract
+                            pass
+            except _Categorized as exc:
+                with self._lock:
+                    task.failed = exc.detail
+                    task.updated_at = time.time()
+            except Exception as exc:  # noqa: BLE001 — map to taxonomy, never bare
+                with self._lock:
+                    task.failed = pb.ErrorDetail(
+                        category=pb.ErrorDetail.Category.VENDOR_ERROR, retriable=True,
+                        vendor_code=type(exc).__name__, vendor_message=str(exc)[:500])
+                    task.updated_at = time.time()
+
+        # rabi.sim/delay-ms holds the task in QUEUED before execution so
+        # cancellation is exercisable deterministically (simulator hint;
+        # meaningless against the real queue, where waits are real).
+        try:
+            delay_ms = int(request.parameters.get("rabi.sim/delay-ms", "0"))
+        except ValueError:
+            delay_ms = 0
+        def run_task() -> None:
+            if delay_ms > 0:
+                deadline = time.time() + delay_ms / 1000.0
+                while time.time() < deadline:
+                    with self._lock:
+                        if task.cancel_requested:
+                            task.cancelled_before_run = True
+                            task.updated_at = time.time()
+                            return
+                    time.sleep(0.02)
+            start()
+
+        # One worker per backend: tasks execute in submission order, like
+        # the real per-backend queue — which is also what makes a QUEUED
+        # task cancellable before it ever runs.
+        self._queues[request.target.target_id].submit(run_task)
         return pb.TaskHandle(target=request.target, task_id=task.task_id)
 
     @staticmethod
@@ -231,7 +277,11 @@ class IBMAdapterService(pb_grpc.AdapterServiceServicer):
             except (binascii.Error, UnicodeDecodeError) as exc:
                 raise _Categorized(pb.ErrorDetail.Category.INVALID_PROGRAM,
                                    f"payload is neither UTF-8 QASM nor base64: {exc}") from exc
-        return qasm3.loads(text)
+        try:
+            return qasm3.loads(text)
+        except Exception as exc:  # noqa: BLE001 — parse failures are the program's fault
+            raise _Categorized(pb.ErrorDetail.Category.INVALID_PROGRAM,
+                               f"{type(exc).__name__}: {exc}"[:500]) from exc
 
     def _status(self, task: _Task) -> pb.TaskStatus:
         ref = pb.TaskRef(target=pb.TargetRef(target_id=task.backend_name),
@@ -241,6 +291,9 @@ class IBMAdapterService(pb_grpc.AdapterServiceServicer):
         if task.failed is not None:
             status.state = pb.TaskStatus.State.FAILED
             status.error.CopyFrom(task.failed)
+            return status
+        if task.cancelled_before_run:
+            status.state = pb.TaskStatus.State.CANCELLED
             return status
         job = task.runtime_job
         if job is None:
@@ -317,10 +370,16 @@ class IBMAdapterService(pb_grpc.AdapterServiceServicer):
 
     def CancelTask(self, request, context):
         task = self._get(request, context)
-        if task.failed is not None or task.runtime_job is None:
-            return pb.CancelTaskResponse(accepted=False)
+        with self._lock:
+            if task.failed is not None or task.cancelled_before_run:
+                return pb.CancelTaskResponse(accepted=False)
+            # Flag first: a delayed start observes this and never runs.
+            task.cancel_requested = True
+            job = task.runtime_job
+        if job is None:
+            return pb.CancelTaskResponse(accepted=True)
         try:
-            task.runtime_job.cancel()
+            job.cancel()
             return pb.CancelTaskResponse(accepted=True)
         except Exception:  # noqa: BLE001 — cancel is best-effort by contract
             return pb.CancelTaskResponse(accepted=False)

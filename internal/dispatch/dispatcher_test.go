@@ -48,6 +48,11 @@ func TestMain(m *testing.M) {
 }
 
 func newFleet(t *testing.T, specs ...*adaptertest.TargetSpec) (*registry.Registry, *dispatch.Dispatcher) {
+	reg, d, _ := newFleetWithFake(t, specs...)
+	return reg, d
+}
+
+func newFleetWithFake(t *testing.T, specs ...*adaptertest.TargetSpec) (*registry.Registry, *dispatch.Dispatcher, *adaptertest.Fake) {
 	t.Helper()
 	fake := adaptertest.New(specs...)
 	addr := fake.Serve(t)
@@ -63,7 +68,7 @@ func newFleet(t *testing.T, specs ...*adaptertest.TargetSpec) (*registry.Registr
 		t.Fatal(err)
 	}
 	go d.Run(ctx)
-	return reg, d
+	return reg, d, fake
 }
 
 func insertJob(t *testing.T, id, tenant string, spec map[string]any) *store.JobRecord {

@@ -105,3 +105,19 @@ jobs:
       - name: compose down
         if: always()
         run: make compose-down
+
+  conformance-reports:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: astral-sh/setup-uv@v5
+      - name: certify in-tree adapters (aer replay + ibm fake)
+        run: ./hack/conformance-report.sh bin/conformance
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conformance-reports
+          path: bin/conformance/
+          if-no-files-found: error

@@ -13,12 +13,13 @@ import (
 	"github.com/rabi-project/rabi/internal/store"
 )
 
-func sessionFleet(t *testing.T) {
+func sessionFleet(t *testing.T) *adaptertest.Fake {
 	t.Helper()
-	newFleet(t,
+	_, _, fake := newFleetWithFake(t,
 		&adaptertest.TargetSpec{ID: "aaa", Qubits: 5, Formats: []string{"openqasm3"}, MaxShots: 100000},
 		&adaptertest.TargetSpec{ID: "zzz", Qubits: 5, Formats: []string{"openqasm3"}, MaxShots: 100000},
 	)
+	return fake
 }
 
 func sessionSpec(join string, maxDuration string) map[string]any {
@@ -44,7 +45,7 @@ func boundTarget(rec *store.JobRecord) string {
 // 100% — even though the fifo policy would otherwise prefer the
 // lexicographically first target.
 func TestSessionOpenerAndAffinity(t *testing.T) {
-	sessionFleet(t)
+	fake := sessionFleet(t)
 	ctx := t.Context()
 
 	opener := insertJob(t, "00000000-0000-4000-9000-00000000d001", "sess/loop", sessionSpec("", "30m"))
@@ -66,6 +67,7 @@ func TestSessionOpenerAndAffinity(t *testing.T) {
 
 	// Pin the affinity proof to the non-default target: a session on
 	// sim/zzz must pull every joiner there although fifo prefers sim/aaa.
+	fake.AddSession("fake-sess-forced")
 	forced := &store.SessionRecord{
 		SessionID: "forced-affinity", Tenant: "sess/loop", Target: "sim/zzz",
 		AdapterSessionID: "fake-sess-forced", OpenedByJob: opener.JobID,

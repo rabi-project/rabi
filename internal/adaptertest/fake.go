@@ -7,10 +7,12 @@
 package adaptertest
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net"
+	"slices"
 	"sync"
 	"testing"
 	"time"
@@ -34,23 +36,28 @@ type TargetSpec struct {
 	Metrics    []*adapterv1alpha1.Metric
 	// FailWith, when set, makes every task fail with this detail.
 	FailWith *adapterv1alpha1.ErrorDetail
+	// Broken-adapter knobs for the harness self-test (M7): each one makes
+	// exactly one conformance category fail.
+	IgnoreMaxShots bool // declare MaxShots but accept above it (cat 1)
+	BrokenSessions bool // declare sessions but refuse OpenSession (cat 8)
 	// StepDelay is the pause between task states (default 10ms).
 	StepDelay time.Duration
 }
 
 type task struct {
-	status *adapterv1alpha1.TaskStatus
-	cancel bool
+	status   *adapterv1alpha1.TaskStatus
+	cancel   bool
+	failWith *adapterv1alpha1.ErrorDetail
 }
 
 // Fake implements AdapterService in memory.
 type Fake struct {
 	adapterv1alpha1.UnimplementedAdapterServiceServer
-	mu      sync.Mutex
-	targets map[string]*TargetSpec
-	tasks   map[string]*task
-	byKey   map[string]string
-	nextID  int
+	mu       sync.Mutex
+	targets  map[string]*TargetSpec
+	tasks    map[string]*task
+	byKey    map[string]string
+	nextID   int
 	sessions map[string]bool
 }
 
@@ -62,6 +69,17 @@ func New(specs ...*TargetSpec) *Fake {
 		}
 		if s.MaxShots == 0 {
 			s.MaxShots = 100000
+		}
+		if s.SnapshotID == "" {
+			s.SnapshotID = "fake-snap-1"
+		}
+		if len(s.Metrics) == 0 {
+			s.Metrics = []*adapterv1alpha1.Metric{
+				{Name: "gate.2q.cx.error", Value: 0.005, Qubits: []uint32{0, 1},
+					Methodology: "synthetic-fixture"},
+				{Name: "readout.error", Value: 0.01, Qubits: []uint32{0},
+					Methodology: "synthetic-fixture"},
+			}
 		}
 		f.targets[s.ID] = s
 	}
@@ -119,8 +137,23 @@ func (f *Fake) GetCapabilities(_ context.Context, ref *adapterv1alpha1.TargetRef
 	}, nil
 }
 
+// AddSession pre-registers a live session id (dispatcher-test fixtures
+// that fabricate control-plane session rows need the adapter to honor the
+// adapter-side id they invented).
+func (f *Fake) AddSession(id string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.sessions == nil {
+		f.sessions = map[string]bool{}
+	}
+	f.sessions[id] = true
+}
+
 // Sessions: minimal spec-shaped session support for dispatcher tests.
 func (f *Fake) OpenSession(_ context.Context, req *adapterv1alpha1.OpenSessionRequest) (*adapterv1alpha1.SessionHandle, error) {
+	if s, err := f.spec(req.GetTarget().GetTargetId()); err == nil && s.BrokenSessions {
+		return nil, status.Error(codes.Unimplemented, "sessions declared but not implemented (self-test fixture)")
+	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if f.sessions == nil {
@@ -184,7 +217,30 @@ func (f *Fake) SubmitTask(_ context.Context, req *adapterv1alpha1.SubmitTaskRequ
 	f.nextID++
 	id := fmt.Sprintf("fake-task-%d", f.nextID)
 	f.byKey[key] = id
-	tk := &task{status: &adapterv1alpha1.TaskStatus{
+	var failWith *adapterv1alpha1.ErrorDetail
+	if !slices.Contains(s.Formats, req.GetPayload().GetFormat()) {
+		failWith = &adapterv1alpha1.ErrorDetail{
+			Category:      adapterv1alpha1.ErrorDetail_CAPABILITY_MISMATCH,
+			VendorMessage: "undeclared program format",
+		}
+	} else if req.GetSessionId() != "" && !f.sessions[req.GetSessionId()] {
+		failWith = &adapterv1alpha1.ErrorDetail{
+			Category:      adapterv1alpha1.ErrorDetail_SESSION_LOST,
+			Retriable:     true,
+			VendorMessage: "unknown or closed session",
+		}
+	} else if bytes.Contains(req.GetPayload().GetInline(), []byte("not a program")) {
+		failWith = &adapterv1alpha1.ErrorDetail{
+			Category:      adapterv1alpha1.ErrorDetail_INVALID_PROGRAM,
+			VendorMessage: "unparseable program",
+		}
+	} else if s.MaxShots > 0 && req.GetShots() > s.MaxShots && !s.IgnoreMaxShots {
+		failWith = &adapterv1alpha1.ErrorDetail{
+			Category:      adapterv1alpha1.ErrorDetail_CAPABILITY_MISMATCH,
+			VendorMessage: "shots above declared max_shots",
+		}
+	}
+	tk := &task{failWith: failWith, status: &adapterv1alpha1.TaskStatus{
 		Task: &adapterv1alpha1.TaskRef{
 			Target: &adapterv1alpha1.TargetRef{TargetId: s.ID}, TaskId: id},
 		State:     adapterv1alpha1.TaskStatus_QUEUED,
@@ -221,6 +277,11 @@ func (f *Fake) advance(s *TargetSpec, id string, shots uint64) {
 		return
 	}
 	step(func(tk *task) {
+		if tk.failWith != nil {
+			tk.status.State = adapterv1alpha1.TaskStatus_FAILED
+			tk.status.Error = tk.failWith
+			return
+		}
 		if s.FailWith != nil {
 			tk.status.State = adapterv1alpha1.TaskStatus_FAILED
 			tk.status.Error = s.FailWith
@@ -311,6 +372,7 @@ func targetInfo(id string) *adapterv1alpha1.TargetInfo {
 		DisplayName: "Fake " + id,
 		Vendor:      "adaptertest",
 		Modality:    "gate-model",
+		Technology:  "simulator",
 		Simulator:   true,
 	}
 }
