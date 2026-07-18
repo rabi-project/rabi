@@ -14,9 +14,8 @@ mkdir -p bin
 cleanup() { $COMPOSE down -v >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
-echo "--- seeded stack"
+echo "--- stack up"
 $COMPOSE up -d --build --wait >/dev/null
-./deploy/compose/seed.sh >/dev/null
 
 echo "--- a bound job for the placement-audit page (with a real rejection)"
 go build -o bin/qctl ./cmd/qctl
@@ -46,6 +45,12 @@ for _ in $(seq 1 300); do
   sleep 1
 done
 [ "$phase" = "SUCCEEDED" ] || { echo "FAIL: seed job ended $phase"; exit 1; }
+
+# Seed the demo mix AFTER the audit job is terminal: on 2-core runners the
+# mix takes minutes to drain and would queue ahead of it otherwise. The
+# playwright pass only needs populated views, not drained ones.
+echo "--- seed demo mix"
+./deploy/compose/seed.sh >/dev/null
 
 echo "--- playwright"
 if [ ! -d node_modules/playwright ]; then

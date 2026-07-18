@@ -238,8 +238,15 @@ func TestDexOIDCLoginE2E(t *testing.T) {
 		t.Fatalf("minted token malformed: %q", created.GetToken())
 	}
 
-	// Tampered JWT must fail closed.
-	tampered := rawJWT[:len(rawJWT)-2] + "xx"
+	// Tampered JWT must fail closed. Flip the final signature character to
+	// a guaranteed-different value (a fixed suffix can collide with the
+	// real one — it did, once, in CI).
+	last := rawJWT[len(rawJWT)-1]
+	flip := byte('A')
+	if last == 'A' {
+		flip = 'B'
+	}
+	tampered := rawJWT[:len(rawJWT)-1] + string(flip)
 	badCtx := metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+tampered)
 	if _, err := admin.WhoAmI(badCtx, &adminv1alpha1.WhoAmIRequest{}); status.Code(err) != codes.Unauthenticated {
 		t.Fatalf("tampered JWT must be Unauthenticated, got %v", err)
