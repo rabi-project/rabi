@@ -555,3 +555,31 @@ would leave role mapping untested.
   at load with the exact list.
 - QDMI devices are site-local: cloud_queue=false; technology defaults to
   superconducting/cz with the recipe instructing per-device correction.
+
+## D-044 · 2026-07-19 · P1-M10 — second cloud + GPU simulator boring choices
+
+- Second EU cloud = IQM Resonance (Pasqal Cloud is already reachable via
+  the QRMI driver's resource types; a dedicated Pasqal driver would
+  duplicate that path). Neither vendor has credentials in-repo, so the
+  cassette/live split applies: CassetteIqm certifies in CI, LiveIqm binds
+  qiskit-iqm — which must be installed in the SERVING environment (its
+  qiskit pin conflicts with the fleet's qiskit 2.x lock; the import is
+  lazy, so CI never needs it).
+- GPU-backed simulator targets = the EXISTING Aer adapter with a
+  sim_device: GPU config knob (cuQuantum/cuStateVec via the
+  qiskit-aer-gpu build). CUDA-Q-the-framework was rejected: it cannot
+  ingest the spec's wire format (no OpenQASM 3 import), so it would need
+  a private translation layer — cuStateVec through Aer serves the actual
+  goal (GPU-backed simulator Targets) with zero new adapter code. The
+  gpu-sim target declares technology "simulator" (registry value). CI
+  runs the CPU-device twin config; real GPU execution needs the NVIDIA
+  container runtime (compose --profile gpu + RABI_GPU_CONFIG=gpu-sim.yaml)
+  and is exercised at fleet-0/site.
+- Mixed-fleet e2e (hack/e2e-mixed-fleet.sh, deploy workflow): 3 replay +
+  IQM cassette + gpu-class sim; placements verified per segment, with the
+  RFC-0001 technology filter steering the simulator-only job. It caught a
+  real dispatcher bug: fast tasks can finish before a RUNNING observation
+  and the linear FSM rejected SUBMITTED→SUCCEEDED — the dispatcher now
+  passes through RUNNING (event history stays truthful).
+- New-adapter env gotcha: every adapter dir needs .python-version=3.13
+  (qiskit-aer lacks 3.14 wheels) — added to ibm/qrmi/qdmi/iqm.

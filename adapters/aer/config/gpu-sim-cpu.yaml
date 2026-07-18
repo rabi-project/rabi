@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+# M10 GPU-backed simulator target (cuQuantum/cuStateVec via qiskit-aer-gpu).
+# CPU-device twin for CI/e2e hosts without an NVIDIA runtime (D-044).
+targets:
+  - target_id: gpu-sim-1
+    display_name: "cuQuantum statevector sim (12q, CPU)"
+    num_qubits: 12
+    coupling_map: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11]]
+    snapshot_file: snapshots/gpu-sim-static.json
+    noise: false
+    max_shots: 1000000
+    seed: 77
+    technology: simulator
+    sim_device: CPU

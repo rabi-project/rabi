@@ -1,0 +1,271 @@
+{
+ "snapshot_id": "gpu-sim-static-1",
+ "source": "synthetic-simulator-baseline",
+ "measured_at": "2026-07-19T00:00:00Z",
+ "metrics": [
+  {
+   "name": "gate.2q.cx.error",
+   "value": 0.001,
+   "qubits": [
+    0,
+    1
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "gate.2q.cx.error",
+   "value": 0.001,
+   "qubits": [
+    1,
+    2
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "gate.2q.cx.error",
+   "value": 0.001,
+   "qubits": [
+    2,
+    3
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "gate.2q.cx.error",
+   "value": 0.001,
+   "qubits": [
+    3,
+    4
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "gate.2q.cx.error",
+   "value": 0.001,
+   "qubits": [
+    4,
+    5
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "gate.2q.cx.error",
+   "value": 0.001,
+   "qubits": [
+    5,
+    6
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "gate.2q.cx.error",
+   "value": 0.001,
+   "qubits": [
+    6,
+    7
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "gate.2q.cx.error",
+   "value": 0.001,
+   "qubits": [
+    7,
+    8
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "gate.2q.cx.error",
+   "value": 0.001,
+   "qubits": [
+    8,
+    9
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "gate.2q.cx.error",
+   "value": 0.001,
+   "qubits": [
+    9,
+    10
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "gate.2q.cx.error",
+   "value": 0.001,
+   "qubits": [
+    10,
+    11
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "readout.error",
+   "value": 0.005,
+   "qubits": [
+    0
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "readout.error",
+   "value": 0.005,
+   "qubits": [
+    1
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "readout.error",
+   "value": 0.005,
+   "qubits": [
+    2
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "readout.error",
+   "value": 0.005,
+   "qubits": [
+    3
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "readout.error",
+   "value": 0.005,
+   "qubits": [
+    4
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "readout.error",
+   "value": 0.005,
+   "qubits": [
+    5
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "readout.error",
+   "value": 0.005,
+   "qubits": [
+    6
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "readout.error",
+   "value": 0.005,
+   "qubits": [
+    7
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "readout.error",
+   "value": 0.005,
+   "qubits": [
+    8
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "readout.error",
+   "value": 0.005,
+   "qubits": [
+    9
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "readout.error",
+   "value": 0.005,
+   "qubits": [
+    10
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  },
+  {
+   "name": "readout.error",
+   "value": 0.005,
+   "qubits": [
+    11
+   ],
+   "unit": "probability",
+   "modality": "gate-model",
+   "methodology": "synthetic",
+   "confidence": 1.0
+  }
+ ]
+}

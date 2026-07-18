@@ -47,6 +47,33 @@ services:
       IBM_TOKEN: ${IBM_TOKEN:-}
       IBM_BACKENDS: ${IBM_BACKENDS:-}
 
+  # M10 mixed-fleet members. Enable with --profile mixed (cassette cloud +
+  # CPU-device sim twin, CI-safe) or --profile gpu (real cuQuantum device;
+  # needs the NVIDIA container runtime and RABI_GPU_CONFIG=gpu-sim.yaml).
+  adapter-iqm:
+    profiles: ["mixed"]
+    build:
+      context: ../..
+      dockerfile: adapters/iqm/Dockerfile
+    command: ["--cassette", "--listen", "[::]:50055"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('localhost', 50055), 2).close()"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  adapter-gpu:
+    profiles: ["mixed", "gpu"]
+    build:
+      context: ../..
+      dockerfile: adapters/aer/Dockerfile
+    command: ["--config", "config/${RABI_GPU_CONFIG:-gpu-sim-cpu.yaml}", "--listen", "[::]:50056"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('localhost', 50056), 2).close()"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
   rabi:
     build:
       context: ../..

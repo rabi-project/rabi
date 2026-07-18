@@ -52,7 +52,12 @@ class TargetRuntime:
             self._simulators.move_to_end(sid)
             return self._simulators[sid]
         model = build_noise_model(self.cfg, snapshot)
-        simulator = AerSimulator(noise_model=model) if model is not None else AerSimulator()
+        kwargs = {}
+        if self.cfg.device.upper() == "GPU":
+            kwargs["device"] = "GPU"  # needs the qiskit-aer-gpu build + NVIDIA runtime
+        if model is not None:
+            kwargs["noise_model"] = model
+        simulator = AerSimulator(**kwargs)
         self._simulators[sid] = simulator
         while len(self._simulators) > NOISE_CACHE_SIZE:
             self._simulators.popitem(last=False)

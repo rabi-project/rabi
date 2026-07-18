@@ -348,6 +348,10 @@ func (d *Dispatcher) applyTaskStatus(ctx context.Context, rec *store.JobRecord, 
 		return false
 
 	case adapterv1alpha1.TaskStatus_SUCCEEDED:
+		// Fast tasks (cloud cassettes, small sims) can finish before a
+		// RUNNING observation; the job FSM is linear, so pass through
+		// RUNNING first (best-effort: already-RUNNING jobs reject it).
+		_, _ = d.transition(ctx, rec.JobID, job.Running, nil)
 		result := resultToMap(status.GetResult())
 		_ = d.store.UpdateTask(ctx, taskID, adapterTaskID, "SUCCEEDED", nil, result)
 		usage := usageToMap(status.GetUsage())

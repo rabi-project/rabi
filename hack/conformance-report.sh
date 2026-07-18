@@ -57,6 +57,10 @@ run_one() { # name, spawn-dir, spawn-cmd..., extra CLI args
     bin/rabi-conformance run --target "$addr" --out "$OUT/$name" \
       --note "cassette mode (deterministic QRMI-shaped resource); live certification runs nightly with credentials" || rc=$?
     ;;
+  iqm)
+    bin/rabi-conformance run --target "$addr" --out "$OUT/$name" \
+      --note "cassette mode (deterministic IQM-shaped resource); live certification needs IQM Resonance credentials" || rc=$?
+    ;;
   qdmi)
     bin/rabi-conformance run --target "$addr" --out "$OUT/$name" \
       --note "mock QDMI device (compiled C library; the ctypes ABI path is real) — real-site recipe in docs/qdmi-site-recipe.md" || rc=$?
@@ -74,9 +78,11 @@ run_one aer adapters/aer uv run rabi-adapter-aer --config config/single.yaml
 run_one ibm adapters/ibm uv run rabi-adapter-ibm --fake
 run_one qrmi adapters/qrmi uv run rabi-adapter-qrmi --cassette
 
+run_one iqm adapters/iqm uv run rabi-adapter-iqm --cassette
+
 echo "--- qdmi mock device (C ABI)"
 case "$(uname -s)" in Darwin) MOCK_EXT=dylib ;; *) MOCK_EXT=so ;; esac
 cc -shared -fPIC -o "bin/libmockqdmi.$MOCK_EXT" adapters/qdmi/mock/mock_device.c
 run_one qdmi adapters/qdmi uv run rabi-adapter-qdmi --device "$PWD/bin/libmockqdmi.$MOCK_EXT"
 
-echo "CONFORMANCE-REPORTS OK ($OUT/aer, $OUT/ibm, $OUT/qrmi, $OUT/qdmi)"
+echo "CONFORMANCE-REPORTS OK ($OUT/aer, $OUT/ibm, $OUT/qrmi, $OUT/iqm, $OUT/qdmi)"

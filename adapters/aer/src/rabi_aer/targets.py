@@ -63,6 +63,10 @@ class TargetConfig:
     # adapter protocol has no first-class field (spec question, D-016).
     technology: str = "superconducting"
     two_qubit_gate: str = "cx"
+    # Simulation device: "CPU" (default) or "GPU" (cuQuantum/cuStateVec via
+    # the qiskit-aer-gpu build — the M10 GPU-backed simulator target; the
+    # adapter code is identical, the device is deploy-time config, D-044).
+    device: str = "CPU"
     # Drift config (see replay.DriftConfig) enables calibration replay.
     drift: dict | None = None
 
@@ -95,6 +99,7 @@ def load_config(path: str | Path) -> list[TargetConfig]:
                 seed=int(t.get("seed", 0)),
                 technology=str(t.get("technology", "superconducting")),
                 two_qubit_gate=str(t.get("two_qubit_gate", "cx")),
+                device=str(t.get("sim_device", "CPU")),
             )
         )
     return targets
@@ -116,6 +121,7 @@ def _load_replay_target(base: Path, t: dict) -> TargetConfig:
         max_shots=int(t.get("max_shots", 100_000)),
         seed=int(t.get("seed", 0)),
         technology=str(device.get("technology", "superconducting")),
+        device=str(device.get("sim_device", "CPU")),
         two_qubit_gate=str(device["two_qubit_gate"]),
         drift=dict(t["drift"]) if "drift" in t else None,
     )

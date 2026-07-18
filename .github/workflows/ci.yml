@@ -40,6 +40,7 @@ jobs:
           (cd adapters/ibm && uv run --extra dev ruff check .)
           (cd adapters/qrmi && uv run --extra dev ruff check .)
           (cd adapters/qdmi && uv run --extra dev ruff check .)
+          (cd adapters/iqm && uv run --extra dev ruff check .)
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
@@ -91,6 +92,8 @@ jobs:
         run: cd adapters/qrmi && uv run --extra dev pytest -q
       - name: pytest (QDMI adapter — C ABI binding vs compiled mock)
         run: cd adapters/qdmi && uv run --extra dev pytest -q
+      - name: pytest (IQM adapter — cassette lifecycle)
+        run: cd adapters/iqm && uv run --extra dev pytest -q
 
   integration:
     runs-on: ubuntu-latest
