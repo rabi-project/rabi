@@ -537,3 +537,21 @@ would leave role mapping untested.
   QRMI_RESOURCE/QRMI_ENV_FILE are configured (needs Edward) — provably
   dormant like ibm-live. The "nightly live ≥95% over 7 days" criterion is
   an operational gate that starts counting when credentials land.
+
+## D-043 · 2026-07-19 · P1-M9 — QDMI driver boring choices
+
+- One adapter chassis: QrmiAdapterService is parameterized (VENDOR,
+  MAX_SHOTS, SNAPSHOT_PREFIX, _extensions hook) and any backend with
+  describe/start/status/result/stop rides it. QdmiAdapterService is a
+  ~15-line subclass; all FSM/idempotency/taxonomy/queue behavior — and
+  its conformance record — is shared.
+- QDMI's contract is a C ABI, so the binding is ctypes over a device
+  shared library, and CI certifies through a COMPILED mock device
+  (mock/mock_device.c) — the dlopen/marshalling path is the real thing,
+  the device is synthetic (report notes it). The bound symbol table is
+  QDMI 1.0-shaped and centralized in device.py SYMBOLS: real sites vary
+  by QDMI version, and the site recipe (docs/qdmi-site-recipe.md) makes
+  ABI drift a one-file fix + re-certification. Missing symbols fail fast
+  at load with the exact list.
+- QDMI devices are site-local: cloud_queue=false; technology defaults to
+  superconducting/cz with the recipe instructing per-device correction.

@@ -62,7 +62,16 @@ class _Task:
 
 
 class QrmiAdapterService(pb_grpc.AdapterServiceServicer):
-    """Serves QRMI resources. `resources` maps target_id → backend."""
+    """Serves QRMI resources. `resources` maps target_id → backend.
+
+    Doubles as the shared adapter chassis (docs/decisions.md D-043): any
+    backend exposing describe/start/status/result/stop can ride it —
+    subclasses override the class attributes and extensions hook.
+    """
+
+    VENDOR = VENDOR
+    MAX_SHOTS = MAX_SHOTS
+    SNAPSHOT_PREFIX = "qrmi"
 
     def __init__(self, resources: dict[str, object]):
         self._resources = resources
@@ -78,7 +87,7 @@ class QrmiAdapterService(pb_grpc.AdapterServiceServicer):
     def _info(self, target_id: str) -> pb.TargetInfo:
         d = self._described[target_id]
         return pb.TargetInfo(
-            target_id=target_id, display_name=d["resource_id"], vendor=VENDOR,
+            target_id=target_id, display_name=d["resource_id"], vendor=self.VENDOR,
             modality=MODALITY, simulator=False, technology=d["technology"],
         )
 
@@ -98,18 +107,21 @@ class QrmiAdapterService(pb_grpc.AdapterServiceServicer):
             target=self._info(request.target_id),
             num_qubits=int(d["num_qubits"]),
             program_formats=list(PROGRAM_FORMATS),
-            max_shots=MAX_SHOTS,
+            max_shots=self.MAX_SHOTS,
             sessions=False,
             cancellation=True,
             billing_units=list(BILLING_UNITS),
             coupling_class="loose",
             cloud_queue=bool(d["cloud"]),
-            vendor_extensions={
-                "technology": d["technology"],
-                "cloud": "true" if d["cloud"] else "false",
-                "qrmi-resource-type": d["resource_type"],
-            },
+            vendor_extensions=self._extensions(d),
         )
+
+    def _extensions(self, d: dict) -> dict[str, str]:
+        return {
+            "technology": d["technology"],
+            "cloud": "true" if d["cloud"] else "false",
+            "qrmi-resource-type": d["resource_type"],
+        }
 
     def GetDeviceState(self, request, context):
         self._resource(request.target_id, context)
@@ -123,8 +135,8 @@ class QrmiAdapterService(pb_grpc.AdapterServiceServicer):
             for m in d["metrics"]
         ]
         snapshot = pb.CalibrationSnapshot(
-            snapshot_id=f'qrmi-{d["resource_type"]}-{int(self._started_at)}',
-            source=f'qrmi:{d["resource_type"]}/{d["resource_id"]}',
+            snapshot_id=f'{self.SNAPSHOT_PREFIX}-{d["resource_type"]}-{int(self._started_at)}',
+            source=f'{self.SNAPSHOT_PREFIX}:{d["resource_type"]}/{d["resource_id"]}',
             measured_at=_ts(self._started_at),
             metrics=metrics,
         )
@@ -166,9 +178,10 @@ class QrmiAdapterService(pb_grpc.AdapterServiceServicer):
                 if payload_format not in PROGRAM_FORMATS:
                     raise _Categorized(pb.ErrorDetail.Category.CAPABILITY_MISMATCH,
                                        f"format {payload_format!r} unsupported")
-                if shots and shots > MAX_SHOTS:
-                    raise _Categorized(pb.ErrorDetail.Category.CAPABILITY_MISMATCH,
-                                       f"{shots} shots exceeds declared max_shots {MAX_SHOTS}")
+                if shots and shots > self.MAX_SHOTS:
+                    raise _Categorized(
+                        pb.ErrorDetail.Category.CAPABILITY_MISMATCH,
+                        f"{shots} shots exceeds declared max_shots {self.MAX_SHOTS}")
                 qasm = _validate_qasm(payload_inline)
                 qrmi_id = resource.start(qasm, shots or 1024)
                 with self._lock:
