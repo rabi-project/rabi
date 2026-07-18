@@ -34,7 +34,7 @@ func newWhoAmICmd() *cobra.Command {
 			if flagOutput == "json" {
 				return printProto(resp)
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "subject:\t%s\nname:\t%s\ntype:\t%s\nrole:\t%s\nproject:\t%s\n",
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "subject:\t%s\nname:\t%s\ntype:\t%s\nrole:\t%s\nproject:\t%s\n",
 				resp.GetSubject(), resp.GetName(), resp.GetPrincipalType(), resp.GetRole(), orDash(resp.GetProject()))
 			return nil
 		},
@@ -74,7 +74,7 @@ func newTokenCreateCmd() *cobra.Command {
 			if flagOutput == "json" {
 				return printProto(resp)
 			}
-			fmt.Fprintf(cmd.OutOrStdout(),
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(),
 				"token: %s\nid: %s  project: %s  role: %s\n\nStore the token now — it cannot be shown again.\n",
 				resp.GetToken(), resp.GetInfo().GetId(), resp.GetInfo().GetProject(), resp.GetInfo().GetRole())
 			return nil
@@ -108,7 +108,7 @@ func newTokenListCmd() *cobra.Command {
 				return printProto(resp)
 			}
 			w := tabwriter.NewWriter(os.Stdout, 2, 4, 2, ' ', 0)
-			fmt.Fprintln(w, "ID\tNAME\tPROJECT\tROLE\tCREATED\tLAST USED\tSTATUS")
+			_, _ = fmt.Fprintln(w, "ID\tNAME\tPROJECT\tROLE\tCREATED\tLAST USED\tSTATUS")
 			for _, t := range resp.GetTokens() {
 				status := "active"
 				if t.GetRevokedAt() != nil {
@@ -118,7 +118,7 @@ func newTokenListCmd() *cobra.Command {
 				if t.GetLastUsedAt() != nil {
 					lastUsed = t.GetLastUsedAt().AsTime().Format(time.DateTime)
 				}
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+				_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
 					t.GetId(), t.GetName(), t.GetProject(), t.GetRole(),
 					t.GetCreatedAt().AsTime().Format(time.DateOnly), lastUsed, status)
 			}
@@ -149,7 +149,7 @@ func newTokenRevokeCmd() *cobra.Command {
 			if !resp.GetFound() {
 				return fmt.Errorf("token %q not found", args[0])
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "token %s revoked\n", args[0])
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "token %s revoked\n", args[0])
 			return nil
 		},
 	}

@@ -37,6 +37,23 @@ The same API over REST:
 curl -H "Authorization: Bearer dev-key" http://localhost:8080/v1alpha1/targets
 ```
 
+## Auth in the demo vs. production
+
+`dev-key` is the compose stack's **bootstrap token** (`RABI_BOOTSTRAP_TOKEN`
+in `deploy/compose/docker-compose.yml`) — an admin credential for demos and
+first-admin setup only. Production deployments configure OIDC
+(`RABI_OIDC_ISSUER` + `RABI_OIDC_CLIENT_ID`; log in with `qctl login`) and
+mint per-project API tokens:
+
+```sh
+export RABI_TOKEN=dev-key
+go run ./cmd/qctl token create ci-bot --project demo --role member
+go run ./cmd/qctl whoami         # check what any credential resolves to
+```
+
+Tokens are stored only as hashes; roles are viewer < member < operator <
+admin; every denied call and admin action lands in the audit log.
+
 ## Optional: a real IBM Quantum backend
 
 Off by default. With an IBM Quantum token (open-plan queue times can be

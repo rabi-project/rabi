@@ -371,3 +371,5 @@ func TestListJobsFilters(t *testing.T) {
 		t.Fatalf("expected zero jobs for unknown tenant, got %d", len(none.GetJobs()))
 	}
 }
+
+func testLogger() *slog.Logger { return slog.Default() }

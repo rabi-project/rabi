@@ -113,7 +113,7 @@ func runLogin(ctx context.Context, cmd *cobra.Command, issuer, clientID, listen 
 				http.Error(w, q.Get("error_description"), http.StatusBadRequest)
 				got <- callback{err: fmt.Errorf("idp error: %s", q.Get("error"))}
 			default:
-				fmt.Fprintln(w, "Logged in — you can close this tab and return to qctl.")
+				_, _ = fmt.Fprintln(w, "Logged in — you can close this tab and return to qctl.")
 				got <- callback{code: q.Get("code")}
 			}
 		})}
@@ -121,7 +121,7 @@ func runLogin(ctx context.Context, cmd *cobra.Command, issuer, clientID, listen 
 	defer func() { _ = srv.Close() }()
 
 	if noBrowser || !openBrowser(authURL) {
-		fmt.Fprintf(cmd.OutOrStdout(), "Open this URL to log in:\n\n  %s\n\n", authURL)
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Open this URL to log in:\n\n  %s\n\n", authURL)
 	}
 
 	var cb callback
@@ -154,7 +154,7 @@ func runLogin(ctx context.Context, cmd *cobra.Command, issuer, clientID, listen 
 		return err
 	}
 	path, _ := credentialsPath()
-	fmt.Fprintf(cmd.OutOrStdout(), "logged in as %s (credentials: %s)\n", idTok.Subject, path)
+	_, _ = fmt.Fprintf(cmd.OutOrStdout(), "logged in as %s (credentials: %s)\n", idTok.Subject, path)
 	return nil
 }
 

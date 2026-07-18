@@ -97,6 +97,20 @@ onto the job until terminal. Usage lands in an append-only ledger
 model from the same snapshot `GetDeviceState` reports, and passes the
 public conformance suite (`conformance/`) in CI — categories 1–8.
 
+## Authentication & authorization (Phase 1 M1)
+
+Every RPC presents `Authorization: Bearer <credential>`; the interceptor in
+`internal/api/auth.go` resolves it to a principal — the bootstrap token
+(`RABI_BOOTSTRAP_TOKEN`, admin, dev/first-admin only), a per-project API
+token (`rabi_<id>_<secret>`, stored only as a SHA-256 hash), or an OIDC JWT
+verified against the configured IdP via `coreos/go-oidc` (groups claim →
+role). Authorization is a fail-closed per-method matrix in
+`internal/auth/matrix.go` over four ordered roles (viewer < member <
+operator < admin); a token's project additionally scopes which tenant's
+resources it can touch. Every denied call and every admin action is
+appended to `audit_log`. Token lifecycle lives on the implementation-defined
+`rabi.admin.v1alpha1.AdminService` (decisions D-033..D-035).
+
 ## Job lifecycle (M1)
 
 Admission validates the submitted document against the spec schema plus the

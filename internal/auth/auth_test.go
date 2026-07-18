@@ -12,7 +12,7 @@ import (
 )
 
 func TestRoleOrderingAndParse(t *testing.T) {
-	if !(RoleViewer < RoleMember && RoleMember < RoleOperator && RoleOperator < RoleAdmin) {
+	if RoleViewer >= RoleMember || RoleMember >= RoleOperator || RoleOperator >= RoleAdmin {
 		t.Fatal("role ordering broken")
 	}
 	for _, r := range Roles() {
