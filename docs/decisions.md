@@ -583,3 +583,22 @@ would leave role mapping untested.
   passes through RUNNING (event history stays truthful).
 - New-adapter env gotcha: every adapter dir needs .python-version=3.13
   (qiskit-aer lacks 3.14 wheels) — added to ibm/qrmi/qdmi/iqm.
+
+## D-045 · 2026-07-19 · P1-M11 — console boring choices
+
+- The console is dependency-free vanilla JS/CSS (no framework, no build
+  step, no npm at build or runtime) embedded via go:embed and served at
+  /console/ from the single binary — nothing to vendor for air-gap, and
+  the whole "SPA" is three static files. The viewer's token lives in tab
+  sessionStorage and is sent only to this server.
+- Zero-write is enforced twice: the page only ever issues GET, and the
+  Playwright suite intercepts every request and fails the run on any
+  non-GET/HEAD to the server origin (the plan's proxy assertion).
+- Provenance is asserted AS UI: the e2e requires the rendered calibration
+  age ("N min ago") and a non-empty per-metric methodology column, not
+  just fields in API payloads. The placement-audit page renders the
+  decision facts (policy, snapshot, predictions, onConflict/horizon,
+  floorsRelaxed details) plus the full rejected-target list; the e2e
+  seeds a denyTargets job so a real rejection is always on screen.
+- Playwright itself is fetched at TEST time via npx (test tooling is
+  outside the air-gap rule, which governs runtime).

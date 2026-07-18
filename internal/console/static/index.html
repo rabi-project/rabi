@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rabi console</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <span class="wordmark">Rabi</span>
+    <nav>
+      <a href="#fleet" data-nav="fleet">Fleet</a>
+      <a href="#jobs" data-nav="jobs">Jobs</a>
+      <a href="#usage" data-nav="usage">Usage</a>
+    </nav>
+    <span id="whoami" class="muted"></span>
+  </header>
+
+  <section id="token-gate" hidden>
+    <h1>Read-only console</h1>
+    <p>Paste your bearer credential (API token or OIDC ID token). It stays in
+       this tab's session storage and is sent only to this server.</p>
+    <input id="token-input" type="password" placeholder="rabi_… or JWT" size="48">
+    <button id="token-save">Use token</button>
+  </section>
+
+  <main id="view" hidden></main>
+
+  <template id="tpl-error"><p class="error"></p></template>
+  <script src="app.js"></script>
+</body>
+</html>

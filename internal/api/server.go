@@ -20,6 +20,7 @@ import (
 
 	adminv1alpha1 "github.com/rabi-project/rabi/gen/go/rabi/admin/v1alpha1"
 	apiv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/api/v1alpha1"
+	"github.com/rabi-project/rabi/internal/console"
 	"github.com/rabi-project/rabi/internal/job"
 	"github.com/rabi-project/rabi/internal/store"
 )
@@ -111,6 +112,10 @@ func (s *Server) Run(ctx context.Context) error {
 	}
 
 	httpMux := http.NewServeMux()
+	// Read-only console (M11): static SPA from the single binary; it calls
+	// the REST API below with the viewer's own token.
+	httpMux.Handle("/console/", console.Handler())
+	httpMux.Handle("/console", http.RedirectHandler("/console/", http.StatusMovedPermanently))
 	// Liveness for compose healthchecks; deliberately unauthenticated.
 	httpMux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)

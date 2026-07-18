@@ -1,0 +1,39 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+:root {
+  --ink: #1a1a2e; --paper: #f2f3f7; --teal: #2a9d8f; --muted: #8a8fa3;
+  --warn-bg: #fff4e5; --err: #b3261e;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; font: 15px/1.5 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  color: var(--ink); background: var(--paper);
+}
+header {
+  display: flex; align-items: center; gap: 1.5rem;
+  padding: 0.6rem 1.2rem; background: var(--ink); color: var(--paper);
+}
+.wordmark { font-weight: 700; font-size: 1.2rem; color: var(--teal); }
+nav a { color: var(--paper); text-decoration: none; margin-right: 1rem; opacity: 0.75; }
+nav a.active, nav a:hover { opacity: 1; border-bottom: 2px solid var(--teal); }
+main, #token-gate { max-width: 64rem; margin: 1.2rem auto; padding: 0 1.2rem; }
+h1 { font-size: 1.4rem; } h2 { font-size: 1.05rem; margin-top: 1.4rem; }
+.card { background: white; border-radius: 8px; padding: 1rem 1.2rem; margin: 0.8rem 0;
+        box-shadow: 0 1px 3px rgba(26,26,46,0.08); }
+.card h2 { margin: 0 0 0.2rem; }
+table { border-collapse: collapse; width: 100%; margin-top: 0.6rem; }
+th, td { text-align: left; padding: 0.25rem 0.6rem 0.25rem 0; font-size: 0.85rem; }
+thead th { color: var(--muted); font-weight: 600; border-bottom: 1px solid #e2e4ec; }
+.muted { color: var(--muted); }
+.phase { font-weight: 700; }
+.phase-SUCCEEDED { color: var(--teal); }
+.phase-FAILED, .error { color: var(--err); }
+.phase-PENDING { color: var(--muted); }
+.warn { background: var(--warn-bg); border-radius: 6px; padding: 0.6rem 1rem; margin: 0.8rem 0; }
+.reason { background: white; border-left: 3px solid var(--teal); padding: 0.5rem 0.8rem;
+          font-size: 0.85rem; overflow-wrap: anywhere; }
+.rejected li { margin: 0.25rem 0; font-size: 0.9rem; }
+dl.audit { display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 1rem; }
+dl.audit dt { color: var(--muted); } dl.audit dd { margin: 0; }
+input { padding: 0.4rem 0.6rem; border: 1px solid #cfd3e0; border-radius: 6px; }
+button { padding: 0.45rem 1rem; border: 0; border-radius: 6px; background: var(--teal);
+         color: white; font-weight: 600; cursor: pointer; }

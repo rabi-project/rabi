@@ -12,6 +12,9 @@ on:
       - "hack/airgap-verify.sh"
       - "hack/backup-drill.sh"
       - "hack/e2e-mixed-fleet.sh"
+      - "hack/e2e-console.sh"
+      - "hack/e2e-console.mjs"
+      - "internal/console/**"
       - "adapters/**"
       - "internal/store/migrations/**"
       - ".github/workflows/deploy.yml"
@@ -53,6 +56,17 @@ jobs:
       - uses: actions/setup-go@v5
         with: { go-version-file: go.mod }
       - run: ./hack/e2e-mixed-fleet.sh
+
+  console-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: ./hack/e2e-console.sh
 
   backup-drill:
     runs-on: ubuntu-latest
