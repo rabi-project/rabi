@@ -30,6 +30,17 @@ type Store struct {
 // Open connects to Postgres, retrying until the deadline so rabi tolerates
 // compose startup ordering, and runs pending migrations.
 func Open(ctx context.Context, databaseURL string) (*Store, error) {
+	return open(ctx, databaseURL, true)
+}
+
+// OpenNoMigrate connects WITHOUT running migrations — the upgrade gate for
+// sites that apply migrations deliberately (helm value autoMigrate=false).
+// It fails fast if the schema is behind the binary.
+func OpenNoMigrate(ctx context.Context, databaseURL string) (*Store, error) {
+	return open(ctx, databaseURL, false)
+}
+
+func open(ctx context.Context, databaseURL string, migrate bool) (*Store, error) {
 	pool, err := pgxpool.New(ctx, databaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("store: parse database url: %w", err)
@@ -51,7 +62,12 @@ func Open(ctx context.Context, databaseURL string) (*Store, error) {
 	}
 
 	s := &Store{Pool: pool}
-	if err := s.migrate(ctx); err != nil {
+	if migrate {
+		if err := s.migrate(ctx); err != nil {
+			pool.Close()
+			return nil, err
+		}
+	} else if err := s.checkSchemaCurrent(ctx); err != nil {
 		pool.Close()
 		return nil, err
 	}
@@ -95,6 +111,30 @@ func (s *Store) migrate(ctx context.Context) error {
 	}
 	if _, err := provider.Up(ctx); err != nil {
 		return fmt.Errorf("store: apply migrations: %w", err)
+	}
+	return nil
+}
+
+// checkSchemaCurrent fails fast when the database is behind the binary's
+// embedded migrations (auto-migrate disabled: the operator must migrate
+// first, then roll the fleet).
+func (s *Store) checkSchemaCurrent(ctx context.Context) error {
+	db := stdlib.OpenDBFromPool(s.Pool)
+	defer func() { _ = db.Close() }()
+	migrations, err := fs.Sub(migrationsFS, "migrations")
+	if err != nil {
+		return fmt.Errorf("store: scope migrations fs: %w", err)
+	}
+	provider, err := goose.NewProvider(goose.DialectPostgres, db, migrations)
+	if err != nil {
+		return fmt.Errorf("store: init migrations: %w", err)
+	}
+	pending, err := provider.HasPending(ctx)
+	if err != nil {
+		return fmt.Errorf("store: check pending migrations: %w", err)
+	}
+	if pending {
+		return fmt.Errorf("store: schema is behind this binary and auto-migrate is disabled; run migrations first (RABI_AUTO_MIGRATE=true once)")
 	}
 	return nil
 }

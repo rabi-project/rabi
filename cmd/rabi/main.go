@@ -71,7 +71,11 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	st, err := store.Open(ctx, dbURL)
+	openStore := store.Open
+	if os.Getenv("RABI_AUTO_MIGRATE") == "false" {
+		openStore = store.OpenNoMigrate
+	}
+	st, err := openStore(ctx, dbURL)
 	if err != nil {
 		logger.Error("opening store", "error", err)
 		os.Exit(1)

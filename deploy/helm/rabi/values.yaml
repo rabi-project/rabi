@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: Apache-2.0
+
+image:
+  repository: rabi
+  tag: dev
+  pullPolicy: IfNotPresent
+
+adapterAer:
+  enabled: true
+  image:
+    repository: rabi-adapter-aer
+    tag: dev
+    pullPolicy: IfNotPresent
+  # 1 wall second = simAccel sim seconds of calibration drift.
+  simAccel: "600"
+
+# Built-in Postgres (StatefulSet). Disable and set externalDatabaseUrl to
+# bring your own.
+postgres:
+  enabled: true
+  image: postgres:15-alpine
+  storage: 1Gi
+  storageClassName: ""
+  user: rabi
+  password: rabi
+  database: rabi
+
+# Used only when postgres.enabled=false.
+externalDatabaseUrl: ""
+
+auth:
+  # Dev/first-admin bootstrap token. Set to "" once OIDC + real tokens are
+  # configured. Stored in a Secret.
+  bootstrapToken: dev-key
+  oidc:
+    issuer: ""
+    clientId: ""
+    groupsClaim: ""
+    groupRoles: ""
+    defaultRole: ""
+
+# Migrations run on boot by default; set false to gate upgrades manually
+# (run a one-off pod/job with autoMigrate=true first, then roll the fleet).
+autoMigrate: true
+
+policy: calib-aware/v0
+reconcileEvery: ""   # e.g. "1h"; empty = weekly default
+
+service:
+  type: ClusterIP
+  grpcPort: 9090
+  httpPort: 8080
+
+resources: {}

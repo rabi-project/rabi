@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: v2
+name: rabi
+description: >
+  Rabi control plane for quantum compute fleets: single binary + Postgres,
+  adapters as sidecars. No chart dependencies by design — the whole chart
+  installs air-gapped (docs/decisions.md D-038).
+type: application
+version: 0.3.0
+appVersion: "0.3.0"

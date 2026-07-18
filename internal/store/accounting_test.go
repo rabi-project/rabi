@@ -3,8 +3,11 @@
 package store_test
 
 import (
+	"context"
 	"strings"
 	"testing"
+
+	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
 	"github.com/google/uuid"
 	"github.com/rabi-project/rabi/internal/job"
@@ -132,5 +135,87 @@ func TestReconciliation(t *testing.T) {
 	}
 	if _, err := store.OpenAt(ctx, testDSN, 6); err != nil {
 		t.Fatalf("OpenAt current head: %v", err)
+	}
+}
+
+// §3 deploy: N-1→N upgrade from the v0.1.0 schema (migrations 00001–00003).
+// A golden Phase-0 database with jobs, a bound task, and ledger rows
+// upgrades to head with data intact, tenants mapped, and the append-only
+// grants active.
+func TestV010GoldenDatabaseUpgrade(t *testing.T) {
+	ctx := t.Context()
+	pg, err := tcpostgres.Run(ctx, "postgres:15-alpine",
+		tcpostgres.WithDatabase("rabi"), tcpostgres.WithUsername("rabi"),
+		tcpostgres.WithPassword("rabi"), tcpostgres.BasicWaitStrategies())
+	if err != nil {
+		t.Fatalf("starting postgres: %v", err)
+	}
+	t.Cleanup(func() { _ = pg.Terminate(context.Background()) })
+	dsn, err := pg.ConnectionString(ctx, "sslmode=disable")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	old, err := store.OpenAt(ctx, dsn, 3) // v0.1.0 head
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := shotsJob("golden/v010", 100)
+	if err := old.InsertJob(ctx, rec); err != nil {
+		t.Fatal(err)
+	}
+	taskID := uuid.NewString()
+	if _, err := old.BindJob(ctx, rec.JobID, taskID, "site/t1", map[string]any{"policy": "static-best/v0"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := old.RecordUsage(ctx, rec.JobID, taskID, rec.Tenant, "site/t1",
+		map[string]float64{"shots": 100}); err != nil {
+		t.Fatal(err)
+	}
+	old.Close()
+
+	// The N upgrade: a fresh binary boots with auto-migrate on.
+	up, err := store.Open(ctx, dsn)
+	if err != nil {
+		t.Fatalf("v0.1.0 -> head upgrade failed: %v", err)
+	}
+	defer up.Close()
+	got, err := up.GetJob(ctx, rec.JobID)
+	if err != nil || got.Tenant != "golden/v010" {
+		t.Fatalf("job lost in upgrade: %v %+v", err, got)
+	}
+	if _, err := up.GetProject(ctx, "golden/v010"); err != nil {
+		t.Fatalf("tenant not mapped to a project: %v", err)
+	}
+	entries, err := up.LedgerEntries(ctx, "golden/v010")
+	if err != nil || len(entries) != 1 || entries[0].Amount != 100 {
+		t.Fatalf("ledger lost in upgrade: %v %v", entries, err)
+	}
+	if _, err := up.Pool.Exec(ctx, `DELETE FROM usage_ledger`); err == nil {
+		t.Fatal("append-only grants not active after upgrade")
+	}
+
+	// The auto-migrate gate: a lagging schema refuses to serve...
+	if _, err := store.OpenNoMigrate(ctx, dsn); err != nil {
+		t.Fatalf("current schema must serve with auto-migrate off: %v", err)
+	}
+	pg2, err := tcpostgres.Run(ctx, "postgres:15-alpine",
+		tcpostgres.WithDatabase("rabi"), tcpostgres.WithUsername("rabi"),
+		tcpostgres.WithPassword("rabi"), tcpostgres.BasicWaitStrategies())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = pg2.Terminate(context.Background()) })
+	dsn2, err := pg2.ConnectionString(ctx, "sslmode=disable")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if lagged, err := store.OpenAt(ctx, dsn2, 3); err != nil {
+		t.Fatal(err)
+	} else {
+		lagged.Close()
+	}
+	if _, err := store.OpenNoMigrate(ctx, dsn2); err == nil {
+		t.Fatal("lagging schema must refuse to serve with auto-migrate off")
 	}
 }

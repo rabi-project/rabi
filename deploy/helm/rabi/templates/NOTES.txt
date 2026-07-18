@@ -1,0 +1,10 @@
+Rabi is starting.
+
+Port-forward the API:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "rabi.fullname" . }} 9090:9090 8080:8080
+
+Then (bootstrap token from values.auth.bootstrapToken):
+  RABI_TOKEN=<token> qctl targets
+  RABI_TOKEN=<token> qctl whoami
+
+Rotate the bootstrap token away once real API tokens / OIDC are set up.
