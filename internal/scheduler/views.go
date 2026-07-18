@@ -53,36 +53,59 @@ type Window struct {
 	Start, End time.Time
 }
 
-// MinMetric returns the device-best (minimum) value for a metric name, and
-// whether any value exists. Floors are evaluated against the device's best
-// value: a device is feasible if some qubit/edge meets the floor (D-016).
-func (t *TargetView) MinMetric(name string) (float64, bool) {
-	best, found := 0.0, false
-	for _, m := range t.Metrics {
-		if m.Name != name {
-			continue
-		}
-		if !found || m.Value < best {
-			best, found = m.Value, true
-		}
+// aggregateValues collapses selected error-metric values per RFC-0002:
+// "best" = minimum (most favorable for error-type metrics), "worst" =
+// maximum, "median" = middle value (lower of the two middles for even
+// counts — deterministic). Unknown aggregates fall back to best, which the
+// admission schema makes unreachable.
+func aggregateValues(values []float64, aggregate string) (float64, bool) {
+	if len(values) == 0 {
+		return 0, false
 	}
-	return best, found
+	sort.Float64s(values)
+	switch aggregate {
+	case "worst":
+		return values[len(values)-1], true
+	case "median":
+		return values[(len(values)-1)/2], true
+	default: // "best"
+		return values[0], true
+	}
 }
 
-// MinTwoQubitError is the device-best two-qubit gate error regardless of the
-// native gate: it matches any "gate.2q.<gate>.error" metric (cx, cz, ecr, …)
-// per D-020.
-func (t *TargetView) MinTwoQubitError() (float64, bool) {
-	best, found := 0.0, false
+// MetricAggregate returns the aggregate of all values for an exact metric
+// name (RFC-0002 evaluation step 1–2).
+func (t *TargetView) MetricAggregate(name, aggregate string) (float64, bool) {
+	var vals []float64
 	for _, m := range t.Metrics {
-		if !strings.HasPrefix(m.Name, "gate.2q.") || !strings.HasSuffix(m.Name, ".error") {
-			continue
-		}
-		if !found || m.Value < best {
-			best, found = m.Value, true
+		if m.Name == name {
+			vals = append(vals, m.Value)
 		}
 	}
-	return best, found
+	return aggregateValues(vals, aggregate)
+}
+
+// TwoQubitErrorAggregate aggregates across any "gate.2q.<gate>.error"
+// metric (cx, cz, ecr, …) per D-020.
+func (t *TargetView) TwoQubitErrorAggregate(aggregate string) (float64, bool) {
+	var vals []float64
+	for _, m := range t.Metrics {
+		if strings.HasPrefix(m.Name, "gate.2q.") && strings.HasSuffix(m.Name, ".error") {
+			vals = append(vals, m.Value)
+		}
+	}
+	return aggregateValues(vals, aggregate)
+}
+
+// MinMetric returns the device-best (minimum) value for a metric name — the
+// RFC-0002 "best" aggregate (D-016).
+func (t *TargetView) MinMetric(name string) (float64, bool) {
+	return t.MetricAggregate(name, "best")
+}
+
+// MinTwoQubitError is the device-best two-qubit gate error (D-020).
+func (t *TargetView) MinTwoQubitError() (float64, bool) {
+	return t.TwoQubitErrorAggregate("best")
 }
 
 // InMaintenance reports whether now falls inside a maintenance window.
@@ -108,6 +131,13 @@ type JobView struct {
 	TwoQubitErrorMax  float64 // 0 = unset
 	ReadoutErrorMax   float64 // 0 = unset
 	CalibrationMaxAge time.Duration
+	// Aggregate is the RFC-0002 floor-evaluation aggregate: how the many
+	// per-qubit/edge metric values collapse to one number before the floor
+	// comparison. "best" (normative default) | "median" | "worst".
+	Aggregate string
+	// OnConflict is the RFC-0003 deadline/floor conflict policy:
+	// "prefer-quality" (default) | "prefer-deadline" | "reject".
+	OnConflict string
 
 	Deadline    time.Time
 	BudgetUnits []string
@@ -185,8 +215,22 @@ func ParseJob(id, tenant string, doc map[string]any) (*JobView, error) {
 					}
 					j.CalibrationMaxAge = d
 				}
+				if agg, ok := gm["aggregate"].(string); ok {
+					j.Aggregate = agg
+				}
 			}
 		}
+	}
+	if j.Aggregate == "" {
+		j.Aggregate = "best" // RFC-0002 normative default
+	}
+	if sched, ok := spec["scheduling"].(map[string]any); ok {
+		if oc, ok := sched["onConflict"].(string); ok {
+			j.OnConflict = oc
+		}
+	}
+	if j.OnConflict == "" {
+		j.OnConflict = "prefer-quality" // RFC-0003 default = v0 behavior
 	}
 
 	if raw, ok := spec["deadline"].(string); ok {

@@ -87,22 +87,29 @@ func filterTarget(j *JobView, t *TargetView, now time.Time, quality bool) string
 }
 
 func qualityFloors(j *JobView, t *TargetView, now time.Time) string {
+	// RFC-0002: floors compare against the job's aggregate over the
+	// snapshot ("best" default); the rejection string names the aggregate
+	// and the winning value — that format is normative.
+	agg := j.Aggregate
+	if agg == "" {
+		agg = "best"
+	}
 	if j.TwoQubitErrorMax > 0 {
-		v, ok := t.MinTwoQubitError()
+		v, ok := t.TwoQubitErrorAggregate(agg)
 		if !ok {
 			return "no two-qubit error metric in calibration snapshot"
 		}
 		if v > j.TwoQubitErrorMax {
-			return fmt.Sprintf("best two-qubit error %.4g exceeds floor %.4g", v, j.TwoQubitErrorMax)
+			return fmt.Sprintf("%s two-qubit error %.4g exceeds floor %.4g", agg, v, j.TwoQubitErrorMax)
 		}
 	}
 	if j.ReadoutErrorMax > 0 {
-		v, ok := t.MinMetric("readout.error")
+		v, ok := t.MetricAggregate("readout.error", agg)
 		if !ok {
 			return "no readout error metric in calibration snapshot"
 		}
 		if v > j.ReadoutErrorMax {
-			return fmt.Sprintf("best readout error %.4g exceeds floor %.4g", v, j.ReadoutErrorMax)
+			return fmt.Sprintf("%s readout error %.4g exceeds floor %.4g", agg, v, j.ReadoutErrorMax)
 		}
 	}
 	if j.CalibrationMaxAge > 0 {
