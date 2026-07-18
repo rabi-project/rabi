@@ -30,6 +30,13 @@ var minRole = map[string]Role{
 	"/rabi.admin.v1alpha1.AdminService/ListTokens":  RoleOperator,
 	"/rabi.admin.v1alpha1.AdminService/CreateToken": RoleAdmin,
 	"/rabi.admin.v1alpha1.AdminService/RevokeToken": RoleAdmin,
+
+	// Project lifecycle + quotas (M2): reads operator+, mutations admin.
+	"/rabi.admin.v1alpha1.AdminService/CreateProject":  RoleAdmin,
+	"/rabi.admin.v1alpha1.AdminService/ListProjects":   RoleOperator,
+	"/rabi.admin.v1alpha1.AdminService/ArchiveProject": RoleAdmin,
+	"/rabi.admin.v1alpha1.AdminService/SetQuota":       RoleAdmin,
+	"/rabi.admin.v1alpha1.AdminService/ListQuotas":     RoleOperator,
 }
 
 // MinRole reports the minimum role for a full method name.

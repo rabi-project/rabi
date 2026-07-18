@@ -79,6 +79,17 @@ func (s *jobsService) SubmitJob(ctx context.Context, req *apiv1alpha1.SubmitJobR
 		})
 	}
 
+	// Tenancy (M2): the project must exist (auto-created on first use) and
+	// be active; quotas are checked inside the insert transaction.
+	proj, err := s.store.EnsureProject(ctx, adm.Tenant)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "resolving project: %v", err)
+	}
+	if proj.ArchivedAt != nil {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"project %q is archived; new submissions are rejected", adm.Tenant)
+	}
+
 	rec := &store.JobRecord{
 		JobID:  uuid.NewString(),
 		Tenant: adm.Tenant,
@@ -92,10 +103,27 @@ func (s *jobsService) SubmitJob(ctx context.Context, req *apiv1alpha1.SubmitJobR
 			"usage":      []any{},
 		},
 	}
-	if err := s.store.InsertJob(ctx, rec); err != nil {
+	if err := s.store.InsertJobWithQuota(ctx, rec, declaredCosts(adm.Doc)); err != nil {
+		var qe *store.ErrQuotaExceeded
+		if errors.As(err, &qe) {
+			return nil, status.Errorf(codes.ResourceExhausted, "%v", qe)
+		}
 		return nil, status.Errorf(codes.Internal, "persisting job: %v", err)
 	}
 	return jobToProto(rec)
+}
+
+// declaredCosts extracts a submission's meterable native-unit demand. It
+// must agree with the SQL declared_cost() used for in-flight reservations
+// (migration 00005).
+func declaredCosts(doc map[string]any) map[string]float64 {
+	spec, _ := doc["spec"].(map[string]any)
+	workload, _ := spec["workload"].(map[string]any)
+	gm, _ := workload["gateModel"].(map[string]any)
+	if shots, ok := gm["shots"].(float64); ok && shots > 0 {
+		return map[string]float64{"shots": shots}
+	}
+	return nil
 }
 
 func (s *jobsService) GetJob(ctx context.Context, ref *apiv1alpha1.JobRef) (*apiv1alpha1.Job, error) {

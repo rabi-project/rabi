@@ -530,6 +530,562 @@ func (x *RevokeTokenResponse) GetFound() bool {
 	return false
 }
 
+type Project struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tenant        string                 `protobuf:"bytes,1,opt,name=tenant,proto3" json:"tenant,omitempty"` // exact wire string, e.g. "acme/qa"
+	Org           string                 `protobuf:"bytes,2,opt,name=org,proto3" json:"org,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Weight        int32                  `protobuf:"varint,4,opt,name=weight,proto3" json:"weight,omitempty"` // fair-share weight, >= 1
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	ArchivedAt    *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=archived_at,json=archivedAt,proto3" json:"archived_at,omitempty"` // unset = active
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Project) Reset() {
+	*x = Project{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Project) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Project) ProtoMessage() {}
+
+func (x *Project) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Project.ProtoReflect.Descriptor instead.
+func (*Project) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *Project) GetTenant() string {
+	if x != nil {
+		return x.Tenant
+	}
+	return ""
+}
+
+func (x *Project) GetOrg() string {
+	if x != nil {
+		return x.Org
+	}
+	return ""
+}
+
+func (x *Project) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Project) GetWeight() int32 {
+	if x != nil {
+		return x.Weight
+	}
+	return 0
+}
+
+func (x *Project) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *Project) GetArchivedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ArchivedAt
+	}
+	return nil
+}
+
+type CreateProjectRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tenant        string                 `protobuf:"bytes,1,opt,name=tenant,proto3" json:"tenant,omitempty"`
+	Weight        int32                  `protobuf:"varint,2,opt,name=weight,proto3" json:"weight,omitempty"` // 0 = default (1)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateProjectRequest) Reset() {
+	*x = CreateProjectRequest{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateProjectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateProjectRequest) ProtoMessage() {}
+
+func (x *CreateProjectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateProjectRequest.ProtoReflect.Descriptor instead.
+func (*CreateProjectRequest) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *CreateProjectRequest) GetTenant() string {
+	if x != nil {
+		return x.Tenant
+	}
+	return ""
+}
+
+func (x *CreateProjectRequest) GetWeight() int32 {
+	if x != nil {
+		return x.Weight
+	}
+	return 0
+}
+
+type ListProjectsRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	IncludeArchived bool                   `protobuf:"varint,1,opt,name=include_archived,json=includeArchived,proto3" json:"include_archived,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ListProjectsRequest) Reset() {
+	*x = ListProjectsRequest{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListProjectsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListProjectsRequest) ProtoMessage() {}
+
+func (x *ListProjectsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListProjectsRequest.ProtoReflect.Descriptor instead.
+func (*ListProjectsRequest) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *ListProjectsRequest) GetIncludeArchived() bool {
+	if x != nil {
+		return x.IncludeArchived
+	}
+	return false
+}
+
+type ListProjectsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Projects      []*Project             `protobuf:"bytes,1,rep,name=projects,proto3" json:"projects,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListProjectsResponse) Reset() {
+	*x = ListProjectsResponse{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListProjectsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListProjectsResponse) ProtoMessage() {}
+
+func (x *ListProjectsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListProjectsResponse.ProtoReflect.Descriptor instead.
+func (*ListProjectsResponse) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ListProjectsResponse) GetProjects() []*Project {
+	if x != nil {
+		return x.Projects
+	}
+	return nil
+}
+
+type ArchiveProjectRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tenant        string                 `protobuf:"bytes,1,opt,name=tenant,proto3" json:"tenant,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ArchiveProjectRequest) Reset() {
+	*x = ArchiveProjectRequest{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ArchiveProjectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ArchiveProjectRequest) ProtoMessage() {}
+
+func (x *ArchiveProjectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ArchiveProjectRequest.ProtoReflect.Descriptor instead.
+func (*ArchiveProjectRequest) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *ArchiveProjectRequest) GetTenant() string {
+	if x != nil {
+		return x.Tenant
+	}
+	return ""
+}
+
+type ArchiveProjectResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Found         bool                   `protobuf:"varint,1,opt,name=found,proto3" json:"found,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ArchiveProjectResponse) Reset() {
+	*x = ArchiveProjectResponse{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ArchiveProjectResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ArchiveProjectResponse) ProtoMessage() {}
+
+func (x *ArchiveProjectResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ArchiveProjectResponse.ProtoReflect.Descriptor instead.
+func (*ArchiveProjectResponse) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ArchiveProjectResponse) GetFound() bool {
+	if x != nil {
+		return x.Found
+	}
+	return false
+}
+
+type Quota struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tenant        string                 `protobuf:"bytes,1,opt,name=tenant,proto3" json:"tenant,omitempty"`
+	Unit          string                 `protobuf:"bytes,2,opt,name=unit,proto3" json:"unit,omitempty"` // native unit, e.g. "shots"
+	Limit         float64                `protobuf:"fixed64,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Quota) Reset() {
+	*x = Quota{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Quota) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Quota) ProtoMessage() {}
+
+func (x *Quota) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Quota.ProtoReflect.Descriptor instead.
+func (*Quota) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *Quota) GetTenant() string {
+	if x != nil {
+		return x.Tenant
+	}
+	return ""
+}
+
+func (x *Quota) GetUnit() string {
+	if x != nil {
+		return x.Unit
+	}
+	return ""
+}
+
+func (x *Quota) GetLimit() float64 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type SetQuotaRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tenant        string                 `protobuf:"bytes,1,opt,name=tenant,proto3" json:"tenant,omitempty"`
+	Unit          string                 `protobuf:"bytes,2,opt,name=unit,proto3" json:"unit,omitempty"`
+	Limit         float64                `protobuf:"fixed64,3,opt,name=limit,proto3" json:"limit,omitempty"` // negative removes the quota
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetQuotaRequest) Reset() {
+	*x = SetQuotaRequest{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetQuotaRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetQuotaRequest) ProtoMessage() {}
+
+func (x *SetQuotaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetQuotaRequest.ProtoReflect.Descriptor instead.
+func (*SetQuotaRequest) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *SetQuotaRequest) GetTenant() string {
+	if x != nil {
+		return x.Tenant
+	}
+	return ""
+}
+
+func (x *SetQuotaRequest) GetUnit() string {
+	if x != nil {
+		return x.Unit
+	}
+	return ""
+}
+
+func (x *SetQuotaRequest) GetLimit() float64 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type SetQuotaResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetQuotaResponse) Reset() {
+	*x = SetQuotaResponse{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetQuotaResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetQuotaResponse) ProtoMessage() {}
+
+func (x *SetQuotaResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetQuotaResponse.ProtoReflect.Descriptor instead.
+func (*SetQuotaResponse) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{17}
+}
+
+type ListQuotasRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tenant        string                 `protobuf:"bytes,1,opt,name=tenant,proto3" json:"tenant,omitempty"` // empty = all projects
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListQuotasRequest) Reset() {
+	*x = ListQuotasRequest{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListQuotasRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListQuotasRequest) ProtoMessage() {}
+
+func (x *ListQuotasRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListQuotasRequest.ProtoReflect.Descriptor instead.
+func (*ListQuotasRequest) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *ListQuotasRequest) GetTenant() string {
+	if x != nil {
+		return x.Tenant
+	}
+	return ""
+}
+
+type ListQuotasResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Quotas        []*Quota               `protobuf:"bytes,1,rep,name=quotas,proto3" json:"quotas,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListQuotasResponse) Reset() {
+	*x = ListQuotasResponse{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListQuotasResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListQuotasResponse) ProtoMessage() {}
+
+func (x *ListQuotasResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListQuotasResponse.ProtoReflect.Descriptor instead.
+func (*ListQuotasResponse) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *ListQuotasResponse) GetQuotas() []*Quota {
+	if x != nil {
+		return x.Quotas
+	}
+	return nil
+}
+
 var File_rabi_admin_v1alpha1_admin_proto protoreflect.FileDescriptor
 
 const file_rabi_admin_v1alpha1_admin_proto_rawDesc = "" +
@@ -569,13 +1125,52 @@ const file_rabi_admin_v1alpha1_admin_proto_rawDesc = "" +
 	"\x12RevokeTokenRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"+\n" +
 	"\x13RevokeTokenResponse\x12\x14\n" +
-	"\x05found\x18\x01 \x01(\bR\x05found2\x84\x03\n" +
+	"\x05found\x18\x01 \x01(\bR\x05found\"\xd7\x01\n" +
+	"\aProject\x12\x16\n" +
+	"\x06tenant\x18\x01 \x01(\tR\x06tenant\x12\x10\n" +
+	"\x03org\x18\x02 \x01(\tR\x03org\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x16\n" +
+	"\x06weight\x18\x04 \x01(\x05R\x06weight\x129\n" +
+	"\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12;\n" +
+	"\varchived_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"archivedAt\"F\n" +
+	"\x14CreateProjectRequest\x12\x16\n" +
+	"\x06tenant\x18\x01 \x01(\tR\x06tenant\x12\x16\n" +
+	"\x06weight\x18\x02 \x01(\x05R\x06weight\"@\n" +
+	"\x13ListProjectsRequest\x12)\n" +
+	"\x10include_archived\x18\x01 \x01(\bR\x0fincludeArchived\"P\n" +
+	"\x14ListProjectsResponse\x128\n" +
+	"\bprojects\x18\x01 \x03(\v2\x1c.rabi.admin.v1alpha1.ProjectR\bprojects\"/\n" +
+	"\x15ArchiveProjectRequest\x12\x16\n" +
+	"\x06tenant\x18\x01 \x01(\tR\x06tenant\".\n" +
+	"\x16ArchiveProjectResponse\x12\x14\n" +
+	"\x05found\x18\x01 \x01(\bR\x05found\"I\n" +
+	"\x05Quota\x12\x16\n" +
+	"\x06tenant\x18\x01 \x01(\tR\x06tenant\x12\x12\n" +
+	"\x04unit\x18\x02 \x01(\tR\x04unit\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x01R\x05limit\"S\n" +
+	"\x0fSetQuotaRequest\x12\x16\n" +
+	"\x06tenant\x18\x01 \x01(\tR\x06tenant\x12\x12\n" +
+	"\x04unit\x18\x02 \x01(\tR\x04unit\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x01R\x05limit\"\x12\n" +
+	"\x10SetQuotaResponse\"+\n" +
+	"\x11ListQuotasRequest\x12\x16\n" +
+	"\x06tenant\x18\x01 \x01(\tR\x06tenant\"H\n" +
+	"\x12ListQuotasResponse\x122\n" +
+	"\x06quotas\x18\x01 \x03(\v2\x1a.rabi.admin.v1alpha1.QuotaR\x06quotas2\xe6\x06\n" +
 	"\fAdminService\x12Q\n" +
 	"\x06WhoAmI\x12\".rabi.admin.v1alpha1.WhoAmIRequest\x1a#.rabi.admin.v1alpha1.WhoAmIResponse\x12`\n" +
 	"\vCreateToken\x12'.rabi.admin.v1alpha1.CreateTokenRequest\x1a(.rabi.admin.v1alpha1.CreateTokenResponse\x12]\n" +
 	"\n" +
 	"ListTokens\x12&.rabi.admin.v1alpha1.ListTokensRequest\x1a'.rabi.admin.v1alpha1.ListTokensResponse\x12`\n" +
-	"\vRevokeToken\x12'.rabi.admin.v1alpha1.RevokeTokenRequest\x1a(.rabi.admin.v1alpha1.RevokeTokenResponseB\xda\x01\n" +
+	"\vRevokeToken\x12'.rabi.admin.v1alpha1.RevokeTokenRequest\x1a(.rabi.admin.v1alpha1.RevokeTokenResponse\x12X\n" +
+	"\rCreateProject\x12).rabi.admin.v1alpha1.CreateProjectRequest\x1a\x1c.rabi.admin.v1alpha1.Project\x12c\n" +
+	"\fListProjects\x12(.rabi.admin.v1alpha1.ListProjectsRequest\x1a).rabi.admin.v1alpha1.ListProjectsResponse\x12i\n" +
+	"\x0eArchiveProject\x12*.rabi.admin.v1alpha1.ArchiveProjectRequest\x1a+.rabi.admin.v1alpha1.ArchiveProjectResponse\x12W\n" +
+	"\bSetQuota\x12$.rabi.admin.v1alpha1.SetQuotaRequest\x1a%.rabi.admin.v1alpha1.SetQuotaResponse\x12]\n" +
+	"\n" +
+	"ListQuotas\x12&.rabi.admin.v1alpha1.ListQuotasRequest\x1a'.rabi.admin.v1alpha1.ListQuotasResponseB\xda\x01\n" +
 	"\x17com.rabi.admin.v1alpha1B\n" +
 	"AdminProtoP\x01ZEgithub.com/rabi-project/rabi/gen/go/rabi/admin/v1alpha1;adminv1alpha1\xa2\x02\x03RAX\xaa\x02\x13Rabi.Admin.V1alpha1\xca\x02\x13Rabi\\Admin\\V1alpha1\xe2\x02\x1fRabi\\Admin\\V1alpha1\\GPBMetadata\xea\x02\x15Rabi::Admin::V1alpha1b\x06proto3"
 
@@ -591,38 +1186,63 @@ func file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP() []byte {
 	return file_rabi_admin_v1alpha1_admin_proto_rawDescData
 }
 
-var file_rabi_admin_v1alpha1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_rabi_admin_v1alpha1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_rabi_admin_v1alpha1_admin_proto_goTypes = []any{
-	(*WhoAmIRequest)(nil),         // 0: rabi.admin.v1alpha1.WhoAmIRequest
-	(*WhoAmIResponse)(nil),        // 1: rabi.admin.v1alpha1.WhoAmIResponse
-	(*TokenInfo)(nil),             // 2: rabi.admin.v1alpha1.TokenInfo
-	(*CreateTokenRequest)(nil),    // 3: rabi.admin.v1alpha1.CreateTokenRequest
-	(*CreateTokenResponse)(nil),   // 4: rabi.admin.v1alpha1.CreateTokenResponse
-	(*ListTokensRequest)(nil),     // 5: rabi.admin.v1alpha1.ListTokensRequest
-	(*ListTokensResponse)(nil),    // 6: rabi.admin.v1alpha1.ListTokensResponse
-	(*RevokeTokenRequest)(nil),    // 7: rabi.admin.v1alpha1.RevokeTokenRequest
-	(*RevokeTokenResponse)(nil),   // 8: rabi.admin.v1alpha1.RevokeTokenResponse
-	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
+	(*WhoAmIRequest)(nil),          // 0: rabi.admin.v1alpha1.WhoAmIRequest
+	(*WhoAmIResponse)(nil),         // 1: rabi.admin.v1alpha1.WhoAmIResponse
+	(*TokenInfo)(nil),              // 2: rabi.admin.v1alpha1.TokenInfo
+	(*CreateTokenRequest)(nil),     // 3: rabi.admin.v1alpha1.CreateTokenRequest
+	(*CreateTokenResponse)(nil),    // 4: rabi.admin.v1alpha1.CreateTokenResponse
+	(*ListTokensRequest)(nil),      // 5: rabi.admin.v1alpha1.ListTokensRequest
+	(*ListTokensResponse)(nil),     // 6: rabi.admin.v1alpha1.ListTokensResponse
+	(*RevokeTokenRequest)(nil),     // 7: rabi.admin.v1alpha1.RevokeTokenRequest
+	(*RevokeTokenResponse)(nil),    // 8: rabi.admin.v1alpha1.RevokeTokenResponse
+	(*Project)(nil),                // 9: rabi.admin.v1alpha1.Project
+	(*CreateProjectRequest)(nil),   // 10: rabi.admin.v1alpha1.CreateProjectRequest
+	(*ListProjectsRequest)(nil),    // 11: rabi.admin.v1alpha1.ListProjectsRequest
+	(*ListProjectsResponse)(nil),   // 12: rabi.admin.v1alpha1.ListProjectsResponse
+	(*ArchiveProjectRequest)(nil),  // 13: rabi.admin.v1alpha1.ArchiveProjectRequest
+	(*ArchiveProjectResponse)(nil), // 14: rabi.admin.v1alpha1.ArchiveProjectResponse
+	(*Quota)(nil),                  // 15: rabi.admin.v1alpha1.Quota
+	(*SetQuotaRequest)(nil),        // 16: rabi.admin.v1alpha1.SetQuotaRequest
+	(*SetQuotaResponse)(nil),       // 17: rabi.admin.v1alpha1.SetQuotaResponse
+	(*ListQuotasRequest)(nil),      // 18: rabi.admin.v1alpha1.ListQuotasRequest
+	(*ListQuotasResponse)(nil),     // 19: rabi.admin.v1alpha1.ListQuotasResponse
+	(*timestamppb.Timestamp)(nil),  // 20: google.protobuf.Timestamp
 }
 var file_rabi_admin_v1alpha1_admin_proto_depIdxs = []int32{
-	9, // 0: rabi.admin.v1alpha1.TokenInfo.created_at:type_name -> google.protobuf.Timestamp
-	9, // 1: rabi.admin.v1alpha1.TokenInfo.last_used_at:type_name -> google.protobuf.Timestamp
-	9, // 2: rabi.admin.v1alpha1.TokenInfo.revoked_at:type_name -> google.protobuf.Timestamp
-	2, // 3: rabi.admin.v1alpha1.CreateTokenResponse.info:type_name -> rabi.admin.v1alpha1.TokenInfo
-	2, // 4: rabi.admin.v1alpha1.ListTokensResponse.tokens:type_name -> rabi.admin.v1alpha1.TokenInfo
-	0, // 5: rabi.admin.v1alpha1.AdminService.WhoAmI:input_type -> rabi.admin.v1alpha1.WhoAmIRequest
-	3, // 6: rabi.admin.v1alpha1.AdminService.CreateToken:input_type -> rabi.admin.v1alpha1.CreateTokenRequest
-	5, // 7: rabi.admin.v1alpha1.AdminService.ListTokens:input_type -> rabi.admin.v1alpha1.ListTokensRequest
-	7, // 8: rabi.admin.v1alpha1.AdminService.RevokeToken:input_type -> rabi.admin.v1alpha1.RevokeTokenRequest
-	1, // 9: rabi.admin.v1alpha1.AdminService.WhoAmI:output_type -> rabi.admin.v1alpha1.WhoAmIResponse
-	4, // 10: rabi.admin.v1alpha1.AdminService.CreateToken:output_type -> rabi.admin.v1alpha1.CreateTokenResponse
-	6, // 11: rabi.admin.v1alpha1.AdminService.ListTokens:output_type -> rabi.admin.v1alpha1.ListTokensResponse
-	8, // 12: rabi.admin.v1alpha1.AdminService.RevokeToken:output_type -> rabi.admin.v1alpha1.RevokeTokenResponse
-	9, // [9:13] is the sub-list for method output_type
-	5, // [5:9] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	20, // 0: rabi.admin.v1alpha1.TokenInfo.created_at:type_name -> google.protobuf.Timestamp
+	20, // 1: rabi.admin.v1alpha1.TokenInfo.last_used_at:type_name -> google.protobuf.Timestamp
+	20, // 2: rabi.admin.v1alpha1.TokenInfo.revoked_at:type_name -> google.protobuf.Timestamp
+	2,  // 3: rabi.admin.v1alpha1.CreateTokenResponse.info:type_name -> rabi.admin.v1alpha1.TokenInfo
+	2,  // 4: rabi.admin.v1alpha1.ListTokensResponse.tokens:type_name -> rabi.admin.v1alpha1.TokenInfo
+	20, // 5: rabi.admin.v1alpha1.Project.created_at:type_name -> google.protobuf.Timestamp
+	20, // 6: rabi.admin.v1alpha1.Project.archived_at:type_name -> google.protobuf.Timestamp
+	9,  // 7: rabi.admin.v1alpha1.ListProjectsResponse.projects:type_name -> rabi.admin.v1alpha1.Project
+	15, // 8: rabi.admin.v1alpha1.ListQuotasResponse.quotas:type_name -> rabi.admin.v1alpha1.Quota
+	0,  // 9: rabi.admin.v1alpha1.AdminService.WhoAmI:input_type -> rabi.admin.v1alpha1.WhoAmIRequest
+	3,  // 10: rabi.admin.v1alpha1.AdminService.CreateToken:input_type -> rabi.admin.v1alpha1.CreateTokenRequest
+	5,  // 11: rabi.admin.v1alpha1.AdminService.ListTokens:input_type -> rabi.admin.v1alpha1.ListTokensRequest
+	7,  // 12: rabi.admin.v1alpha1.AdminService.RevokeToken:input_type -> rabi.admin.v1alpha1.RevokeTokenRequest
+	10, // 13: rabi.admin.v1alpha1.AdminService.CreateProject:input_type -> rabi.admin.v1alpha1.CreateProjectRequest
+	11, // 14: rabi.admin.v1alpha1.AdminService.ListProjects:input_type -> rabi.admin.v1alpha1.ListProjectsRequest
+	13, // 15: rabi.admin.v1alpha1.AdminService.ArchiveProject:input_type -> rabi.admin.v1alpha1.ArchiveProjectRequest
+	16, // 16: rabi.admin.v1alpha1.AdminService.SetQuota:input_type -> rabi.admin.v1alpha1.SetQuotaRequest
+	18, // 17: rabi.admin.v1alpha1.AdminService.ListQuotas:input_type -> rabi.admin.v1alpha1.ListQuotasRequest
+	1,  // 18: rabi.admin.v1alpha1.AdminService.WhoAmI:output_type -> rabi.admin.v1alpha1.WhoAmIResponse
+	4,  // 19: rabi.admin.v1alpha1.AdminService.CreateToken:output_type -> rabi.admin.v1alpha1.CreateTokenResponse
+	6,  // 20: rabi.admin.v1alpha1.AdminService.ListTokens:output_type -> rabi.admin.v1alpha1.ListTokensResponse
+	8,  // 21: rabi.admin.v1alpha1.AdminService.RevokeToken:output_type -> rabi.admin.v1alpha1.RevokeTokenResponse
+	9,  // 22: rabi.admin.v1alpha1.AdminService.CreateProject:output_type -> rabi.admin.v1alpha1.Project
+	12, // 23: rabi.admin.v1alpha1.AdminService.ListProjects:output_type -> rabi.admin.v1alpha1.ListProjectsResponse
+	14, // 24: rabi.admin.v1alpha1.AdminService.ArchiveProject:output_type -> rabi.admin.v1alpha1.ArchiveProjectResponse
+	17, // 25: rabi.admin.v1alpha1.AdminService.SetQuota:output_type -> rabi.admin.v1alpha1.SetQuotaResponse
+	19, // 26: rabi.admin.v1alpha1.AdminService.ListQuotas:output_type -> rabi.admin.v1alpha1.ListQuotasResponse
+	18, // [18:27] is the sub-list for method output_type
+	9,  // [9:18] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_rabi_admin_v1alpha1_admin_proto_init() }
@@ -636,7 +1256,7 @@ func file_rabi_admin_v1alpha1_admin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_rabi_admin_v1alpha1_admin_proto_rawDesc), len(file_rabi_admin_v1alpha1_admin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

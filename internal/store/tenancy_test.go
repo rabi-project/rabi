@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -250,6 +251,67 @@ func TestPhase0DatabaseUpgradesZeroLoss(t *testing.T) {
 		}
 		if p.Org != want[0] || p.Name != want[1] {
 			t.Fatalf("tenant %q mapped to %s/%s, want %s/%s", tenant, p.Org, p.Name, want[0], want[1])
+		}
+	}
+}
+
+// §3 property: usage never exceeds quota (strict — declared-reservation
+// admission needs no one-task tolerance). Seeded stdlib rand per D-023.
+func TestQuotaNeverExceededProperty(t *testing.T) {
+	ctx := t.Context()
+	const tenant = "quota/property"
+	const limit = 10_000.0
+	if _, err := testStore.EnsureProject(ctx, tenant); err != nil {
+		t.Fatal(err)
+	}
+	if err := testStore.SetQuota(ctx, tenant, "shots", limit); err != nil {
+		t.Fatal(err)
+	}
+	rng := rand.New(rand.NewSource(20260719))
+	var wg sync.WaitGroup
+	for i := 0; i < 60; i++ {
+		shots := float64(rng.Intn(2000) + 1)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_ = testStore.InsertJobWithQuota(ctx, shotsJob(tenant, shots), map[string]float64{"shots": shots})
+		}()
+	}
+	wg.Wait()
+	var committed float64
+	if err := testStore.Pool.QueryRow(ctx, `
+		SELECT COALESCE(SUM(declared_cost(doc, 'shots')), 0) FROM jobs
+		WHERE tenant = $1 AND phase NOT IN ('SUCCEEDED','FAILED','CANCELLED')`,
+		tenant).Scan(&committed); err != nil {
+		t.Fatal(err)
+	}
+	if committed > limit {
+		t.Fatalf("committed %.0f exceeds quota %.0f", committed, limit)
+	}
+	if committed == 0 {
+		t.Fatal("property run admitted nothing; vacuous")
+	}
+}
+
+// Org/project derivation from the wire tenant string, table-tested
+// (§3 "org/project inheritance"): a project inherits its org from the
+// string's first segment; richer org-entity policies arrive when something
+// consumes them (D-036).
+func TestTenantDerivationTable(t *testing.T) {
+	ctx := t.Context()
+	cases := []struct{ tenant, org, name string }{
+		{"acme/qa", "acme", "qa"},
+		{"acme/sub/team-x", "acme", "sub/team-x"},
+		{"bare", "bare", "default"},
+		{"trailing/", "trailing", ""},
+	}
+	for _, c := range cases {
+		p, err := testStore.EnsureProject(ctx, c.tenant)
+		if err != nil {
+			t.Fatalf("EnsureProject(%q): %v", c.tenant, err)
+		}
+		if p.Org != c.org || p.Name != c.name {
+			t.Errorf("tenant %q → %s/%s, want %s/%s", c.tenant, p.Org, p.Name, c.org, c.name)
 		}
 	}
 }

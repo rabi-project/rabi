@@ -108,3 +108,80 @@ func tsOrNil(t *time.Time) *timestamppb.Timestamp {
 	}
 	return timestamppb.New(*t)
 }
+
+func projectToProto(p *store.ProjectRecord) *adminv1alpha1.Project {
+	return &adminv1alpha1.Project{
+		Tenant: p.Tenant, Org: p.Org, Name: p.Name, Weight: int32(p.Weight),
+		CreatedAt: tsOrNil(&p.CreatedAt), ArchivedAt: tsOrNil(p.ArchivedAt),
+	}
+}
+
+func (a *adminService) CreateProject(ctx context.Context, req *adminv1alpha1.CreateProjectRequest) (*adminv1alpha1.Project, error) {
+	if req.GetTenant() == "" {
+		return nil, status.Error(codes.InvalidArgument, "tenant is required")
+	}
+	p, err := a.store.EnsureProject(ctx, req.GetTenant())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "create project: %v", err)
+	}
+	if w := int(req.GetWeight()); w >= 1 && w != p.Weight {
+		if err := a.store.SetProjectWeight(ctx, p.Tenant, w); err != nil {
+			return nil, status.Errorf(codes.Internal, "set weight: %v", err)
+		}
+		p.Weight = w
+	}
+	return projectToProto(p), nil
+}
+
+func (a *adminService) ListProjects(ctx context.Context, req *adminv1alpha1.ListProjectsRequest) (*adminv1alpha1.ListProjectsResponse, error) {
+	recs, err := a.store.ListProjects(ctx, req.GetIncludeArchived())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "list projects: %v", err)
+	}
+	resp := &adminv1alpha1.ListProjectsResponse{}
+	for _, p := range recs {
+		resp.Projects = append(resp.Projects, projectToProto(p))
+	}
+	return resp, nil
+}
+
+func (a *adminService) ArchiveProject(ctx context.Context, req *adminv1alpha1.ArchiveProjectRequest) (*adminv1alpha1.ArchiveProjectResponse, error) {
+	if req.GetTenant() == "" {
+		return nil, status.Error(codes.InvalidArgument, "tenant is required")
+	}
+	found, err := a.store.ArchiveProject(ctx, req.GetTenant())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "archive project: %v", err)
+	}
+	return &adminv1alpha1.ArchiveProjectResponse{Found: found}, nil
+}
+
+func (a *adminService) SetQuota(ctx context.Context, req *adminv1alpha1.SetQuotaRequest) (*adminv1alpha1.SetQuotaResponse, error) {
+	if req.GetTenant() == "" || req.GetUnit() == "" {
+		return nil, status.Error(codes.InvalidArgument, "tenant and unit are required")
+	}
+	if _, err := a.store.GetProject(ctx, req.GetTenant()); err != nil {
+		if errors.Is(err, store.ErrProjectNotFound) {
+			return nil, status.Errorf(codes.NotFound, "project %q not found", req.GetTenant())
+		}
+		return nil, status.Errorf(codes.Internal, "project lookup: %v", err)
+	}
+	if err := a.store.SetQuota(ctx, req.GetTenant(), req.GetUnit(), req.GetLimit()); err != nil {
+		return nil, status.Errorf(codes.Internal, "set quota: %v", err)
+	}
+	return &adminv1alpha1.SetQuotaResponse{}, nil
+}
+
+func (a *adminService) ListQuotas(ctx context.Context, req *adminv1alpha1.ListQuotasRequest) (*adminv1alpha1.ListQuotasResponse, error) {
+	recs, err := a.store.ListQuotas(ctx, req.GetTenant())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "list quotas: %v", err)
+	}
+	resp := &adminv1alpha1.ListQuotasResponse{}
+	for _, q := range recs {
+		resp.Quotas = append(resp.Quotas, &adminv1alpha1.Quota{
+			Tenant: q.Tenant, Unit: q.Unit, Limit: q.Limit,
+		})
+	}
+	return resp, nil
+}

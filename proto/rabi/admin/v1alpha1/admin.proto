@@ -21,6 +21,16 @@ service AdminService {
   rpc ListTokens(ListTokensRequest) returns (ListTokensResponse);
   // RevokeToken invalidates a token immediately; rotation = create + revoke.
   rpc RevokeToken(RevokeTokenRequest) returns (RevokeTokenResponse);
+
+  // Project lifecycle (M2). Projects are keyed by the exact tenant string
+  // the spec API speaks; org/name are derived display fields.
+  rpc CreateProject(CreateProjectRequest) returns (Project);
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse);
+  // ArchiveProject stops new submissions; history and running jobs remain.
+  rpc ArchiveProject(ArchiveProjectRequest) returns (ArchiveProjectResponse);
+  // SetQuota sets a per-unit native-unit limit; negative limit removes it.
+  rpc SetQuota(SetQuotaRequest) returns (SetQuotaResponse);
+  rpc ListQuotas(ListQuotasRequest) returns (ListQuotasResponse);
 }
 
 message WhoAmIRequest {}
@@ -69,4 +79,56 @@ message RevokeTokenRequest {
 
 message RevokeTokenResponse {
   bool found = 1;
+}
+
+message Project {
+  string tenant = 1;  // exact wire string, e.g. "acme/qa"
+  string org = 2;
+  string name = 3;
+  int32 weight = 4;   // fair-share weight, >= 1
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp archived_at = 6;  // unset = active
+}
+
+message CreateProjectRequest {
+  string tenant = 1;
+  int32 weight = 2;  // 0 = default (1)
+}
+
+message ListProjectsRequest {
+  bool include_archived = 1;
+}
+
+message ListProjectsResponse {
+  repeated Project projects = 1;
+}
+
+message ArchiveProjectRequest {
+  string tenant = 1;
+}
+
+message ArchiveProjectResponse {
+  bool found = 1;
+}
+
+message Quota {
+  string tenant = 1;
+  string unit = 2;   // native unit, e.g. "shots"
+  double limit = 3;
+}
+
+message SetQuotaRequest {
+  string tenant = 1;
+  string unit = 2;
+  double limit = 3;  // negative removes the quota
+}
+
+message SetQuotaResponse {}
+
+message ListQuotasRequest {
+  string tenant = 1;  // empty = all projects
+}
+
+message ListQuotasResponse {
+  repeated Quota quotas = 1;
 }

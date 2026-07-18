@@ -36,7 +36,8 @@ func main() {
 
 	root.AddCommand(newTargetsCmd(), newSubmitCmd(), newGetCmd(), newListCmd(),
 		newWatchCmd(), newCancelCmd(), newUsageCmd(),
-		newTokenCmd(), newWhoAmICmd(), newLoginCmd())
+		newTokenCmd(), newWhoAmICmd(), newLoginCmd(),
+		newProjectCmd(), newQuotaCmd())
 
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "qctl:", err)

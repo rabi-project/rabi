@@ -35,8 +35,11 @@ const (
 // adminActions are the allow-side calls that must always be audited
 // (phase1-build-plan.md M1: "every admin action").
 var adminActions = map[string]bool{
-	"/rabi.admin.v1alpha1.AdminService/CreateToken": true,
-	"/rabi.admin.v1alpha1.AdminService/RevokeToken": true,
+	"/rabi.admin.v1alpha1.AdminService/CreateToken":    true,
+	"/rabi.admin.v1alpha1.AdminService/RevokeToken":    true,
+	"/rabi.admin.v1alpha1.AdminService/CreateProject":  true,
+	"/rabi.admin.v1alpha1.AdminService/ArchiveProject": true,
+	"/rabi.admin.v1alpha1.AdminService/SetQuota":       true,
 }
 
 // Authenticator resolves a bearer credential to a Principal.

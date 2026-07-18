@@ -381,3 +381,26 @@ authorization-code flow against the mockCallback connector (headless —
 it approves without a form and its identity carries groups=[authors]);
 mockPassword was rejected because its identity has no groups, which
 would leave role mapping untested.
+
+## D-036 · 2026-07-19 · P1-M2 — tenancy boring choices
+
+- The spec API speaks tenant strings (ListJobsRequest.tenant et al. — spec
+  law), so the exact wire string is the project identity/PK; org and
+  project name are DERIVED display fields (first "/" segment; bare strings
+  get project "default"). "Org/project inheritance" = this derivation
+  rule, table-tested; org-level entities/policies (org quotas, org roles)
+  arrive when something consumes them, and org-scoped role bindings are
+  the natural M2 follow-up once OIDC users get project memberships.
+- Projects auto-create on first submission (Phase 0 accepted arbitrary
+  tenants; strict mode is a future deployment flag). Archive is one-way
+  and blocks new submissions only.
+- Quota model: per-(project, unit) limits in native units; admission locks
+  the quota rows and inserts the job IN THE SAME transaction, so
+  concurrency serializes per project and the race criterion holds exactly.
+  Committed = ledger usage + declared demand of non-terminal jobs
+  (declared_cost() in SQL and declaredCosts() in Go must agree). Only
+  gate-model shots are declarable today; other units meter post-hoc via
+  the ledger and are quota-unlimited until declarable.
+- Fair share: weighted deficit round-robin over each dispatch cycle's
+  pending set (virtual time (assigned+1)/weight, lexical tie-break, FIFO
+  within a project), reset per cycle. Golden: 3:1 → exact aaab cadence.

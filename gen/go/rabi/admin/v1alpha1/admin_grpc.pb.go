@@ -27,10 +27,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AdminService_WhoAmI_FullMethodName      = "/rabi.admin.v1alpha1.AdminService/WhoAmI"
-	AdminService_CreateToken_FullMethodName = "/rabi.admin.v1alpha1.AdminService/CreateToken"
-	AdminService_ListTokens_FullMethodName  = "/rabi.admin.v1alpha1.AdminService/ListTokens"
-	AdminService_RevokeToken_FullMethodName = "/rabi.admin.v1alpha1.AdminService/RevokeToken"
+	AdminService_WhoAmI_FullMethodName         = "/rabi.admin.v1alpha1.AdminService/WhoAmI"
+	AdminService_CreateToken_FullMethodName    = "/rabi.admin.v1alpha1.AdminService/CreateToken"
+	AdminService_ListTokens_FullMethodName     = "/rabi.admin.v1alpha1.AdminService/ListTokens"
+	AdminService_RevokeToken_FullMethodName    = "/rabi.admin.v1alpha1.AdminService/RevokeToken"
+	AdminService_CreateProject_FullMethodName  = "/rabi.admin.v1alpha1.AdminService/CreateProject"
+	AdminService_ListProjects_FullMethodName   = "/rabi.admin.v1alpha1.AdminService/ListProjects"
+	AdminService_ArchiveProject_FullMethodName = "/rabi.admin.v1alpha1.AdminService/ArchiveProject"
+	AdminService_SetQuota_FullMethodName       = "/rabi.admin.v1alpha1.AdminService/SetQuota"
+	AdminService_ListQuotas_FullMethodName     = "/rabi.admin.v1alpha1.AdminService/ListQuotas"
 )
 
 // AdminServiceClient is the client API for AdminService service.
@@ -45,6 +50,15 @@ type AdminServiceClient interface {
 	ListTokens(ctx context.Context, in *ListTokensRequest, opts ...grpc.CallOption) (*ListTokensResponse, error)
 	// RevokeToken invalidates a token immediately; rotation = create + revoke.
 	RevokeToken(ctx context.Context, in *RevokeTokenRequest, opts ...grpc.CallOption) (*RevokeTokenResponse, error)
+	// Project lifecycle (M2). Projects are keyed by the exact tenant string
+	// the spec API speaks; org/name are derived display fields.
+	CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*Project, error)
+	ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...grpc.CallOption) (*ListProjectsResponse, error)
+	// ArchiveProject stops new submissions; history and running jobs remain.
+	ArchiveProject(ctx context.Context, in *ArchiveProjectRequest, opts ...grpc.CallOption) (*ArchiveProjectResponse, error)
+	// SetQuota sets a per-unit native-unit limit; negative limit removes it.
+	SetQuota(ctx context.Context, in *SetQuotaRequest, opts ...grpc.CallOption) (*SetQuotaResponse, error)
+	ListQuotas(ctx context.Context, in *ListQuotasRequest, opts ...grpc.CallOption) (*ListQuotasResponse, error)
 }
 
 type adminServiceClient struct {
@@ -95,6 +109,56 @@ func (c *adminServiceClient) RevokeToken(ctx context.Context, in *RevokeTokenReq
 	return out, nil
 }
 
+func (c *adminServiceClient) CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*Project, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Project)
+	err := c.cc.Invoke(ctx, AdminService_CreateProject_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...grpc.CallOption) (*ListProjectsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListProjectsResponse)
+	err := c.cc.Invoke(ctx, AdminService_ListProjects_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) ArchiveProject(ctx context.Context, in *ArchiveProjectRequest, opts ...grpc.CallOption) (*ArchiveProjectResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ArchiveProjectResponse)
+	err := c.cc.Invoke(ctx, AdminService_ArchiveProject_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) SetQuota(ctx context.Context, in *SetQuotaRequest, opts ...grpc.CallOption) (*SetQuotaResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetQuotaResponse)
+	err := c.cc.Invoke(ctx, AdminService_SetQuota_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) ListQuotas(ctx context.Context, in *ListQuotasRequest, opts ...grpc.CallOption) (*ListQuotasResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListQuotasResponse)
+	err := c.cc.Invoke(ctx, AdminService_ListQuotas_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AdminServiceServer is the server API for AdminService service.
 // All implementations must embed UnimplementedAdminServiceServer
 // for forward compatibility.
@@ -107,6 +171,15 @@ type AdminServiceServer interface {
 	ListTokens(context.Context, *ListTokensRequest) (*ListTokensResponse, error)
 	// RevokeToken invalidates a token immediately; rotation = create + revoke.
 	RevokeToken(context.Context, *RevokeTokenRequest) (*RevokeTokenResponse, error)
+	// Project lifecycle (M2). Projects are keyed by the exact tenant string
+	// the spec API speaks; org/name are derived display fields.
+	CreateProject(context.Context, *CreateProjectRequest) (*Project, error)
+	ListProjects(context.Context, *ListProjectsRequest) (*ListProjectsResponse, error)
+	// ArchiveProject stops new submissions; history and running jobs remain.
+	ArchiveProject(context.Context, *ArchiveProjectRequest) (*ArchiveProjectResponse, error)
+	// SetQuota sets a per-unit native-unit limit; negative limit removes it.
+	SetQuota(context.Context, *SetQuotaRequest) (*SetQuotaResponse, error)
+	ListQuotas(context.Context, *ListQuotasRequest) (*ListQuotasResponse, error)
 	mustEmbedUnimplementedAdminServiceServer()
 }
 
@@ -128,6 +201,21 @@ func (UnimplementedAdminServiceServer) ListTokens(context.Context, *ListTokensRe
 }
 func (UnimplementedAdminServiceServer) RevokeToken(context.Context, *RevokeTokenRequest) (*RevokeTokenResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RevokeToken not implemented")
+}
+func (UnimplementedAdminServiceServer) CreateProject(context.Context, *CreateProjectRequest) (*Project, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateProject not implemented")
+}
+func (UnimplementedAdminServiceServer) ListProjects(context.Context, *ListProjectsRequest) (*ListProjectsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListProjects not implemented")
+}
+func (UnimplementedAdminServiceServer) ArchiveProject(context.Context, *ArchiveProjectRequest) (*ArchiveProjectResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ArchiveProject not implemented")
+}
+func (UnimplementedAdminServiceServer) SetQuota(context.Context, *SetQuotaRequest) (*SetQuotaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetQuota not implemented")
+}
+func (UnimplementedAdminServiceServer) ListQuotas(context.Context, *ListQuotasRequest) (*ListQuotasResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListQuotas not implemented")
 }
 func (UnimplementedAdminServiceServer) mustEmbedUnimplementedAdminServiceServer() {}
 func (UnimplementedAdminServiceServer) testEmbeddedByValue()                      {}
@@ -222,6 +310,96 @@ func _AdminService_RevokeToken_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminService_CreateProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProjectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).CreateProject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_CreateProject_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).CreateProject(ctx, req.(*CreateProjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_ListProjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListProjectsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).ListProjects(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_ListProjects_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).ListProjects(ctx, req.(*ListProjectsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_ArchiveProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ArchiveProjectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).ArchiveProject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_ArchiveProject_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).ArchiveProject(ctx, req.(*ArchiveProjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_SetQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetQuotaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).SetQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_SetQuota_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).SetQuota(ctx, req.(*SetQuotaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_ListQuotas_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListQuotasRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).ListQuotas(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_ListQuotas_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).ListQuotas(ctx, req.(*ListQuotasRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AdminService_ServiceDesc is the grpc.ServiceDesc for AdminService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -244,6 +422,26 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RevokeToken",
 			Handler:    _AdminService_RevokeToken_Handler,
+		},
+		{
+			MethodName: "CreateProject",
+			Handler:    _AdminService_CreateProject_Handler,
+		},
+		{
+			MethodName: "ListProjects",
+			Handler:    _AdminService_ListProjects_Handler,
+		},
+		{
+			MethodName: "ArchiveProject",
+			Handler:    _AdminService_ArchiveProject_Handler,
+		},
+		{
+			MethodName: "SetQuota",
+			Handler:    _AdminService_SetQuota_Handler,
+		},
+		{
+			MethodName: "ListQuotas",
+			Handler:    _AdminService_ListQuotas_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
