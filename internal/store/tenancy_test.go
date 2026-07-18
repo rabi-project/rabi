@@ -7,11 +7,14 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/rabi-project/rabi/internal/auth"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
 	"github.com/rabi-project/rabi/internal/job"
@@ -312,5 +315,272 @@ func TestTenantDerivationTable(t *testing.T) {
 		if p.Org != c.org || p.Name != c.name {
 			t.Errorf("tenant %q → %s/%s, want %s/%s", c.tenant, p.Org, p.Name, c.org, c.name)
 		}
+	}
+}
+
+func TestQuotaHelpersAndWeights(t *testing.T) {
+	ctx := t.Context()
+	const tenant = "quota/helpers"
+	if _, err := testStore.EnsureProject(ctx, tenant); err != nil {
+		t.Fatal(err)
+	}
+	if err := testStore.SetProjectWeight(ctx, tenant, 4); err != nil {
+		t.Fatal(err)
+	}
+	weights, err := testStore.ProjectWeights(ctx, []string{tenant, "never/created"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if weights[tenant] != 4 || weights["never/created"] != 1 {
+		t.Fatalf("weights = %v", weights)
+	}
+
+	if err := testStore.SetQuota(ctx, tenant, "shots", 100); err != nil {
+		t.Fatal(err)
+	}
+	if err := testStore.SetQuota(ctx, tenant, "seconds", 60); err != nil {
+		t.Fatal(err)
+	}
+	quotas, err := testStore.ListQuotas(ctx, tenant)
+	if err != nil || len(quotas) != 2 {
+		t.Fatalf("quotas = %v, %v", quotas, err)
+	}
+	// Update in place, then remove.
+	if err := testStore.SetQuota(ctx, tenant, "shots", 200); err != nil {
+		t.Fatal(err)
+	}
+	if err := testStore.SetQuota(ctx, tenant, "seconds", -1); err != nil {
+		t.Fatal(err)
+	}
+	quotas, err = testStore.ListQuotas(ctx, tenant)
+	if err != nil || len(quotas) != 1 || quotas[0].Limit != 200 {
+		t.Fatalf("after update/remove: %v, %v", quotas, err)
+	}
+
+	qe := &store.ErrQuotaExceeded{Unit: "shots", Limit: 10, Committed: 8, Requested: 5}
+	if !strings.Contains(qe.Error(), "shots") || !strings.Contains(qe.Error(), "10") {
+		t.Fatalf("error text uninformative: %s", qe.Error())
+	}
+}
+
+func TestTouchTokenAndJobCondition(t *testing.T) {
+	ctx := t.Context()
+	_, id, hash, err := auth.MintToken()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := testStore.InsertToken(ctx, &store.TokenRecord{
+		ID: id, Name: "touchable", Project: "helpers", Role: "viewer",
+		TokenHash: hash, CreatedBy: "test",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	testStore.TouchToken(ctx, id)
+	rec, err := testStore.GetToken(ctx, id)
+	if err != nil || rec.LastUsedAt == nil {
+		t.Fatalf("touch not recorded: %v %+v", err, rec)
+	}
+
+	jobRec := shotsJob("helpers", 1)
+	if err := testStore.InsertJob(ctx, jobRec); err != nil {
+		t.Fatal(err)
+	}
+	changed, err := testStore.SetJobCondition(ctx, jobRec.JobID, map[string]any{
+		"type": "Schedulable", "status": "False", "reason": "TestReason",
+	})
+	if err != nil || !changed {
+		t.Fatalf("set condition: %v changed=%v", err, changed)
+	}
+	// Same condition again: no change recorded.
+	changed, err = testStore.SetJobCondition(ctx, jobRec.JobID, map[string]any{
+		"type": "Schedulable", "status": "False", "reason": "TestReason",
+	})
+	if err != nil || changed {
+		t.Fatalf("condition dedup broken: %v changed=%v", err, changed)
+	}
+}
+
+func TestStoreErrorPaths(t *testing.T) {
+	ctx := t.Context()
+	// Unknown job: condition set reports not-found.
+	if _, err := testStore.SetJobCondition(ctx, uuid.NewString(), map[string]any{
+		"type": "X", "status": "True", "reason": "Y",
+	}); err == nil {
+		t.Fatal("condition on missing job must error")
+	}
+	// Empty tenant is rejected before touching the database.
+	if _, err := testStore.EnsureProject(ctx, ""); err == nil {
+		t.Fatal("empty tenant must error")
+	}
+	// Archiving a nonexistent project reports found=false.
+	if found, err := testStore.ArchiveProject(ctx, "ghost/project"); err != nil || found {
+		t.Fatalf("ghost archive: %v found=%v", err, found)
+	}
+	// Revoking a nonexistent token reports found=false.
+	if found, err := testStore.RevokeToken(ctx, "no-such-id"); err != nil || found {
+		t.Fatalf("ghost revoke: %v found=%v", err, found)
+	}
+	// Duplicate job id: the quota insert surfaces the constraint violation.
+	rec := shotsJob("helpers", 1)
+	if err := testStore.InsertJobWithQuota(ctx, rec, nil); err != nil {
+		t.Fatal(err)
+	}
+	if err := testStore.InsertJobWithQuota(ctx, rec, nil); err == nil {
+		t.Fatal("duplicate job id must error")
+	}
+	// Duplicate token id: insert surfaces the constraint violation.
+	_, id, hash, err := auth.MintToken()
+	if err != nil {
+		t.Fatal(err)
+	}
+	tok := &store.TokenRecord{ID: id, Name: "dup", Project: "helpers", Role: "viewer", TokenHash: hash, CreatedBy: "t"}
+	if err := testStore.InsertToken(ctx, tok); err != nil {
+		t.Fatal(err)
+	}
+	if err := testStore.InsertToken(ctx, tok); err == nil {
+		t.Fatal("duplicate token id must error")
+	}
+	// Invalid role violates the CHECK constraint.
+	bad := &store.TokenRecord{ID: id + "x", Name: "bad", Project: "helpers", Role: "root", TokenHash: hash, CreatedBy: "t"}
+	if err := testStore.InsertToken(ctx, bad); err == nil {
+		t.Fatal("invalid role must be rejected by the schema")
+	}
+	// Audit decision outside allow|deny violates the CHECK constraint.
+	if err := testStore.RecordAudit(ctx, store.AuditEntry{
+		PrincipalType: "t", Subject: "s", Method: "m", Decision: "maybe",
+	}); err == nil {
+		t.Fatal("invalid audit decision must be rejected by the schema")
+	}
+}
+
+func TestConditionReplaceAndDoubleBind(t *testing.T) {
+	ctx := t.Context()
+	rec := shotsJob("helpers", 1)
+	if err := testStore.InsertJob(ctx, rec); err != nil {
+		t.Fatal(err)
+	}
+	set := func(reason, msg string) bool {
+		changed, err := testStore.SetJobCondition(ctx, rec.JobID, map[string]any{
+			"type": "Schedulable", "status": "False", "reason": reason, "message": msg,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return changed
+	}
+	if !set("NoFeasibleTarget", "0 of 3 targets") {
+		t.Fatal("first condition must record")
+	}
+	if !set("NoFeasibleTarget", "1 of 3 targets") {
+		t.Fatal("changed message must replace the same-type condition")
+	}
+	// A second condition type appends alongside.
+	if changed, err := testStore.SetJobCondition(ctx, rec.JobID, map[string]any{
+		"type": "QuotaPressure", "status": "True", "reason": "NearLimit",
+	}); err != nil || !changed {
+		t.Fatalf("second type: %v changed=%v", err, changed)
+	}
+
+	// Bind, then a second bind must refuse (job no longer PENDING).
+	if _, err := testStore.BindJob(ctx, rec.JobID, uuid.NewString(), "site/t1", map[string]any{"policy": "test"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := testStore.BindJob(ctx, rec.JobID, uuid.NewString(), "site/t2", map[string]any{"policy": "test"}); err == nil {
+		t.Fatal("double bind must fail")
+	}
+}
+
+func TestUnfilteredListingsAndUsageWindow(t *testing.T) {
+	ctx := t.Context()
+	if _, err := testStore.ListTokens(ctx, ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := testStore.AuditEntries(ctx, "", 5); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := testStore.ListProjects(ctx, true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := testStore.ListQuotas(ctx, ""); err != nil {
+		t.Fatal(err)
+	}
+	// Usage with an explicit window and with the zero-time defaults.
+	if _, err := testStore.TenantUsage(ctx, "helpers", time.Time{}, time.Time{}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := testStore.TenantUsage(ctx, "helpers",
+		time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+		time.Date(2026, 12, 31, 0, 0, 0, 0, time.UTC)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := testStore.GetJob(ctx, uuid.NewString()); !errors.Is(err, store.ErrNotFound) {
+		t.Fatalf("missing job: want ErrNotFound, got %v", err)
+	}
+}
+
+func TestOpenAtErrorPaths(t *testing.T) {
+	ctx := t.Context()
+	if _, err := store.OpenAt(ctx, "postgres://%zz-not-a-url", 4); err == nil {
+		t.Fatal("bad database url must error")
+	}
+}
+
+// A closed pool exercises every query-error return in one sweep — these
+// branches otherwise need fault injection.
+func TestClosedPoolSurfacesErrors(t *testing.T) {
+	ctx := t.Context()
+	dead, err := store.Open(ctx, testDSN)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dead.Close()
+
+	if _, err := dead.GetProject(ctx, "x"); err == nil {
+		t.Error("GetProject on closed pool must error")
+	}
+	if _, err := dead.ArchiveProject(ctx, "x"); err == nil {
+		t.Error("ArchiveProject on closed pool must error")
+	}
+	if err := dead.SetQuota(ctx, "x", "shots", 1); err == nil {
+		t.Error("SetQuota on closed pool must error")
+	}
+	if err := dead.SetQuota(ctx, "x", "shots", -1); err == nil {
+		t.Error("SetQuota remove on closed pool must error")
+	}
+	if _, err := dead.RevokeToken(ctx, "x"); err == nil {
+		t.Error("RevokeToken on closed pool must error")
+	}
+	if _, err := dead.ListQuotas(ctx, ""); err == nil {
+		t.Error("ListQuotas on closed pool must error")
+	}
+	if _, err := dead.ProjectWeights(ctx, []string{"x"}); err == nil {
+		t.Error("ProjectWeights on closed pool must error")
+	}
+	if _, err := dead.ListProjects(ctx, true); err == nil {
+		t.Error("ListProjects on closed pool must error")
+	}
+	if _, err := dead.EnsureProject(ctx, "x"); err == nil {
+		t.Error("EnsureProject on closed pool must error")
+	}
+	if err := dead.InsertToken(ctx, &store.TokenRecord{ID: "x"}); err == nil {
+		t.Error("InsertToken on closed pool must error")
+	}
+	if _, err := dead.ListTokens(ctx, ""); err == nil {
+		t.Error("ListTokens on closed pool must error")
+	}
+	if _, err := dead.GetToken(ctx, "x"); err == nil {
+		t.Error("GetToken on closed pool must error")
+	}
+	if err := dead.RecordAudit(ctx, store.AuditEntry{Decision: "deny"}); err == nil {
+		t.Error("RecordAudit on closed pool must error")
+	}
+	if _, err := dead.AuditEntries(ctx, "", 1); err == nil {
+		t.Error("AuditEntries on closed pool must error")
+	}
+	if err := dead.InsertJobWithQuota(ctx, shotsJob("x", 1), nil); err == nil {
+		t.Error("InsertJobWithQuota on closed pool must error")
+	}
+	if _, err := dead.BindJob(ctx, "x", "t", "tt", nil); err == nil {
+		t.Error("BindJob on closed pool must error")
 	}
 }
