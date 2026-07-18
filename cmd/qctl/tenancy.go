@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 
 	adminv1alpha1 "github.com/rabi-project/rabi/gen/go/rabi/admin/v1alpha1"
+	"github.com/rabi-project/rabi/internal/accounting"
+	"github.com/rabi-project/rabi/internal/store"
 )
 
 // newProjectCmd groups project lifecycle (create/list/archive) — M2.
@@ -203,5 +205,51 @@ func newQuotaListCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&tenant, "project", "", "filter by project tenant string")
+	return cmd
+}
+
+// newUsageExportCmd normalizes the immutable ledger under a site policy
+// file and writes canonical CSV to stdout (M3). Same ledger + same policy
+// version → byte-equal output.
+func newUsageExportCmd() *cobra.Command {
+	var project, policyPath string
+	cmd := &cobra.Command{
+		Use:   "export",
+		Short: "Export the usage ledger as normalized cost records (CSV)",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			raw, err := os.ReadFile(policyPath)
+			if err != nil {
+				return err
+			}
+			policy, err := accounting.ParsePolicy(raw)
+			if err != nil {
+				return err
+			}
+			ctx, cancel := commandContext()
+			defer cancel()
+			conn, ctx, err := dial(ctx)
+			if err != nil {
+				return err
+			}
+			defer func() { _ = conn.Close() }()
+			resp, err := adminv1alpha1.NewAdminServiceClient(conn).ExportLedger(ctx, &adminv1alpha1.ExportLedgerRequest{Tenant: project})
+			if err != nil {
+				return err
+			}
+			entries := make([]store.LedgerEntry, 0, len(resp.GetEntries()))
+			for _, e := range resp.GetEntries() {
+				entries = append(entries, store.LedgerEntry{
+					ID: e.GetId(), JobID: e.GetJobId(), TaskID: e.GetTaskId(),
+					Tenant: e.GetTenant(), Target: e.GetTarget(),
+					Unit: e.GetUnit(), Amount: e.GetAmount(),
+				})
+			}
+			return accounting.WriteCSV(cmd.OutOrStdout(), accounting.Normalize(entries, policy))
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", "", "project tenant string (empty = all you can see)")
+	cmd.Flags().StringVar(&policyPath, "policy", "", "normalization policy YAML (required)")
+	_ = cmd.MarkFlagRequired("policy")
 	return cmd
 }

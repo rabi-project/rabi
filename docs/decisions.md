@@ -404,3 +404,23 @@ would leave role mapping untested.
 - Fair share: weighted deficit round-robin over each dispatch cycle's
   pending set (virtual time (assigned+1)/weight, lexical tie-break, FIFO
   within a project), reset per cycle. Golden: 3:1 → exact aaab cadence.
+
+## D-037 · 2026-07-19 · P1-M3 — accounting boring choices
+
+- Append-only is enforced by Postgres, not discipline: migration 00006
+  creates a NOLOGIN role `rabi_app` with no UPDATE/DELETE/TRUNCATE on
+  usage_ledger, audit_log, job_events, reconciliation_runs; store.Open
+  migrates as the owner, then serves every connection under
+  `SET ROLE rabi_app`. The §3 test issues UPDATE/DELETE/TRUNCATE through
+  the serving pool and asserts "permission denied". Closes D-035's interim.
+- Normalization is a PURE FUNCTION of (ledger, policy document): cost
+  records are computed on export, never stored, so same ledger + same
+  policy version is byte-equal by construction. Policy is a site YAML
+  (version + currency + ordered rates, first match wins, optional target
+  glob); unpriced units surface at rate 0 rather than vanishing.
+  `qctl usage export --policy site.yaml` emits canonical CSV; the raw
+  ledger crosses the wire via admin ExportLedger (viewer role, project
+  scope enforced server-side).
+- Reconciliation (Σ ledger == per-job status usage for SUCCEEDED jobs)
+  runs inside `rabi` on a ticker — weekly by default, RABI_RECONCILE_EVERY
+  for demos/CI — and appends to reconciliation_runs (itself append-only).

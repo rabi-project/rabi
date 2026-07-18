@@ -13,6 +13,7 @@ import (
 	"io/fs"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
@@ -54,6 +55,29 @@ func Open(ctx context.Context, databaseURL string) (*Store, error) {
 		pool.Close()
 		return nil, err
 	}
+	pool.Close()
+
+	// Serve under the rabi_app role: it has no UPDATE/DELETE privilege on
+	// the ledger/audit tables, so append-only is enforced by Postgres for
+	// every query the server can ever run (M3). Migrations above ran with
+	// the owner's rights.
+	cfg, err := pgxpool.ParseConfig(databaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("store: parse database url: %w", err)
+	}
+	cfg.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		_, err := conn.Exec(ctx, "SET ROLE rabi_app")
+		return err
+	}
+	servePool, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("store: open serving pool: %w", err)
+	}
+	if err := servePool.Ping(ctx); err != nil {
+		servePool.Close()
+		return nil, fmt.Errorf("store: serving role: %w", err)
+	}
+	s.Pool = servePool
 	return s, nil
 }
 

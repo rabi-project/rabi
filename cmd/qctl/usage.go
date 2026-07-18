@@ -47,5 +47,6 @@ func newUsageCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&tenant, "tenant", "", "tenant to report")
 	_ = cmd.MarkFlagRequired("tenant")
+	cmd.AddCommand(newUsageExportCmd())
 	return cmd
 }

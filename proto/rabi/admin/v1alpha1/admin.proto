@@ -31,6 +31,11 @@ service AdminService {
   // SetQuota sets a per-unit native-unit limit; negative limit removes it.
   rpc SetQuota(SetQuotaRequest) returns (SetQuotaResponse);
   rpc ListQuotas(ListQuotasRequest) returns (ListQuotasResponse);
+
+  // ExportLedger returns raw immutable usage rows in append order — the
+  // deterministic input to site-side normalization (M3). Project-scoped
+  // tokens may export only their own project.
+  rpc ExportLedger(ExportLedgerRequest) returns (ExportLedgerResponse);
 }
 
 message WhoAmIRequest {}
@@ -131,4 +136,22 @@ message ListQuotasRequest {
 
 message ListQuotasResponse {
   repeated Quota quotas = 1;
+}
+
+message LedgerEntry {
+  int64 id = 1;        // append-order id
+  string job_id = 2;
+  string task_id = 3;
+  string tenant = 4;
+  string target = 5;
+  string unit = 6;     // native unit
+  double amount = 7;
+}
+
+message ExportLedgerRequest {
+  string tenant = 1;  // empty = all projects (unscoped principals only)
+}
+
+message ExportLedgerResponse {
+  repeated LedgerEntry entries = 1;
 }

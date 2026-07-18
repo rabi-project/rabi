@@ -185,3 +185,28 @@ func (a *adminService) ListQuotas(ctx context.Context, req *adminv1alpha1.ListQu
 	}
 	return resp, nil
 }
+
+func (a *adminService) ExportLedger(ctx context.Context, req *adminv1alpha1.ExportLedgerRequest) (*adminv1alpha1.ExportLedgerResponse, error) {
+	tenant := req.GetTenant()
+	if p, ok := auth.FromContext(ctx); ok && p.Project != "" {
+		// Scoped tokens export their own project only; an empty filter
+		// narrows to it rather than leaking the fleet.
+		if tenant == "" {
+			tenant = p.Project
+		} else if err := auth.CheckProject(ctx, tenant); err != nil {
+			return nil, err
+		}
+	}
+	entries, err := a.store.LedgerEntries(ctx, tenant)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "export ledger: %v", err)
+	}
+	resp := &adminv1alpha1.ExportLedgerResponse{}
+	for _, e := range entries {
+		resp.Entries = append(resp.Entries, &adminv1alpha1.LedgerEntry{
+			Id: e.ID, JobId: e.JobID, TaskId: e.TaskID, Tenant: e.Tenant,
+			Target: e.Target, Unit: e.Unit, Amount: e.Amount,
+		})
+	}
+	return resp, nil
+}

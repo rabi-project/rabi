@@ -36,6 +36,7 @@ const (
 	AdminService_ArchiveProject_FullMethodName = "/rabi.admin.v1alpha1.AdminService/ArchiveProject"
 	AdminService_SetQuota_FullMethodName       = "/rabi.admin.v1alpha1.AdminService/SetQuota"
 	AdminService_ListQuotas_FullMethodName     = "/rabi.admin.v1alpha1.AdminService/ListQuotas"
+	AdminService_ExportLedger_FullMethodName   = "/rabi.admin.v1alpha1.AdminService/ExportLedger"
 )
 
 // AdminServiceClient is the client API for AdminService service.
@@ -59,6 +60,10 @@ type AdminServiceClient interface {
 	// SetQuota sets a per-unit native-unit limit; negative limit removes it.
 	SetQuota(ctx context.Context, in *SetQuotaRequest, opts ...grpc.CallOption) (*SetQuotaResponse, error)
 	ListQuotas(ctx context.Context, in *ListQuotasRequest, opts ...grpc.CallOption) (*ListQuotasResponse, error)
+	// ExportLedger returns raw immutable usage rows in append order — the
+	// deterministic input to site-side normalization (M3). Project-scoped
+	// tokens may export only their own project.
+	ExportLedger(ctx context.Context, in *ExportLedgerRequest, opts ...grpc.CallOption) (*ExportLedgerResponse, error)
 }
 
 type adminServiceClient struct {
@@ -159,6 +164,16 @@ func (c *adminServiceClient) ListQuotas(ctx context.Context, in *ListQuotasReque
 	return out, nil
 }
 
+func (c *adminServiceClient) ExportLedger(ctx context.Context, in *ExportLedgerRequest, opts ...grpc.CallOption) (*ExportLedgerResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ExportLedgerResponse)
+	err := c.cc.Invoke(ctx, AdminService_ExportLedger_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AdminServiceServer is the server API for AdminService service.
 // All implementations must embed UnimplementedAdminServiceServer
 // for forward compatibility.
@@ -180,6 +195,10 @@ type AdminServiceServer interface {
 	// SetQuota sets a per-unit native-unit limit; negative limit removes it.
 	SetQuota(context.Context, *SetQuotaRequest) (*SetQuotaResponse, error)
 	ListQuotas(context.Context, *ListQuotasRequest) (*ListQuotasResponse, error)
+	// ExportLedger returns raw immutable usage rows in append order — the
+	// deterministic input to site-side normalization (M3). Project-scoped
+	// tokens may export only their own project.
+	ExportLedger(context.Context, *ExportLedgerRequest) (*ExportLedgerResponse, error)
 	mustEmbedUnimplementedAdminServiceServer()
 }
 
@@ -216,6 +235,9 @@ func (UnimplementedAdminServiceServer) SetQuota(context.Context, *SetQuotaReques
 }
 func (UnimplementedAdminServiceServer) ListQuotas(context.Context, *ListQuotasRequest) (*ListQuotasResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListQuotas not implemented")
+}
+func (UnimplementedAdminServiceServer) ExportLedger(context.Context, *ExportLedgerRequest) (*ExportLedgerResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ExportLedger not implemented")
 }
 func (UnimplementedAdminServiceServer) mustEmbedUnimplementedAdminServiceServer() {}
 func (UnimplementedAdminServiceServer) testEmbeddedByValue()                      {}
@@ -400,6 +422,24 @@ func _AdminService_ListQuotas_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminService_ExportLedger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExportLedgerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).ExportLedger(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_ExportLedger_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).ExportLedger(ctx, req.(*ExportLedgerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AdminService_ServiceDesc is the grpc.ServiceDesc for AdminService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -442,6 +482,10 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListQuotas",
 			Handler:    _AdminService_ListQuotas_Handler,
+		},
+		{
+			MethodName: "ExportLedger",
+			Handler:    _AdminService_ExportLedger_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

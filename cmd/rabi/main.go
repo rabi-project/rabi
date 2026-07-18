@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/rabi-project/rabi/internal/api"
 	"github.com/rabi-project/rabi/internal/dispatch"
@@ -17,6 +18,40 @@ import (
 	"github.com/rabi-project/rabi/internal/registry"
 	"github.com/rabi-project/rabi/internal/store"
 )
+
+// runReconciliation runs the accounting audit on a schedule (weekly in
+// production; RABI_RECONCILE_EVERY overrides for demos/tests) inside the
+// single binary — no new infrastructure (phase1-build-plan.md §2).
+func runReconciliation(ctx context.Context, st *store.Store, logger *slog.Logger) {
+	every := 168 * time.Hour
+	if v := os.Getenv("RABI_RECONCILE_EVERY"); v != "" {
+		d, err := time.ParseDuration(v)
+		if err != nil {
+			logger.Error("bad RABI_RECONCILE_EVERY; using weekly", "value", v, "error", err)
+		} else {
+			every = d
+		}
+	}
+	ticker := time.NewTicker(every)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+		checked, mismatches, err := st.ReconcileUsage(ctx)
+		switch {
+		case err != nil:
+			logger.Error("reconciliation failed", "error", err)
+		case len(mismatches) > 0:
+			logger.Error("reconciliation found mismatches — investigate before billing",
+				"checked", checked, "mismatches", len(mismatches))
+		default:
+			logger.Info("reconciliation clean", "checked", checked)
+		}
+	}
+}
 
 func envOr(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
@@ -84,6 +119,8 @@ func main() {
 		logger.Error("assembling api server", "error", err)
 		os.Exit(1)
 	}
+
+	go runReconciliation(ctx, st, logger)
 
 	logger.Info("rabi serving", "grpc", grpcAddr, "http", httpAddr,
 		"adapters", os.Getenv("RABI_ADAPTERS"))

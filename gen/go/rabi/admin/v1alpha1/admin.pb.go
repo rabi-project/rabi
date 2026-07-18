@@ -1086,6 +1086,186 @@ func (x *ListQuotasResponse) GetQuotas() []*Quota {
 	return nil
 }
 
+type LedgerEntry struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"` // append-order id
+	JobId         string                 `protobuf:"bytes,2,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	TaskId        string                 `protobuf:"bytes,3,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	Tenant        string                 `protobuf:"bytes,4,opt,name=tenant,proto3" json:"tenant,omitempty"`
+	Target        string                 `protobuf:"bytes,5,opt,name=target,proto3" json:"target,omitempty"`
+	Unit          string                 `protobuf:"bytes,6,opt,name=unit,proto3" json:"unit,omitempty"` // native unit
+	Amount        float64                `protobuf:"fixed64,7,opt,name=amount,proto3" json:"amount,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LedgerEntry) Reset() {
+	*x = LedgerEntry{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LedgerEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LedgerEntry) ProtoMessage() {}
+
+func (x *LedgerEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LedgerEntry.ProtoReflect.Descriptor instead.
+func (*LedgerEntry) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *LedgerEntry) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *LedgerEntry) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *LedgerEntry) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
+	}
+	return ""
+}
+
+func (x *LedgerEntry) GetTenant() string {
+	if x != nil {
+		return x.Tenant
+	}
+	return ""
+}
+
+func (x *LedgerEntry) GetTarget() string {
+	if x != nil {
+		return x.Target
+	}
+	return ""
+}
+
+func (x *LedgerEntry) GetUnit() string {
+	if x != nil {
+		return x.Unit
+	}
+	return ""
+}
+
+func (x *LedgerEntry) GetAmount() float64 {
+	if x != nil {
+		return x.Amount
+	}
+	return 0
+}
+
+type ExportLedgerRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tenant        string                 `protobuf:"bytes,1,opt,name=tenant,proto3" json:"tenant,omitempty"` // empty = all projects (unscoped principals only)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExportLedgerRequest) Reset() {
+	*x = ExportLedgerRequest{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExportLedgerRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExportLedgerRequest) ProtoMessage() {}
+
+func (x *ExportLedgerRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExportLedgerRequest.ProtoReflect.Descriptor instead.
+func (*ExportLedgerRequest) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *ExportLedgerRequest) GetTenant() string {
+	if x != nil {
+		return x.Tenant
+	}
+	return ""
+}
+
+type ExportLedgerResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Entries       []*LedgerEntry         `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExportLedgerResponse) Reset() {
+	*x = ExportLedgerResponse{}
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExportLedgerResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExportLedgerResponse) ProtoMessage() {}
+
+func (x *ExportLedgerResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_rabi_admin_v1alpha1_admin_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExportLedgerResponse.ProtoReflect.Descriptor instead.
+func (*ExportLedgerResponse) Descriptor() ([]byte, []int) {
+	return file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ExportLedgerResponse) GetEntries() []*LedgerEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
 var File_rabi_admin_v1alpha1_admin_proto protoreflect.FileDescriptor
 
 const file_rabi_admin_v1alpha1_admin_proto_rawDesc = "" +
@@ -1158,7 +1338,19 @@ const file_rabi_admin_v1alpha1_admin_proto_rawDesc = "" +
 	"\x11ListQuotasRequest\x12\x16\n" +
 	"\x06tenant\x18\x01 \x01(\tR\x06tenant\"H\n" +
 	"\x12ListQuotasResponse\x122\n" +
-	"\x06quotas\x18\x01 \x03(\v2\x1a.rabi.admin.v1alpha1.QuotaR\x06quotas2\xe6\x06\n" +
+	"\x06quotas\x18\x01 \x03(\v2\x1a.rabi.admin.v1alpha1.QuotaR\x06quotas\"\xa9\x01\n" +
+	"\vLedgerEntry\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x15\n" +
+	"\x06job_id\x18\x02 \x01(\tR\x05jobId\x12\x17\n" +
+	"\atask_id\x18\x03 \x01(\tR\x06taskId\x12\x16\n" +
+	"\x06tenant\x18\x04 \x01(\tR\x06tenant\x12\x16\n" +
+	"\x06target\x18\x05 \x01(\tR\x06target\x12\x12\n" +
+	"\x04unit\x18\x06 \x01(\tR\x04unit\x12\x16\n" +
+	"\x06amount\x18\a \x01(\x01R\x06amount\"-\n" +
+	"\x13ExportLedgerRequest\x12\x16\n" +
+	"\x06tenant\x18\x01 \x01(\tR\x06tenant\"R\n" +
+	"\x14ExportLedgerResponse\x12:\n" +
+	"\aentries\x18\x01 \x03(\v2 .rabi.admin.v1alpha1.LedgerEntryR\aentries2\xcb\a\n" +
 	"\fAdminService\x12Q\n" +
 	"\x06WhoAmI\x12\".rabi.admin.v1alpha1.WhoAmIRequest\x1a#.rabi.admin.v1alpha1.WhoAmIResponse\x12`\n" +
 	"\vCreateToken\x12'.rabi.admin.v1alpha1.CreateTokenRequest\x1a(.rabi.admin.v1alpha1.CreateTokenResponse\x12]\n" +
@@ -1170,7 +1362,8 @@ const file_rabi_admin_v1alpha1_admin_proto_rawDesc = "" +
 	"\x0eArchiveProject\x12*.rabi.admin.v1alpha1.ArchiveProjectRequest\x1a+.rabi.admin.v1alpha1.ArchiveProjectResponse\x12W\n" +
 	"\bSetQuota\x12$.rabi.admin.v1alpha1.SetQuotaRequest\x1a%.rabi.admin.v1alpha1.SetQuotaResponse\x12]\n" +
 	"\n" +
-	"ListQuotas\x12&.rabi.admin.v1alpha1.ListQuotasRequest\x1a'.rabi.admin.v1alpha1.ListQuotasResponseB\xda\x01\n" +
+	"ListQuotas\x12&.rabi.admin.v1alpha1.ListQuotasRequest\x1a'.rabi.admin.v1alpha1.ListQuotasResponse\x12c\n" +
+	"\fExportLedger\x12(.rabi.admin.v1alpha1.ExportLedgerRequest\x1a).rabi.admin.v1alpha1.ExportLedgerResponseB\xda\x01\n" +
 	"\x17com.rabi.admin.v1alpha1B\n" +
 	"AdminProtoP\x01ZEgithub.com/rabi-project/rabi/gen/go/rabi/admin/v1alpha1;adminv1alpha1\xa2\x02\x03RAX\xaa\x02\x13Rabi.Admin.V1alpha1\xca\x02\x13Rabi\\Admin\\V1alpha1\xe2\x02\x1fRabi\\Admin\\V1alpha1\\GPBMetadata\xea\x02\x15Rabi::Admin::V1alpha1b\x06proto3"
 
@@ -1186,7 +1379,7 @@ func file_rabi_admin_v1alpha1_admin_proto_rawDescGZIP() []byte {
 	return file_rabi_admin_v1alpha1_admin_proto_rawDescData
 }
 
-var file_rabi_admin_v1alpha1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_rabi_admin_v1alpha1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_rabi_admin_v1alpha1_admin_proto_goTypes = []any{
 	(*WhoAmIRequest)(nil),          // 0: rabi.admin.v1alpha1.WhoAmIRequest
 	(*WhoAmIResponse)(nil),         // 1: rabi.admin.v1alpha1.WhoAmIResponse
@@ -1208,41 +1401,47 @@ var file_rabi_admin_v1alpha1_admin_proto_goTypes = []any{
 	(*SetQuotaResponse)(nil),       // 17: rabi.admin.v1alpha1.SetQuotaResponse
 	(*ListQuotasRequest)(nil),      // 18: rabi.admin.v1alpha1.ListQuotasRequest
 	(*ListQuotasResponse)(nil),     // 19: rabi.admin.v1alpha1.ListQuotasResponse
-	(*timestamppb.Timestamp)(nil),  // 20: google.protobuf.Timestamp
+	(*LedgerEntry)(nil),            // 20: rabi.admin.v1alpha1.LedgerEntry
+	(*ExportLedgerRequest)(nil),    // 21: rabi.admin.v1alpha1.ExportLedgerRequest
+	(*ExportLedgerResponse)(nil),   // 22: rabi.admin.v1alpha1.ExportLedgerResponse
+	(*timestamppb.Timestamp)(nil),  // 23: google.protobuf.Timestamp
 }
 var file_rabi_admin_v1alpha1_admin_proto_depIdxs = []int32{
-	20, // 0: rabi.admin.v1alpha1.TokenInfo.created_at:type_name -> google.protobuf.Timestamp
-	20, // 1: rabi.admin.v1alpha1.TokenInfo.last_used_at:type_name -> google.protobuf.Timestamp
-	20, // 2: rabi.admin.v1alpha1.TokenInfo.revoked_at:type_name -> google.protobuf.Timestamp
+	23, // 0: rabi.admin.v1alpha1.TokenInfo.created_at:type_name -> google.protobuf.Timestamp
+	23, // 1: rabi.admin.v1alpha1.TokenInfo.last_used_at:type_name -> google.protobuf.Timestamp
+	23, // 2: rabi.admin.v1alpha1.TokenInfo.revoked_at:type_name -> google.protobuf.Timestamp
 	2,  // 3: rabi.admin.v1alpha1.CreateTokenResponse.info:type_name -> rabi.admin.v1alpha1.TokenInfo
 	2,  // 4: rabi.admin.v1alpha1.ListTokensResponse.tokens:type_name -> rabi.admin.v1alpha1.TokenInfo
-	20, // 5: rabi.admin.v1alpha1.Project.created_at:type_name -> google.protobuf.Timestamp
-	20, // 6: rabi.admin.v1alpha1.Project.archived_at:type_name -> google.protobuf.Timestamp
+	23, // 5: rabi.admin.v1alpha1.Project.created_at:type_name -> google.protobuf.Timestamp
+	23, // 6: rabi.admin.v1alpha1.Project.archived_at:type_name -> google.protobuf.Timestamp
 	9,  // 7: rabi.admin.v1alpha1.ListProjectsResponse.projects:type_name -> rabi.admin.v1alpha1.Project
 	15, // 8: rabi.admin.v1alpha1.ListQuotasResponse.quotas:type_name -> rabi.admin.v1alpha1.Quota
-	0,  // 9: rabi.admin.v1alpha1.AdminService.WhoAmI:input_type -> rabi.admin.v1alpha1.WhoAmIRequest
-	3,  // 10: rabi.admin.v1alpha1.AdminService.CreateToken:input_type -> rabi.admin.v1alpha1.CreateTokenRequest
-	5,  // 11: rabi.admin.v1alpha1.AdminService.ListTokens:input_type -> rabi.admin.v1alpha1.ListTokensRequest
-	7,  // 12: rabi.admin.v1alpha1.AdminService.RevokeToken:input_type -> rabi.admin.v1alpha1.RevokeTokenRequest
-	10, // 13: rabi.admin.v1alpha1.AdminService.CreateProject:input_type -> rabi.admin.v1alpha1.CreateProjectRequest
-	11, // 14: rabi.admin.v1alpha1.AdminService.ListProjects:input_type -> rabi.admin.v1alpha1.ListProjectsRequest
-	13, // 15: rabi.admin.v1alpha1.AdminService.ArchiveProject:input_type -> rabi.admin.v1alpha1.ArchiveProjectRequest
-	16, // 16: rabi.admin.v1alpha1.AdminService.SetQuota:input_type -> rabi.admin.v1alpha1.SetQuotaRequest
-	18, // 17: rabi.admin.v1alpha1.AdminService.ListQuotas:input_type -> rabi.admin.v1alpha1.ListQuotasRequest
-	1,  // 18: rabi.admin.v1alpha1.AdminService.WhoAmI:output_type -> rabi.admin.v1alpha1.WhoAmIResponse
-	4,  // 19: rabi.admin.v1alpha1.AdminService.CreateToken:output_type -> rabi.admin.v1alpha1.CreateTokenResponse
-	6,  // 20: rabi.admin.v1alpha1.AdminService.ListTokens:output_type -> rabi.admin.v1alpha1.ListTokensResponse
-	8,  // 21: rabi.admin.v1alpha1.AdminService.RevokeToken:output_type -> rabi.admin.v1alpha1.RevokeTokenResponse
-	9,  // 22: rabi.admin.v1alpha1.AdminService.CreateProject:output_type -> rabi.admin.v1alpha1.Project
-	12, // 23: rabi.admin.v1alpha1.AdminService.ListProjects:output_type -> rabi.admin.v1alpha1.ListProjectsResponse
-	14, // 24: rabi.admin.v1alpha1.AdminService.ArchiveProject:output_type -> rabi.admin.v1alpha1.ArchiveProjectResponse
-	17, // 25: rabi.admin.v1alpha1.AdminService.SetQuota:output_type -> rabi.admin.v1alpha1.SetQuotaResponse
-	19, // 26: rabi.admin.v1alpha1.AdminService.ListQuotas:output_type -> rabi.admin.v1alpha1.ListQuotasResponse
-	18, // [18:27] is the sub-list for method output_type
-	9,  // [9:18] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	20, // 9: rabi.admin.v1alpha1.ExportLedgerResponse.entries:type_name -> rabi.admin.v1alpha1.LedgerEntry
+	0,  // 10: rabi.admin.v1alpha1.AdminService.WhoAmI:input_type -> rabi.admin.v1alpha1.WhoAmIRequest
+	3,  // 11: rabi.admin.v1alpha1.AdminService.CreateToken:input_type -> rabi.admin.v1alpha1.CreateTokenRequest
+	5,  // 12: rabi.admin.v1alpha1.AdminService.ListTokens:input_type -> rabi.admin.v1alpha1.ListTokensRequest
+	7,  // 13: rabi.admin.v1alpha1.AdminService.RevokeToken:input_type -> rabi.admin.v1alpha1.RevokeTokenRequest
+	10, // 14: rabi.admin.v1alpha1.AdminService.CreateProject:input_type -> rabi.admin.v1alpha1.CreateProjectRequest
+	11, // 15: rabi.admin.v1alpha1.AdminService.ListProjects:input_type -> rabi.admin.v1alpha1.ListProjectsRequest
+	13, // 16: rabi.admin.v1alpha1.AdminService.ArchiveProject:input_type -> rabi.admin.v1alpha1.ArchiveProjectRequest
+	16, // 17: rabi.admin.v1alpha1.AdminService.SetQuota:input_type -> rabi.admin.v1alpha1.SetQuotaRequest
+	18, // 18: rabi.admin.v1alpha1.AdminService.ListQuotas:input_type -> rabi.admin.v1alpha1.ListQuotasRequest
+	21, // 19: rabi.admin.v1alpha1.AdminService.ExportLedger:input_type -> rabi.admin.v1alpha1.ExportLedgerRequest
+	1,  // 20: rabi.admin.v1alpha1.AdminService.WhoAmI:output_type -> rabi.admin.v1alpha1.WhoAmIResponse
+	4,  // 21: rabi.admin.v1alpha1.AdminService.CreateToken:output_type -> rabi.admin.v1alpha1.CreateTokenResponse
+	6,  // 22: rabi.admin.v1alpha1.AdminService.ListTokens:output_type -> rabi.admin.v1alpha1.ListTokensResponse
+	8,  // 23: rabi.admin.v1alpha1.AdminService.RevokeToken:output_type -> rabi.admin.v1alpha1.RevokeTokenResponse
+	9,  // 24: rabi.admin.v1alpha1.AdminService.CreateProject:output_type -> rabi.admin.v1alpha1.Project
+	12, // 25: rabi.admin.v1alpha1.AdminService.ListProjects:output_type -> rabi.admin.v1alpha1.ListProjectsResponse
+	14, // 26: rabi.admin.v1alpha1.AdminService.ArchiveProject:output_type -> rabi.admin.v1alpha1.ArchiveProjectResponse
+	17, // 27: rabi.admin.v1alpha1.AdminService.SetQuota:output_type -> rabi.admin.v1alpha1.SetQuotaResponse
+	19, // 28: rabi.admin.v1alpha1.AdminService.ListQuotas:output_type -> rabi.admin.v1alpha1.ListQuotasResponse
+	22, // 29: rabi.admin.v1alpha1.AdminService.ExportLedger:output_type -> rabi.admin.v1alpha1.ExportLedgerResponse
+	20, // [20:30] is the sub-list for method output_type
+	10, // [10:20] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_rabi_admin_v1alpha1_admin_proto_init() }
@@ -1256,7 +1455,7 @@ func file_rabi_admin_v1alpha1_admin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_rabi_admin_v1alpha1_admin_proto_rawDesc), len(file_rabi_admin_v1alpha1_admin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

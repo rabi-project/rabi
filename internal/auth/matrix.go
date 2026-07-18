@@ -37,6 +37,10 @@ var minRole = map[string]Role{
 	"/rabi.admin.v1alpha1.AdminService/ArchiveProject": RoleAdmin,
 	"/rabi.admin.v1alpha1.AdminService/SetQuota":       RoleAdmin,
 	"/rabi.admin.v1alpha1.AdminService/ListQuotas":     RoleOperator,
+
+	// Accounting (M3): ledger export is a read for operators and viewers'
+	// own projects alike — viewer suffices, project scope gates the data.
+	"/rabi.admin.v1alpha1.AdminService/ExportLedger": RoleViewer,
 }
 
 // MinRole reports the minimum role for a full method name.
