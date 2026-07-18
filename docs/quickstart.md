@@ -5,7 +5,7 @@ Go ≥1.22.
 
 ```sh
 git clone https://github.com/rabi-project/rabi.git
-cd Rabi
+cd rabi
 make compose-up               # 3 simulated QPUs replaying real IBM calibration + control plane
 ./deploy/compose/seed.sh      # submit the 20-job demo mix
 RABI_API_KEY=dev-key go run ./cmd/qctl watch --all   # live fleet view (Ctrl-C to exit)
