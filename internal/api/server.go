@@ -45,6 +45,7 @@ type Server struct {
 	grpc    *grpc.Server
 	http    *http.Server
 	grpcLis net.Listener
+	now     func() time.Time
 }
 
 // New assembles the gRPC server and REST gateway and binds the gRPC listener
@@ -81,7 +82,7 @@ func New(cfg Config) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("api: listen grpc %s: %w", cfg.GRPCAddr, err)
 	}
-	return &Server{cfg: cfg, grpc: grpcServer, grpcLis: grpcLis}, nil
+	return &Server{cfg: cfg, grpc: grpcServer, grpcLis: grpcLis, now: time.Now}, nil
 }
 
 // GRPCAddr is the bound gRPC address (useful when configured with ":0").
@@ -116,6 +117,8 @@ func (s *Server) Run(ctx context.Context) error {
 	// the REST API below with the viewer's own token.
 	httpMux.Handle("/console/", console.Handler())
 	httpMux.Handle("/console", http.RedirectHandler("/console/", http.StatusMovedPermanently))
+	// Prometheus aggregates (M12); tenant-blind, scraper-open like /healthz.
+	httpMux.HandleFunc("/metrics", s.metricsHandler())
 	// Liveness for compose healthchecks; deliberately unauthenticated.
 	httpMux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)

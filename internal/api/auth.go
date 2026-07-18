@@ -25,6 +25,7 @@ import (
 //   - the bootstrap token (RABI_BOOTSTRAP_TOKEN — dev/first-admin only),
 //   - a per-project API token ("rabi_<id>_<secret>", hash-verified), or
 //   - an OIDC JWT verified against the configured IdP.
+//
 // The static RABI_API_KEY path is deleted. Authorization is the role matrix
 // in internal/auth; every deny and every admin action is audited.
 const (

@@ -15,6 +15,7 @@ import (
 	"github.com/rabi-project/rabi/internal/api"
 	"github.com/rabi-project/rabi/internal/dispatch"
 	"github.com/rabi-project/rabi/internal/job"
+	"github.com/rabi-project/rabi/internal/probe"
 	"github.com/rabi-project/rabi/internal/registry"
 	"github.com/rabi-project/rabi/internal/store"
 )
@@ -125,6 +126,18 @@ func main() {
 	}
 
 	go runReconciliation(ctx, st, logger)
+
+	probeEvery := 15 * time.Minute
+	if v := os.Getenv("RABI_PROBE_EVERY"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			probeEvery = d
+		} else if v == "off" {
+			probeEvery = 0
+		} else {
+			logger.Error("bad RABI_PROBE_EVERY; using 15m", "value", v, "error", err)
+		}
+	}
+	go probe.New(st, reg, probeEvery, logger).Run(ctx)
 
 	logger.Info("rabi serving", "grpc", grpcAddr, "http", httpAddr,
 		"adapters", os.Getenv("RABI_ADAPTERS"))

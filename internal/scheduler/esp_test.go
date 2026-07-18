@@ -87,9 +87,9 @@ func TestWeightMapping(t *testing.T) {
 	floor := func(j *JobView) { j.TwoQubitErrorMax = 0.01 }
 
 	cases := []struct {
-		name          string
-		mutate        []func(*JobView)
-		wq, wt, wc    float64
+		name       string
+		mutate     []func(*JobView)
+		wq, wt, wc float64
 	}{
 		{"plain", nil, 0.60, 0.25, 0.15},
 		{"deadline", []func(*JobView){deadline}, 0.45, 0.45, 0.10},

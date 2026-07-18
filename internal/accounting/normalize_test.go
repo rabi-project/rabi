@@ -79,12 +79,12 @@ func TestNormalizeRatesAndReplay(t *testing.T) {
 
 func TestParsePolicyRejectsBadDocs(t *testing.T) {
 	for _, bad := range []string{
-		"currency: EUR",                       // no version
-		"version: v1",                         // no currency
-		"version: v1\ncurrency: EUR\nrates: [{rate: 1}]",              // no unit
-		"version: v1\ncurrency: EUR\nrates: [{unit: shots, rate: -1}]", // negative
+		"currency: EUR", // no version
+		"version: v1",   // no currency
+		"version: v1\ncurrency: EUR\nrates: [{rate: 1}]",                              // no unit
+		"version: v1\ncurrency: EUR\nrates: [{unit: shots, rate: -1}]",                // negative
 		"version: v1\ncurrency: EUR\nrates: [{unit: shots, rate: 1, target: '[bad'}]", // bad glob
-		"version: v1\ncurrency: EUR\nbogus: field",                    // unknown field
+		"version: v1\ncurrency: EUR\nbogus: field",                                    // unknown field
 	} {
 		if _, err := ParsePolicy([]byte(bad)); err == nil {
 			t.Errorf("accepted bad policy: %q", bad)

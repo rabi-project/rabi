@@ -283,3 +283,20 @@ func messageToStruct(m proto.Message) (*structpb.Struct, error) {
 	}
 	return out, nil
 }
+
+// OnlineGateModelTargets lists fleet-scoped names of online gate-model
+// targets — the probe runner's fan-out set (M12).
+func (r *Registry) OnlineGateModelTargets(ctx context.Context) []string {
+	var out []string
+	for _, e := range r.Entries() {
+		if e.Info.GetModality() != "gate-model" {
+			continue
+		}
+		if e.State.GetStatus() != adapterv1alpha1.DeviceState_ONLINE {
+			continue
+		}
+		out = append(out, e.Name)
+	}
+	sort.Strings(out)
+	return out
+}
