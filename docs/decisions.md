@@ -313,3 +313,15 @@ it and the spec is law: the `spec/` tree itself, proto packages
 spec in docs. The committed migration `00001` still creates `tangle_info`
 (rewriting applied migrations breaks existing databases; the table is an
 inert marker). Historical decision entries keep their original wording.
+
+## D-031 · 2026-07-19 · Spec v0.2 merged (RFCs 0001–0003); implementation deferred to phase1 M5
+
+Edward, as spec author, merged spec v0.2 into the vendored copy via
+format-patch: RFC-0001 resolves D-016a (first-class `technology` +
+`cloud_queue`; vendor_extensions fallback legal until v0.3 — the current
+adapters/scheduler intentionally keep using it), RFC-0002 ratifies D-016b
+(best-value floors, optional `aggregate`), RFC-0003 adds
+`scheduling.onConflict` (motivated by the benchmark's deadline trade-off).
+Admission accepts the new fields today (schema-merged, tested); their
+scheduler/adapter semantics land in phase1 M5 per the patch's own scoping.
+Note: the upstream `tangle-spec` folder is now behind this vendored copy.
