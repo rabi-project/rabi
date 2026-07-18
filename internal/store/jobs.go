@@ -41,6 +41,23 @@ type JobEvent struct {
 // InsertJob persists a newly admitted job (phase PENDING) and its first event
 // atomically.
 func (s *Store) InsertJob(ctx context.Context, rec *JobRecord) error {
+	tx, err := s.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("store: begin insert job: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	if err := insertJobTx(ctx, tx, rec); err != nil {
+		return err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("store: commit insert job: %w", err)
+	}
+	return nil
+}
+
+// insertJobTx writes the job row, its first event, and the dispatcher
+// wakeup inside the caller's transaction (shared with the quota path).
+func insertJobTx(ctx context.Context, tx pgx.Tx, rec *JobRecord) error {
 	doc, err := json.Marshal(rec.Doc)
 	if err != nil {
 		return fmt.Errorf("store: marshal job doc: %w", err)
@@ -49,12 +66,6 @@ func (s *Store) InsertJob(ctx context.Context, rec *JobRecord) error {
 	if err != nil {
 		return fmt.Errorf("store: marshal job status: %w", err)
 	}
-	tx, err := s.Pool.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("store: begin insert job: %w", err)
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-
 	row := tx.QueryRow(ctx, `
 		INSERT INTO jobs (job_id, tenant, name, phase, doc, status)
 		VALUES ($1, $2, $3, $4, $5, $6)
@@ -71,9 +82,6 @@ func (s *Store) InsertJob(ctx context.Context, rec *JobRecord) error {
 	// Delivered on commit: wakes the dispatcher without polling latency.
 	if _, err := tx.Exec(ctx, "SELECT pg_notify($1, $2)", jobsChannel, rec.JobID); err != nil {
 		return fmt.Errorf("store: notify: %w", err)
-	}
-	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("store: commit insert job: %w", err)
 	}
 	return nil
 }

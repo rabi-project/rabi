@@ -79,3 +79,32 @@ func (s *Store) migrate(ctx context.Context) error {
 func (s *Store) Close() {
 	s.Pool.Close()
 }
+
+// OpenAt connects WITHOUT auto-migrating and applies migrations only up to
+// the given version. It exists for upgrade tests (seed a database at an old
+// schema version, then migrate forward and assert the data migrations) and
+// must not be used by the server, which always runs fully migrated.
+func OpenAt(ctx context.Context, databaseURL string, version int64) (*Store, error) {
+	pool, err := pgxpool.New(ctx, databaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("store: parse database url: %w", err)
+	}
+	s := &Store{Pool: pool}
+	db := stdlib.OpenDBFromPool(pool)
+	defer func() { _ = db.Close() }()
+	migrations, err := fs.Sub(migrationsFS, "migrations")
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("store: scope migrations fs: %w", err)
+	}
+	provider, err := goose.NewProvider(goose.DialectPostgres, db, migrations)
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("store: init migrations: %w", err)
+	}
+	if _, err := provider.UpTo(ctx, version); err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("store: apply migrations to %d: %w", version, err)
+	}
+	return s, nil
+}
