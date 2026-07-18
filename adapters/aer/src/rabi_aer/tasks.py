@@ -42,6 +42,7 @@ TERMINAL = {SUCCEEDED, FAILED, CANCELLED}
 INVALID_PROGRAM = "INVALID_PROGRAM"
 CAPABILITY_MISMATCH = "CAPABILITY_MISMATCH"
 VENDOR_ERROR = "VENDOR_ERROR"
+SESSION_LOST = "SESSION_LOST"
 
 MAX_INLINE_BYTES = 4 * 1024 * 1024
 
@@ -98,8 +99,15 @@ class TaskEngine:
     # -- submission ---------------------------------------------------------
 
     def submit(self, target_id: str, idempotency_key: str, payload_format: str,
-               program: bytes, shots: int, parameters: dict[str, str]) -> Task:
-        """Create (or return the existing) task for this idempotency key."""
+               program: bytes, shots: int, parameters: dict[str, str],
+               precheck_error: TaskError | None = None) -> Task:
+        """Create (or return the existing) task for this idempotency key.
+
+        precheck_error lets the service layer fail the task with a
+        categorized error decided before submission (e.g. SESSION_LOST for
+        a dead session) — never a bare gRPC abort, so the control plane
+        sees the taxonomy (spec §errors).
+        """
         cfg = self._targets[target_id]
         with self._lock:
             existing_id = self._by_key.get((target_id, idempotency_key))
@@ -117,7 +125,7 @@ class TaskEngine:
             )
             # Admission checks that are cheap and deterministic fail the task
             # immediately with a categorized error (never a bare string).
-            err = self._admission_error(cfg, task)
+            err = precheck_error or self._admission_error(cfg, task)
             if err is not None:
                 task.state = FAILED
                 task.error = err

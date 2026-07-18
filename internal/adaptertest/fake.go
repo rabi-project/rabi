@@ -51,6 +51,7 @@ type Fake struct {
 	tasks   map[string]*task
 	byKey   map[string]string
 	nextID  int
+	sessions map[string]bool
 }
 
 func New(specs ...*TargetSpec) *Fake {
@@ -112,9 +113,38 @@ func (f *Fake) GetCapabilities(_ context.Context, ref *adapterv1alpha1.TargetRef
 		ProgramFormats: s.Formats,
 		MaxShots:       s.MaxShots,
 		Cancellation:   true,
+		Sessions:       true,
 		BillingUnits:   []string{"shots", "tasks"},
 		CouplingClass:  "loose",
 	}, nil
+}
+
+// Sessions: minimal spec-shaped session support for dispatcher tests.
+func (f *Fake) OpenSession(_ context.Context, req *adapterv1alpha1.OpenSessionRequest) (*adapterv1alpha1.SessionHandle, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.sessions == nil {
+		f.sessions = map[string]bool{}
+	}
+	f.nextID++
+	id := fmt.Sprintf("fake-sess-%d", f.nextID)
+	f.sessions[id] = true
+	exp := time.Now().Add(req.GetMaxDuration().AsDuration())
+	if req.GetMaxDuration().AsDuration() <= 0 {
+		exp = time.Now().Add(time.Hour)
+	}
+	return &adapterv1alpha1.SessionHandle{
+		Target:    req.GetTarget(),
+		SessionId: id,
+		ExpiresAt: timestamppb.New(exp),
+	}, nil
+}
+
+func (f *Fake) CloseSession(_ context.Context, handle *adapterv1alpha1.SessionHandle) (*adapterv1alpha1.CloseSessionResponse, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	delete(f.sessions, handle.GetSessionId())
+	return &adapterv1alpha1.CloseSessionResponse{}, nil
 }
 
 func (f *Fake) GetDeviceState(_ context.Context, ref *adapterv1alpha1.TargetRef) (*adapterv1alpha1.DeviceState, error) {

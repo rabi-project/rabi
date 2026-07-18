@@ -106,6 +106,7 @@ func (d *Dispatcher) resume(ctx context.Context) {
 }
 
 func (d *Dispatcher) cycle(ctx context.Context) {
+	d.sweepExpiredSessions(ctx)
 	pending, err := d.store.PendingJobs(ctx, claimBatch)
 	if err != nil {
 		d.logger.Error("listing pending jobs", "error", err)
@@ -128,6 +129,9 @@ func (d *Dispatcher) dispatchOne(ctx context.Context, rec *store.JobRecord) {
 		return
 	}
 
+	if _, ok := d.sessionAffinity(ctx, rec, jobView); !ok {
+		return // failed with SESSION_LOST; never silently rescheduled
+	}
 	decision := scheduler.Schedule(d.policy, jobView, d.fleetViews(), d.now())
 	if decision.Target == "" {
 		if d.resolveConflict(ctx, rec, jobView, decision) {
@@ -255,11 +259,16 @@ func (d *Dispatcher) execute(ctx context.Context, rec *store.JobRecord, taskID, 
 		return
 	}
 
+	adapterSessionID, ok := d.sessionForExecution(ctx, rec, taskID, targetName)
+	if !ok {
+		return
+	}
 	handle, err := client.SubmitTask(ctx, &adapterv1alpha1.SubmitTaskRequest{
 		Target:         &adapterv1alpha1.TargetRef{TargetId: targetID},
 		IdempotencyKey: taskID,
 		Payload:        payload,
 		Shots:          shots,
+		SessionId:      adapterSessionID,
 		TenantHint:     rec.Tenant,
 	})
 	if err != nil {
@@ -543,4 +552,3 @@ func appendCondition(st map[string]any, condType, status, reason, message string
 	})
 	return st
 }
-

@@ -22,6 +22,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	adapterv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/adapter/v1alpha1"
 )
@@ -87,7 +88,9 @@ func (s *Suite) Run(ctx context.Context, t T) {
 	t.Run("cat5-provenance", func(t T) { s.Provenance(ctx, t) })
 	t.Run("cat6-usage", func(t T) { s.Usage(ctx, t) })
 	t.Run("cat7-error-taxonomy", func(t T) { s.ErrorTaxonomy(ctx, t) })
-	if !s.Caps.GetSessions() {
+	if s.Caps.GetSessions() {
+		t.Run("cat8-sessions", func(t T) { s.Sessions(ctx, t) })
+	} else {
 		t.Run("cat8-sessions-undeclared", func(t T) { s.SessionsUndeclared(ctx, t) })
 	}
 }
@@ -436,6 +439,80 @@ func (s *Suite) ErrorTaxonomy(ctx context.Context, t T) {
 
 // SessionsUndeclared — an adapter that does not declare sessions must refuse
 // session RPCs rather than half-implement them.
+// Sessions — category 8, for adapters declaring the capability: open
+// returns a handle with id + expiry, in-session tasks run, and submission
+// after close fails with SESSION_LOST (never silently accepted).
+func (s *Suite) Sessions(ctx context.Context, t T) {
+	handle, err := s.Client.OpenSession(ctx, &adapterv1alpha1.OpenSessionRequest{
+		Target:      &adapterv1alpha1.TargetRef{TargetId: s.TargetID},
+		MaxDuration: durationpb.New(5 * time.Minute),
+	})
+	if err != nil {
+		t.Fatalf("OpenSession on declaring adapter: %v", err)
+	}
+	if handle.GetSessionId() == "" || handle.GetExpiresAt() == nil {
+		t.Fatalf("session handle incomplete: %+v", handle)
+	}
+
+	inSession, err := s.Client.SubmitTask(ctx, &adapterv1alpha1.SubmitTaskRequest{
+		Target:         &adapterv1alpha1.TargetRef{TargetId: s.TargetID},
+		IdempotencyKey: s.KeyPrefix + "sess-live",
+		Payload: &adapterv1alpha1.Payload{
+			Format: s.Caps.GetProgramFormats()[0],
+			Body:   &adapterv1alpha1.Payload_Inline{Inline: []byte(validQASM)},
+		},
+		Shots:     100,
+		SessionId: handle.GetSessionId(),
+	})
+	if err != nil {
+		t.Fatalf("in-session submit: %v", err)
+	}
+	if st := s.awaitTerminal(ctx, t, inSession); st.GetState() != adapterv1alpha1.TaskStatus_SUCCEEDED {
+		t.Fatalf("in-session task must succeed, got %v (%v)", st.GetState(), st.GetError())
+	}
+
+	if _, err := s.Client.CloseSession(ctx, handle); err != nil {
+		t.Fatalf("CloseSession: %v", err)
+	}
+	afterClose, err := s.Client.SubmitTask(ctx, &adapterv1alpha1.SubmitTaskRequest{
+		Target:         &adapterv1alpha1.TargetRef{TargetId: s.TargetID},
+		IdempotencyKey: s.KeyPrefix + "sess-dead",
+		Payload: &adapterv1alpha1.Payload{
+			Format: s.Caps.GetProgramFormats()[0],
+			Body:   &adapterv1alpha1.Payload_Inline{Inline: []byte(validQASM)},
+		},
+		Shots:     100,
+		SessionId: handle.GetSessionId(),
+	})
+	if err == nil {
+		st := s.awaitTerminal(ctx, t, afterClose)
+		if st.GetState() != adapterv1alpha1.TaskStatus_FAILED ||
+			st.GetError().GetCategory() != adapterv1alpha1.ErrorDetail_SESSION_LOST {
+			t.Errorf("submit after close: want FAILED/SESSION_LOST, got %v/%v",
+				st.GetState(), st.GetError().GetCategory())
+		}
+	}
+	// Unknown session id is also a loss, not an acceptance.
+	ghost, err := s.Client.SubmitTask(ctx, &adapterv1alpha1.SubmitTaskRequest{
+		Target:         &adapterv1alpha1.TargetRef{TargetId: s.TargetID},
+		IdempotencyKey: s.KeyPrefix + "sess-ghost",
+		Payload: &adapterv1alpha1.Payload{
+			Format: s.Caps.GetProgramFormats()[0],
+			Body:   &adapterv1alpha1.Payload_Inline{Inline: []byte(validQASM)},
+		},
+		Shots:     100,
+		SessionId: "no-such-session",
+	})
+	if err == nil {
+		st := s.awaitTerminal(ctx, t, ghost)
+		if st.GetState() != adapterv1alpha1.TaskStatus_FAILED ||
+			st.GetError().GetCategory() != adapterv1alpha1.ErrorDetail_SESSION_LOST {
+			t.Errorf("unknown session: want FAILED/SESSION_LOST, got %v/%v",
+				st.GetState(), st.GetError().GetCategory())
+		}
+	}
+}
+
 func (s *Suite) SessionsUndeclared(ctx context.Context, t T) {
 	_, err := s.Client.OpenSession(ctx, &adapterv1alpha1.OpenSessionRequest{
 		Target: &adapterv1alpha1.TargetRef{TargetId: s.TargetID}})

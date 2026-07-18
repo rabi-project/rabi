@@ -142,6 +142,12 @@ type JobView struct {
 	Deadline    time.Time
 	BudgetUnits []string
 
+	// SessionJoin is an existing session id to join (spec.session.join);
+	// SessionMaxDuration opens a new session at bind time when set and no
+	// join id is given (M6).
+	SessionJoin        string
+	SessionMaxDuration time.Duration
+
 	PreferOnPrem    bool
 	AllowCloudBurst []string
 	DenyTargets     []string
@@ -223,6 +229,18 @@ func ParseJob(id, tenant string, doc map[string]any) (*JobView, error) {
 	}
 	if j.Aggregate == "" {
 		j.Aggregate = "best" // RFC-0002 normative default
+	}
+	if sess, ok := spec["session"].(map[string]any); ok {
+		if join, ok := sess["join"].(string); ok {
+			j.SessionJoin = join
+		}
+		if raw, ok := sess["maxDuration"].(string); ok {
+			d, err := time.ParseDuration(raw)
+			if err != nil {
+				return nil, fmt.Errorf("scheduler: session.maxDuration %q: %w", raw, err)
+			}
+			j.SessionMaxDuration = d
+		}
 	}
 	if sched, ok := spec["scheduling"].(map[string]any); ok {
 		if oc, ok := sched["onConflict"].(string); ok {

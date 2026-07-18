@@ -584,3 +584,32 @@ func TestClosedPoolSurfacesErrors(t *testing.T) {
 		t.Error("BindJob on closed pool must error")
 	}
 }
+
+func TestSessionStore(t *testing.T) {
+	ctx := t.Context()
+	exp := time.Now().Add(time.Hour)
+	rec := &store.SessionRecord{
+		SessionID: "s-" + uuid.NewString()[:8], Tenant: "sess/store", Target: "sim/t1",
+		AdapterSessionID: "adapter-1", OpenedByJob: uuid.NewString(), ExpiresAt: &exp,
+	}
+	if err := testStore.InsertSession(ctx, rec); err != nil {
+		t.Fatal(err)
+	}
+	got, err := testStore.GetSession(ctx, rec.SessionID)
+	if err != nil || !got.Live(time.Now()) {
+		t.Fatalf("fresh session: %v live=%v", err, got.Live(time.Now()))
+	}
+	if !got.Live(exp.Add(-time.Second)) || got.Live(exp.Add(time.Second)) {
+		t.Fatal("expiry boundary wrong")
+	}
+	if err := testStore.CloseSession(ctx, rec.SessionID); err != nil {
+		t.Fatal(err)
+	}
+	got, _ = testStore.GetSession(ctx, rec.SessionID)
+	if got.Live(time.Now()) {
+		t.Fatal("closed session still live")
+	}
+	if _, err := testStore.GetSession(ctx, "missing"); !errors.Is(err, store.ErrSessionNotFound) {
+		t.Fatalf("want ErrSessionNotFound, got %v", err)
+	}
+}

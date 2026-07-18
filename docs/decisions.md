@@ -469,3 +469,23 @@ would leave role mapping untested.
 - FSM: PENDING→FAILED edge added — required by RFC-0003 reject. SPEC
   QUESTION: spec/spec/overview.md §3's diagram still lacks this edge;
   needs a v0.3 editorial pass.
+
+## D-040 · 2026-07-19 · P1-M6 — session boring choices
+
+- The control-plane session id (uuid, `status.sessionId` on the opener) is
+  what `spec.session.join` names; the adapter's own session id rides along
+  on SubmitTask. Sessions live in a `sessions` table (closure recorded,
+  never deleted); a per-cycle sweep closes expired records.
+- Affinity = `requireTargets` pinning inside the normal pipeline (no
+  special-case scheduler path). Joiners of a missing/closed/expired/
+  foreign-tenant session FAIL with SESSION_LOST + condition SessionLost —
+  never a silent reschedule; the tenant check is what makes session
+  accounting attribute only to the session's project.
+- Opener flow: session opens AFTER bind (on the actual bound target),
+  before task submission; failure to open fails the job — running
+  sessionless would break the affinity contract for followers.
+- Aer adapter: wall-clock session expiry (the sim clock accelerates
+  calibration drift, not session lifetimes); dead-session submissions
+  fail the TASK with categorized SESSION_LOST (a precheck_error hook in
+  the engine), never a bare gRPC abort. Conformance cat 8 covers declared
+  adapters: open→submit→close→SESSION_LOST + unknown-session loss.

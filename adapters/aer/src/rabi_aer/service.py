@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import threading
 import time
+import uuid
 from datetime import UTC, datetime
 
 import grpc
@@ -43,6 +45,7 @@ _STATE_TO_PB = {
 
 _CATEGORY_TO_PB = {
     taskmod.INVALID_PROGRAM: pb.ErrorDetail.Category.INVALID_PROGRAM,
+    taskmod.SESSION_LOST: pb.ErrorDetail.Category.SESSION_LOST,
     taskmod.CAPABILITY_MISMATCH: pb.ErrorDetail.Category.CAPABILITY_MISMATCH,
     taskmod.VENDOR_ERROR: pb.ErrorDetail.Category.VENDOR_ERROR,
 }
@@ -66,6 +69,8 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
         self._targets = {t.target_id: t for t in targets}
         self._runtimes = {t.target_id: TargetRuntime(t, clock) for t in targets}
         self._engine = TaskEngine(self._runtimes)
+        self._sessions: dict[str, dict] = {}
+        self._sessions_lock = threading.Lock()
 
     # -- discovery ----------------------------------------------------------
 
@@ -83,7 +88,7 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
             native_gates=list(cfg.native_gates),
             program_formats=list(cfg.program_formats),
             max_shots=cfg.max_shots,
-            sessions=False,
+            sessions=True,
             cancellation=True,
             billing_units=list(cfg.billing_units),
             coupling_class="loose",
@@ -154,6 +159,9 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
         if request.payload.WhichOneof("body") != "inline":
             context.abort(grpc.StatusCode.INVALID_ARGUMENT,
                           "this adapter accepts inline payloads only")
+        precheck = None
+        if request.session_id:
+            precheck = self._session_error(cfg.target_id, request.session_id)
         task = self._engine.submit(
             target_id=cfg.target_id,
             idempotency_key=request.idempotency_key,
@@ -161,6 +169,7 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
             program=request.payload.inline,
             shots=request.shots,
             parameters=dict(request.parameters),
+            precheck_error=precheck,
         )
         return pb.TaskHandle(
             target=pb.TargetRef(target_id=cfg.target_id), task_id=task.task_id
@@ -213,13 +222,49 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
             ))
         return status
 
-    # -- sessions (not declared) ---------------------------------------------
+    # -- sessions (declared capability, M6) ----------------------------------
+    # A session is an affinity window on one target. Wall-clock expiry (the
+    # sim clock accelerates calibration drift, not session lifetimes).
+
+    _DEFAULT_SESSION_SECONDS = 3600.0
 
     def OpenSession(self, request, context):
-        context.abort(grpc.StatusCode.UNIMPLEMENTED, "sessions capability not declared")
+        cfg = self._lookup(request.target.target_id, context)
+        max_seconds = request.max_duration.ToTimedelta().total_seconds()
+        if max_seconds <= 0:
+            max_seconds = self._DEFAULT_SESSION_SECONDS
+        session_id = str(uuid.uuid4())
+        expires = time.time() + max_seconds
+        with self._sessions_lock:
+            self._sessions[session_id] = {
+                "target": cfg.target_id, "expires": expires, "closed": False,
+            }
+        handle = pb.SessionHandle(
+            target=pb.TargetRef(target_id=cfg.target_id), session_id=session_id
+        )
+        handle.expires_at.FromSeconds(int(expires))
+        return handle
 
     def CloseSession(self, request, context):
-        context.abort(grpc.StatusCode.UNIMPLEMENTED, "sessions capability not declared")
+        with self._sessions_lock:
+            sess = self._sessions.get(request.session_id)
+            if sess is None:
+                context.abort(grpc.StatusCode.NOT_FOUND, "unknown session")
+            sess["closed"] = True
+        return pb.CloseSessionResponse()
+
+    def _session_error(self, target_id: str, session_id: str):
+        with self._sessions_lock:
+            sess = self._sessions.get(session_id)
+            if sess is None:
+                return taskmod.TaskError(taskmod.SESSION_LOST, True, "unknown session " + session_id)
+            if sess["closed"]:
+                return taskmod.TaskError(taskmod.SESSION_LOST, True, "session closed")
+            if time.time() >= sess["expires"]:
+                return taskmod.TaskError(taskmod.SESSION_LOST, True, "session expired")
+            if sess["target"] != target_id:
+                return taskmod.TaskError(taskmod.SESSION_LOST, True, "session bound to another target")
+        return None
 
     # -- helpers --------------------------------------------------------------
 
