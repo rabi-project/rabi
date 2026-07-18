@@ -7,7 +7,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-export RABI_API_KEY="${RABI_API_KEY:-dev-key}"
+export RABI_TOKEN="${RABI_TOKEN:-dev-key}"
 CLUSTER=rabi-e2e
 KCTL="kubectl --context kind-$CLUSTER"
 

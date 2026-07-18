@@ -28,7 +28,7 @@ import (
 type Config struct {
 	GRPCAddr  string // e.g. ":9090"
 	HTTPAddr  string // e.g. ":8080"
-	APIKey    string
+	Auth      *Authenticator
 	Registry  TargetLister
 	Fleet     FleetViewer
 	Store     *store.Store
@@ -49,8 +49,8 @@ type Server struct {
 // New assembles the gRPC server and REST gateway and binds the gRPC listener
 // (so tests may use ":0" and read GRPCAddr). Nothing serves until Run.
 func New(cfg Config) (*Server, error) {
-	if cfg.APIKey == "" {
-		return nil, errors.New("api: APIKey must be set (RABI_API_KEY)")
+	if cfg.Auth == nil {
+		return nil, errors.New("api: Auth must be set")
 	}
 	if cfg.Registry == nil {
 		return nil, errors.New("api: Registry must be set")
@@ -66,8 +66,8 @@ func New(cfg Config) (*Server, error) {
 	}
 
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(UnaryAuthInterceptor(cfg.APIKey)),
-		grpc.StreamInterceptor(StreamAuthInterceptor(cfg.APIKey)),
+		grpc.UnaryInterceptor(cfg.Auth.UnaryAuthInterceptor()),
+		grpc.StreamInterceptor(cfg.Auth.StreamAuthInterceptor()),
 	)
 	apiv1alpha1.RegisterJobsServiceServer(grpcServer, &jobsService{
 		store: cfg.Store, validator: cfg.Validator, fleet: cfg.Fleet, canceller: cfg.Canceller,

@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	apiv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/api/v1alpha1"
+	"github.com/rabi-project/rabi/internal/auth"
 	"github.com/rabi-project/rabi/internal/store"
 )
 
@@ -54,6 +55,9 @@ type usageService struct {
 func (s *usageService) GetTenantUsage(ctx context.Context, req *apiv1alpha1.TenantUsageRequest) (*apiv1alpha1.TenantUsageResponse, error) {
 	if req.GetTenant() == "" {
 		return nil, status.Error(codes.InvalidArgument, "tenant is required")
+	}
+	if err := auth.CheckProject(ctx, req.GetTenant()); err != nil {
+		return nil, err
 	}
 	var from, to time.Time
 	if req.GetFrom() != nil {

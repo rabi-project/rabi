@@ -8,7 +8,7 @@ git clone https://github.com/rabi-project/rabi.git
 cd rabi
 make compose-up               # 3 simulated QPUs replaying real IBM calibration + control plane
 ./deploy/compose/seed.sh      # submit the 20-job demo mix
-RABI_API_KEY=dev-key go run ./cmd/qctl watch --all   # live fleet view (Ctrl-C to exit)
+RABI_TOKEN=dev-key go run ./cmd/qctl watch --all   # live fleet view (Ctrl-C to exit)
 ```
 
 The fleet replays **real device calibration** (20-qubit subgraphs of IBM's
@@ -24,7 +24,7 @@ device can currently satisfy — with the reason recorded.
 Poke at individual jobs:
 
 ```sh
-export RABI_API_KEY=dev-key
+export RABI_TOKEN=dev-key
 go run ./cmd/qctl targets                 # fleet with live calibration state
 go run ./cmd/qctl list --tenant demo
 go run ./cmd/qctl get <job-id>            # full document, placement audit, counts
@@ -58,7 +58,7 @@ With the compose stack up and [kind](https://kind.sigs.k8s.io/) installed:
 kind create cluster
 kubectl apply -f operator/config/crd.yaml
 (cd operator && go build -o ../bin/rabi-operator . )
-RABI_API_KEY=dev-key RABI_API_ADDR=localhost:9090 bin/rabi-operator &
+RABI_TOKEN=dev-key RABI_API_ADDR=localhost:9090 bin/rabi-operator &
 kubectl apply -f operator/examples/bell.yaml
 kubectl -n demo get quantumjobs -w      # bell ... SUCCEEDED  sim/...
 ```

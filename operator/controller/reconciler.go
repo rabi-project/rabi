@@ -34,20 +34,20 @@ const resyncEvery = 2 * time.Second
 // RabiClient is the control-plane surface the reconciler needs.
 type RabiClient struct {
 	Jobs   apiv1alpha1.JobsServiceClient
-	APIKey string
+	Token string
 }
 
 // DialRabi connects to the rabi gRPC endpoint.
-func DialRabi(addr, apiKey string) (*RabiClient, error) {
+func DialRabi(addr, token string) (*RabiClient, error) {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("dialing rabi at %s: %w", addr, err)
 	}
-	return &RabiClient{Jobs: apiv1alpha1.NewJobsServiceClient(conn), APIKey: apiKey}, nil
+	return &RabiClient{Jobs: apiv1alpha1.NewJobsServiceClient(conn), Token: token}, nil
 }
 
 func (c *RabiClient) ctx(ctx context.Context) context.Context {
-	return metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+c.APIKey)
+	return metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+c.Token)
 }
 
 // Reconciler reconciles QuantumJob resources.

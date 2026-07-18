@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"sort"
 	"strings"
@@ -84,11 +85,17 @@ func newServer(st *store.Store) (*api.Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	// The component suite authenticates with the bootstrap token (an admin
+	// principal); role-specific behavior is covered by the authz matrix suite.
+	authn, err := api.NewAuthenticator(testAPIKey, nil, st, slog.Default())
+	if err != nil {
+		return nil, err
+	}
 	reg := registry.New()
 	return api.New(api.Config{
 		GRPCAddr:  "127.0.0.1:0",
 		HTTPAddr:  "127.0.0.1:0",
-		APIKey:    testAPIKey,
+		Auth:      authn,
 		Registry:  reg,
 		Fleet:     reg,
 		Store:     st,

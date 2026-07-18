@@ -17,6 +17,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	apiv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/api/v1alpha1"
+	"github.com/rabi-project/rabi/internal/auth"
 	"github.com/rabi-project/rabi/internal/job"
 	"github.com/rabi-project/rabi/internal/store"
 )
@@ -53,6 +54,9 @@ func (s *jobsService) SubmitJob(ctx context.Context, req *apiv1alpha1.SubmitJobR
 	adm, err := s.validator.Admit(req.GetQuantumJob().AsMap(), req.GetTenant(), s.fleet.FleetView(ctx))
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "admission: %v", err)
+	}
+	if err := auth.CheckProject(ctx, adm.Tenant); err != nil {
+		return nil, err
 	}
 
 	conditions := make([]any, 0, len(adm.Warnings)+1)
@@ -117,7 +121,11 @@ func (s *jobsService) ListJobs(ctx context.Context, req *apiv1alpha1.ListJobsReq
 			return nil, status.Errorf(codes.InvalidArgument, "malformed page_token %q", tok)
 		}
 	}
-	recs, err := s.store.ListJobs(ctx, req.GetTenant(), req.GetPhaseFilter(), pageSize, offset)
+	tenant, err := effectiveTenant(ctx, req.GetTenant())
+	if err != nil {
+		return nil, err
+	}
+	recs, err := s.store.ListJobs(ctx, tenant, req.GetPhaseFilter(), pageSize, offset)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "listing jobs: %v", err)
 	}
@@ -200,6 +208,10 @@ func (s *jobsService) sendEvent(stream apiv1alpha1.JobsService_WatchJobServer, r
 }
 
 func (s *jobsService) CancelJob(ctx context.Context, ref *apiv1alpha1.JobRef) (*apiv1alpha1.Job, error) {
+	// Load first so a project-scoped token cannot cancel outside its project.
+	if _, err := s.loadJob(ctx, ref.GetJobId()); err != nil {
+		return nil, err
+	}
 	if s.canceller != nil {
 		if err := s.canceller.CancelJob(ctx, ref.GetJobId()); err != nil {
 			return nil, status.Errorf(codes.Internal, "cancelling task: %v", err)
@@ -231,7 +243,26 @@ func (s *jobsService) loadJob(ctx context.Context, jobID string) (*store.JobReco
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "loading job: %v", err)
 	}
+	if err := auth.CheckProject(ctx, rec.Tenant); err != nil {
+		return nil, err
+	}
 	return rec, nil
+}
+
+// effectiveTenant resolves a requested tenant filter against the caller's
+// project scope: scoped tokens default to (and may not leave) their project.
+func effectiveTenant(ctx context.Context, requested string) (string, error) {
+	p, ok := auth.FromContext(ctx)
+	if !ok {
+		return "", status.Error(codes.Unauthenticated, "no principal in context")
+	}
+	if p.Project == "" {
+		return requested, nil
+	}
+	if requested == "" {
+		return p.Project, nil
+	}
+	return requested, auth.CheckProject(ctx, requested)
 }
 
 func appendCondition(st map[string]any, c job.Condition) map[string]any {

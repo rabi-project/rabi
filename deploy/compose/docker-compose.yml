@@ -51,7 +51,7 @@ services:
     build:
       context: ../..
     environment:
-      RABI_API_KEY: ${RABI_API_KEY:-dev-key}
+      RABI_BOOTSTRAP_TOKEN: ${RABI_BOOTSTRAP_TOKEN:-dev-key}
       RABI_DB_URL: postgres://rabi:rabi@postgres:5432/rabi?sslmode=disable
       RABI_GRPC_ADDR: ":9090"
       RABI_HTTP_ADDR: ":8080"

@@ -29,9 +29,9 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 	logger := ctrl.Log.WithName("setup")
 
-	apiKey := os.Getenv("RABI_API_KEY")
-	if apiKey == "" {
-		logger.Error(nil, "RABI_API_KEY must be set")
+	token := os.Getenv("RABI_TOKEN")
+	if token == "" {
+		logger.Error(nil, "RABI_TOKEN must be set (API token or bootstrap token)")
 		os.Exit(1)
 	}
 	rabiAddr := envOr("RABI_API_ADDR", "localhost:9090")
@@ -56,7 +56,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	rabi, err := controller.DialRabi(rabiAddr, apiKey)
+	rabi, err := controller.DialRabi(rabiAddr, token)
 	if err != nil {
 		logger.Error(err, "dialing rabi")
 		os.Exit(1)

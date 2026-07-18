@@ -8,7 +8,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-export RABI_API_KEY="${RABI_API_KEY:-dev-key}"
+export RABI_TOKEN="${RABI_TOKEN:-dev-key}"
 go build -o bin/qctl ./cmd/qctl
 
 echo "--- IBM adapter dormant without profile"

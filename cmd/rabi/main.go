@@ -29,11 +29,6 @@ func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 	slog.SetDefault(logger)
 
-	apiKey := os.Getenv("RABI_API_KEY")
-	if apiKey == "" {
-		logger.Error("RABI_API_KEY must be set")
-		os.Exit(1)
-	}
 	dbURL := envOr("RABI_DB_URL", "postgres://rabi:rabi@localhost:5432/rabi?sslmode=disable")
 	grpcAddr := envOr("RABI_GRPC_ADDR", ":9090")
 	httpAddr := envOr("RABI_HTTP_ADDR", ":8080")
@@ -69,10 +64,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	authn, err := buildAuthenticator(ctx, st, logger)
+	if err != nil {
+		logger.Error("configuring auth", "error", err)
+		os.Exit(1)
+	}
+
 	srv, err := api.New(api.Config{
 		GRPCAddr:  grpcAddr,
 		HTTPAddr:  httpAddr,
-		APIKey:    apiKey,
+		Auth:      authn,
 		Registry:  reg,
 		Fleet:     reg,
 		Store:     st,

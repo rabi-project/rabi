@@ -8,8 +8,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-API_KEY="${RABI_API_KEY:-dev-key}"
-export RABI_API_KEY="$API_KEY"
+API_KEY="${RABI_TOKEN:-dev-key}"
+export RABI_TOKEN="$API_KEY"
 
 go build -o bin/qctl ./cmd/qctl
 
