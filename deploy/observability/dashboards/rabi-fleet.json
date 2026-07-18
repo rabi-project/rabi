@@ -1,0 +1,124 @@
+{
+ "title": "Rabi fleet health",
+ "uid": "rabi-fleet",
+ "schemaVersion": 39,
+ "time": {
+  "from": "now-6h",
+  "to": "now"
+ },
+ "refresh": "30s",
+ "panels": [
+  {
+   "id": 0,
+   "type": "timeseries",
+   "title": "Probe fidelity per target (1 - TVD vs ideal)",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "Prometheus"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "expr": "rabi_probe_fidelity",
+     "legendFormat": "{{target}}{{phase}}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 1,
+   "type": "timeseries",
+   "title": "Estimator |predicted \u2212 measured| (pilot SLO: median \u2264 0.10)",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 0
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "Prometheus"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "expr": "rabi_probe_estimator_abs_error",
+     "legendFormat": "{{target}}{{phase}}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "timeseries",
+   "title": "Probe age (staleness)",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "Prometheus"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "expr": "rabi_probe_age_seconds",
+     "legendFormat": "{{target}}{{phase}}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "timeseries",
+   "title": "Jobs by phase",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "Prometheus"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "expr": "rabi_jobs_total",
+     "legendFormat": "{{target}}{{phase}}",
+     "refId": "A"
+    }
+   ]
+  }
+ ]
+}

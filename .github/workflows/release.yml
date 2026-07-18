@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Release CI (M12): on version tags — full test gate is the pushed commit's
+# ci run; this workflow adds the CVE gate (no HIGH/CRITICAL), builds
+# artifacts, and attaches the conformance reports.
+name: release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  cve-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - name: govulncheck (Go, reachable call graph)
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+      - name: trivy (filesystem, HIGH/CRITICAL fail)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+
+  artifacts:
+    needs: cve-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: astral-sh/setup-uv@v5
+      - name: build binaries
+        run: |
+          mkdir -p dist
+          VERSION="${GITHUB_REF_NAME}"
+          for BIN in rabi qctl rabi-conformance; do
+            CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+              -ldflags "-X main.version=$VERSION" -o "dist/${BIN}-linux-amd64" "./cmd/$BIN"
+          done
+      - name: conformance reports (all in-tree adapters)
+        run: ./hack/conformance-report.sh dist/conformance
+      - name: package
+        run: tar -C dist -czf "rabi-${GITHUB_REF_NAME}-linux-amd64.tgz" .
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: rabi-*.tgz
+          generate_release_notes: true

@@ -74,6 +74,27 @@ services:
       timeout: 5s
       retries: 30
 
+  # M12 observability profile: prometheus scraping /metrics + grafana with
+  # the dashboards-as-code under deploy/observability/dashboards.
+  prometheus:
+    profiles: ["observability"]
+    image: prom/prometheus:v2.53.0
+    volumes:
+      - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9091:9090"]
+
+  grafana:
+    profiles: ["observability"]
+    image: grafana/grafana:11.1.0
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ../observability/grafana-datasource.yml:/etc/grafana/provisioning/datasources/rabi.yml:ro
+      - ../observability/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/rabi.yml:ro
+      - ../observability/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3000:3000"]
+
   rabi:
     build:
       context: ../..

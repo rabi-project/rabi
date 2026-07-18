@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+global: { scrape_interval: 15s }
+scrape_configs:
+  - job_name: rabi
+    static_configs: [{ targets: ["rabi:8080"] }]
