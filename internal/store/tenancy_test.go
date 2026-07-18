@@ -137,16 +137,15 @@ func TestQuotaRace(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			err := testStore.InsertJobWithQuota(ctx, shotsJob(tenant, 1000), map[string]float64{"shots": 1000})
-			switch {
-			case err == nil:
+			if err == nil {
 				admitted.Add(1)
-			default:
-				var qe *store.ErrQuotaExceeded
-				if !errors.As(err, &qe) {
-					t.Errorf("unexpected error kind: %v", err)
-				}
-				rejected.Add(1)
+				return
 			}
+			var qe *store.ErrQuotaExceeded
+			if !errors.As(err, &qe) {
+				t.Errorf("unexpected error kind: %v", err)
+			}
+			rejected.Add(1)
 		}()
 	}
 	wg.Wait()
