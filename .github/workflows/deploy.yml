@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# M4 deploy suites: helm-on-kind e2e, air-gapped install verification, and
+# the backup→destroy→restore drill (T&V §3 runs the drill weekly).
+name: deploy
+on:
+  push:
+    branches: [main]
+    paths:
+      - "deploy/**"
+      - "hack/e2e-helm.sh"
+      - "hack/airgap-verify.sh"
+      - "hack/backup-drill.sh"
+      - "internal/store/migrations/**"
+      - ".github/workflows/deploy.yml"
+  schedule:
+    - cron: "17 5 * * 1" # weekly drill, Monday 05:17 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  helm-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: helm/kind-action@v1
+        with: { install_only: true }
+      - run: ./hack/e2e-helm.sh
+
+  airgap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: helm/kind-action@v1
+        with: { install_only: true }
+      - run: ./hack/airgap-verify.sh
+
+  backup-drill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - run: ./hack/backup-drill.sh

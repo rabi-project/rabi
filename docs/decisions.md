@@ -424,3 +424,24 @@ would leave role mapping untested.
 - Reconciliation (Σ ledger == per-job status usage for SUCCEEDED jobs)
   runs inside `rabi` on a ticker — weekly by default, RABI_RECONCILE_EVERY
   for demos/CI — and appends to reconciliation_runs (itself append-only).
+
+## D-038 · 2026-07-19 · P1-M4 — deploy boring choices
+
+- The Helm chart has ZERO dependencies: Postgres is an optional in-chart
+  StatefulSet (postgres.enabled=false + externalDatabaseUrl to bring your
+  own) and the Aer adapter is a sidecar. A remote subchart would need
+  internet at install time and break the air-gap rule.
+- Upgrade gate: RABI_AUTO_MIGRATE=false (helm value autoMigrate) serves
+  without migrating and FAILS FAST on a lagging schema; the documented
+  path is migrate-once-then-roll.
+- Air-gap proof: bundle = single-platform image archive + packaged chart +
+  install script; every pullPolicy=Never, so any egress attempt is a hard
+  failure, and the verify script asserts zero "Pulling" events after
+  install. This kind+archive+Never construction is the portable equivalent
+  of the plan's no-egress network namespace. Gotcha: with Docker's
+  containerd image store, `docker save` of a pulled multi-arch tag carries
+  an index with absent foreign blobs — save with --platform.
+- Backup = pg_dump PLUS pg_dumpall --roles-only: the rabi_app role is
+  cluster-level, and without it a restored instance refuses to boot (SET
+  ROLE fails) — the drill exercises exactly this. Restore order: postgres
+  → roles → database → rabi (never boot rabi against an empty DB first).

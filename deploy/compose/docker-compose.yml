@@ -57,6 +57,7 @@ services:
       RABI_HTTP_ADDR: ":8080"
       RABI_ADAPTERS: "sim=adapter-aer:50051${RABI_ADAPTERS_EXTRA:-}"
       RABI_POLICY: ${RABI_POLICY:-calib-aware/v0}
+      RABI_RECONCILE_EVERY: ${RABI_RECONCILE_EVERY:-}
     ports:
       - "9090:9090"
       - "8080:8080"

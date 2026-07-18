@@ -35,6 +35,7 @@ spec:
       containers:
         - name: postgres
           image: {{ .Values.postgres.image }}
+          imagePullPolicy: {{ .Values.postgres.pullPolicy | default "IfNotPresent" }}
           env:
             - name: POSTGRES_USER
               value: {{ .Values.postgres.user | quote }}
