@@ -257,7 +257,9 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
         with self._sessions_lock:
             sess = self._sessions.get(session_id)
             if sess is None:
-                return taskmod.TaskError(taskmod.SESSION_LOST, True, "unknown session " + session_id)
+                return taskmod.TaskError(
+                    taskmod.SESSION_LOST, True, "unknown session " + session_id
+                )
             if sess["closed"]:
                 return taskmod.TaskError(taskmod.SESSION_LOST, True, "session closed")
             if time.time() >= sess["expires"]:
