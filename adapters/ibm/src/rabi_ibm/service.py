@@ -130,7 +130,9 @@ class IBMAdapterService(pb_grpc.AdapterServiceServicer):
             cancellation=True,
             billing_units=list(BILLING_UNITS),
             coupling_class="loose",
+            cloud_queue=True,  # RFC-0001: tasks traverse IBM's shared queue
             vendor_extensions={"technology": "superconducting", "cloud": "true"},
+            technology="superconducting",
         )
 
     def GetDeviceState(self, request, context):

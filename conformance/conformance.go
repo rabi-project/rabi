@@ -126,8 +126,24 @@ func (s *Suite) awaitTerminal(ctx context.Context, t T, handle *adapterv1alpha1.
 	return nil
 }
 
+// technologyRegistry mirrors spec/spec/overview.md §2a (RFC-0001). Novel
+// strings are legal (SHOULD be proposed upstream) — warned, not failed.
+var technologyRegistry = map[string]bool{
+	"superconducting": true, "trapped-ion": true, "neutral-atom": true,
+	"photonic": true, "annealer": true, "spin-semiconductor": true,
+	"nv-center": true, "simulator": true,
+}
+
 // CapabilityHonesty — category 1.
 func (s *Suite) CapabilityHonesty(ctx context.Context, t T) {
+	// RFC-0001: technology is a first-class, conformance-tested field.
+	tech := s.Caps.GetTarget().GetTechnology()
+	if tech == "" {
+		t.Errorf("TargetInfo.technology is empty (RFC-0001; extension-only declarations fail conformance from spec v0.3)")
+	} else if !technologyRegistry[tech] {
+		t.Logf("warning: technology %q is not in the spec registry (novel strings SHOULD be proposed upstream)", tech)
+	}
+
 	formats := s.Caps.GetProgramFormats()
 	if len(formats) == 0 {
 		t.Fatalf("adapter declares no program formats")

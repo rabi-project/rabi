@@ -168,15 +168,23 @@ func (d *Dispatcher) fleetViews() []*scheduler.TargetView {
 
 func entryToView(e *registry.Entry) *scheduler.TargetView {
 	ext := e.Caps.GetVendorExtensions()
+	// RFC-0001: the first-class fields are authoritative when present; the
+	// vendor_extensions fallback is legal only until spec v0.3, then the
+	// extension keys become reserved and the fallback must be deleted.
+	technology := e.Info.GetTechnology()
+	if technology == "" {
+		technology = ext["technology"]
+	}
+	cloud := e.Caps.GetCloudQueue() || ext["cloud"] == "true"
 	v := &scheduler.TargetView{
 		Name:       e.Name,
 		Modality:   e.Info.GetModality(),
-		Technology: ext["technology"],
+		Technology: technology,
 		Qubits:     e.Caps.GetNumQubits(),
 		Formats:    e.Caps.GetProgramFormats(),
 		MaxShots:   e.Caps.GetMaxShots(),
 		Billing:    e.Caps.GetBillingUnits(),
-		Cloud:      ext["cloud"] == "true",
+		Cloud:      cloud,
 	}
 	if nominal, err := strconv.ParseFloat(ext["nominal-2q-error-median"], 64); err == nil {
 		v.Nominal2QError = nominal

@@ -87,6 +87,7 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
             cancellation=True,
             billing_units=list(cfg.billing_units),
             coupling_class="loose",
+            cloud_queue=False,  # RFC-0001: replay targets are site-local
             vendor_extensions={
                 "technology": cfg.technology,
                 # The device's advertised baseline quality — static per
@@ -139,6 +140,9 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
             vendor=VENDOR,
             modality=MODALITY,
             simulator=True,
+            # RFC-0001 first-class field; the vendor_extensions copy stays
+            # until spec v0.3 for old control planes (deprecation window).
+            technology=cfg.technology,
         )
 
     # -- execution ----------------------------------------------------------
