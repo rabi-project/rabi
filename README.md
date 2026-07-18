@@ -1,4 +1,7 @@
-# Rabi
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/rabi-logo-dark.svg">
+  <img alt="Rabi" src="docs/brand/rabi-logo-light.svg" width="300">
+</picture>
 
 [![ci](https://github.com/rabi-project/rabi/actions/workflows/ci.yml/badge.svg)](https://github.com/rabi-project/rabi/actions/workflows/ci.yml)
 

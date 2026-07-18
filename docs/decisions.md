@@ -325,3 +325,20 @@ adapters/scheduler intentionally keep using it), RFC-0002 ratifies D-016b
 Admission accepts the new fields today (schema-merged, tested); their
 scheduler/adapter semantics land in phase1 M5 per the patch's own scoping.
 Note: the upstream `tangle-spec` folder is now behind this vendored copy.
+
+## D-032 · 2026-07-19 · P1-M0 completion state — PLAN QUESTION on the @v0.1.0 install criterion
+
+Most of P1-M0 landed via Edward's migration patch before this plan started
+(transfer, module path, badges, CI green from fresh clone, old-URL
+redirects). Completed here: phase1 plan committed, original brand assets
+under docs/brand/ (Rabi-oscillation mark), README logo, tag v0.2.0.
+**Plan question:** the acceptance line "`go install …/cmd/qctl@v0.1.0`
+works" is unsatisfiable post-migration — v0.1.0's go.mod permanently
+declares the pre-org module path (Go tags are immutable snapshots).
+Boring resolution: v0.2.0 is the first tag installable under
+`github.com/rabi-project/rabi`; v0.1.0 remains the MVP-content tag.
+**Blocked on org admin (Edward):** (a) branch protection returns 403 —
+private repo on a free org plan; either make the repo public (consistent
+with the open-source mission — his call, outward-facing) or upgrade the
+plan; (b) org-level IBM_TOKEN secret needs `admin:org` scope
+(`gh auth refresh -h github.com -s admin:org`) or the org settings UI.
