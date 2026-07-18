@@ -24,7 +24,7 @@ var (
 func main() {
 	root := &cobra.Command{
 		Use:           "qctl",
-		Short:         "Control Tangle: submit and track QuantumJobs, inspect the fleet",
+		Short:         "Control a Rabi fleet: submit and track QuantumJobs, inspect the fleet",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
