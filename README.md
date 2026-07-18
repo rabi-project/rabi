@@ -34,8 +34,12 @@ from the vendored [Tangle spec](spec/) (`tangle.adapter.v1alpha1`,
 `tangle.api.v1alpha1`, proto packages) — the spec is law, so
 spec-derived identifiers keep their names (docs/decisions.md D-028).
 
-**Status:** pre-v0.1, building toward the MVP milestones in
-`spec/mvp-build-plan.md`.
+**Status:** Phase 1 (pilot-grade alpha) complete on `main` — OIDC + token
+auth, org/project tenancy with quotas and fair-share, DB-enforced
+append-only accounting, Helm + air-gapped install, spec v0.2 semantics,
+sessions, five conformance-certified adapters (Aer, IBM, QRMI, QDMI, IQM),
+a read-only console, and the pilot package (probes, dashboards, CVE-gated
+releases). See `phase1-build-plan.md` and `docs/decisions.md`.
 
 - [Quickstart](docs/quickstart.md) — clone to routed jobs in 5 commands
 - [Architecture](docs/architecture.md)
