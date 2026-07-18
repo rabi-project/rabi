@@ -48,12 +48,19 @@ run_one() { # name, spawn-dir, spawn-cmd..., extra CLI args
   done
 
   local rc=0
-  if [ "$name" = "ibm" ]; then
+  case "$name" in
+  ibm)
     bin/rabi-conformance run --target "$addr" --out "$OUT/$name" \
       --note "fake-backend mode (qiskit-ibm-runtime FakeManilaV2); live certification runs nightly" || rc=$?
-  else
+    ;;
+  qrmi)
+    bin/rabi-conformance run --target "$addr" --out "$OUT/$name" \
+      --note "cassette mode (deterministic QRMI-shaped resource); live certification runs nightly with credentials" || rc=$?
+    ;;
+  *)
     bin/rabi-conformance run --target "$addr" --out "$OUT/$name" || rc=$?
-  fi
+    ;;
+  esac
   kill "$pid" 2>/dev/null || true
   wait "$pid" 2>/dev/null || true
   return "$rc"
@@ -61,5 +68,6 @@ run_one() { # name, spawn-dir, spawn-cmd..., extra CLI args
 
 run_one aer adapters/aer uv run rabi-adapter-aer --config config/single.yaml
 run_one ibm adapters/ibm uv run rabi-adapter-ibm --fake
+run_one qrmi adapters/qrmi uv run rabi-adapter-qrmi --cassette
 
-echo "CONFORMANCE-REPORTS OK ($OUT/aer, $OUT/ibm)"
+echo "CONFORMANCE-REPORTS OK ($OUT/aer, $OUT/ibm, $OUT/qrmi)"

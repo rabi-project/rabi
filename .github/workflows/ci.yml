@@ -35,7 +35,10 @@ jobs:
       - name: codegen matches committed
         run: make gen-check
       - name: ruff (adapters)
-        run: cd adapters/aer && uv run --extra dev ruff check .
+        run: |
+          (cd adapters/aer && uv run --extra dev ruff check .)
+          (cd adapters/ibm && uv run --extra dev ruff check .)
+          (cd adapters/qrmi && uv run --extra dev ruff check .)
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
@@ -83,6 +86,8 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - name: pytest (Aer adapter — physics, idempotency, taxonomy)
         run: cd adapters/aer && uv run --extra dev pytest -q
+      - name: pytest (QRMI adapter — cassette lifecycle, taxonomy, mapping)
+        run: cd adapters/qrmi && uv run --extra dev pytest -q
 
   integration:
     runs-on: ubuntu-latest

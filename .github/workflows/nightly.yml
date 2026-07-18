@@ -55,3 +55,38 @@ jobs:
       - name: dormant without token
         if: ${{ vars.IBM_LIVE_ENABLED != 'true' }}
         run: echo "IBM live path dormant (no token configured) — by design"
+
+  # Live QRMI certification: needs provider credentials in the qrmi-live
+  # environment (QRMI reads its .env convention; see adapters/qrmi). Until
+  # an org admin configures them, this job skips — provably dormant, like
+  # ibm-live above.
+  qrmi-live:
+    runs-on: ubuntu-latest
+    environment: qrmi-live
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: astral-sh/setup-uv@v5
+      - name: live certification (skips without credentials)
+        env:
+          QRMI_RESOURCE: ${{ secrets.QRMI_RESOURCE }}
+          QRMI_ENV_FILE: ${{ secrets.QRMI_ENV_FILE }}
+        run: |
+          if [ -z "$QRMI_RESOURCE" ]; then
+            echo "no QRMI credentials configured; skipping live certification"
+            exit 0
+          fi
+          printf '%s' "$QRMI_ENV_FILE" > adapters/qrmi/.env
+          go build -o bin/rabi-conformance ./cmd/rabi-conformance
+          (cd adapters/qrmi && exec uv run --extra qrmi rabi-adapter-qrmi \
+            --resource "$QRMI_RESOURCE" --listen 127.0.0.1:50053) >/dev/null 2>&1 &
+          sleep 20
+          bin/rabi-conformance run --target 127.0.0.1:50053 --out bin/conformance/qrmi-live
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qrmi-live-report
+          path: bin/conformance/qrmi-live/
+          if-no-files-found: ignore

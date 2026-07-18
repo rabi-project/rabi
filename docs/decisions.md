@@ -513,3 +513,27 @@ would leave role mapping untested.
 - IBM certification in CI runs `--fake` (FakeManilaV2, tokenless,
   deterministic) with an explicit report note; live certification remains
   nightly/token-gated. ci.yml publishes both reports as artifacts.
+
+## D-042 · 2026-07-19 · P1-M8 — QRMI driver boring choices
+
+- Language: QRMI's Python bindings (qrmi>=0.20 on PyPI) — matches the uv
+  toolchain of the rest of the adapter fleet; Rust/C rejected for
+  toolchain sprawl. The live dependency is an optional extra: cassette
+  mode imports none of it.
+- The adapter owns what QRMI does not define: idempotency keys, task FSM,
+  error taxonomy (local QASM validation → INVALID_PROGRAM before any
+  vendor call), per-resource single-worker queue, usage records (shots +
+  tasks; qpu-seconds when live metadata provides it later).
+- Technology/cloud mapping per QRMI ResourceType (IBM* → superconducting/
+  cloud, PasqalCloud → neutral-atom/cloud, PasqalLocal → on-prem, ...);
+  calibration provenance from the QRMI Target document mapped into Metric
+  fields with methodology "qrmi-relayed (<upstream tag>)" and snapshot
+  source "qrmi:<type>/<id>".
+- "Cassette-backed in CI" = CassetteQrmi, a deterministic QRMI-shaped
+  resource behind the same interface as LiveQrmi (reports carry an
+  explicit note) — same precedent as ibm --fake. First live recording can
+  replace the synthetic fixture later without touching the adapter layer.
+- Nightly qrmi-live job exists but SKIPS until org secrets
+  QRMI_RESOURCE/QRMI_ENV_FILE are configured (needs Edward) — provably
+  dormant like ibm-live. The "nightly live ≥95% over 7 days" criterion is
+  an operational gate that starts counting when credentials land.
