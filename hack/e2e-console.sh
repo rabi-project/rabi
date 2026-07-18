@@ -38,7 +38,9 @@ print(json.dumps({
 }))
 PY
 job_id="$(bin/qctl submit -f bin/console-job.json | cut -f1)"
-for _ in $(seq 1 90); do
+# The seeded demo mix queues ahead of this job on the replay targets;
+# slow shared runners need the long leash.
+for _ in $(seq 1 300); do
   phase="$(bin/qctl get "$job_id" -o json | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"].get("phase",""))')"
   case "$phase" in SUCCEEDED|FAILED|CANCELLED) break ;; esac
   sleep 1
