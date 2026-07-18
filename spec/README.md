@@ -6,7 +6,7 @@ This repository is the source of truth for the Tangle standard. It contains no i
 the reference implementation lives in [`tangle`](../tangle) and the conformance harness in
 [`tangle-conformance`](../tangle-conformance) (built against this spec, in that order of authority).
 
-Current spec version: **v0.1-draft** (pre-RFC; everything may change until v0.2).
+Current spec version: **v0.2** (RFC-0001, RFC-0002, RFC-0003 accepted and merged 2026-07-18).
 
 ## Layout
 

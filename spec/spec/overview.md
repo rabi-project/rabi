@@ -34,6 +34,22 @@ semantics of their own.
 | **Tenant** | The accounting/quota boundary (organization → project hierarchy) |
 | **Calibration snapshot** | A timestamped, provenance-carrying set of device quality metrics |
 
+## 2a. Technology registry (RFC-0001, normative)
+
+`TargetInfo.technology` and `QuantumJob.requirements.technology` match exactly and
+case-sensitively against canonical, lowercase kebab-case strings from this open registry
+(extended by spec-repo PR, not by proto release):
+
+`superconducting` · `trapped-ion` · `neutral-atom` · `photonic` · `annealer` ·
+`spin-semiconductor` · `nv-center` · `simulator`
+
+Adapters MUST use a registry value when one applies and MAY use a novel string, which
+SHOULD be proposed to the registry. `Capabilities.cloud_queue` declares that tasks
+traverse a shared vendor cloud queue outside the site's control; it drives
+`backendSelector.preferOnPrem` / `allowCloudBurst` filtering. Until spec v0.3, control
+planes MAY fall back to `vendor_extensions["technology"]` / `["cloud"]`; from v0.3 the
+fallback is removed and those extension keys are reserved.
+
 ## 3. QuantumJob lifecycle (normative)
 
 ```

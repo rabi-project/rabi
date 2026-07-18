@@ -28,21 +28,23 @@ class TargetRef(_message.Message):
     def __init__(self, target_id: _Optional[str] = ...) -> None: ...
 
 class TargetInfo(_message.Message):
-    __slots__ = ("target_id", "display_name", "vendor", "modality", "simulator")
+    __slots__ = ("target_id", "display_name", "vendor", "modality", "simulator", "technology")
     TARGET_ID_FIELD_NUMBER: _ClassVar[int]
     DISPLAY_NAME_FIELD_NUMBER: _ClassVar[int]
     VENDOR_FIELD_NUMBER: _ClassVar[int]
     MODALITY_FIELD_NUMBER: _ClassVar[int]
     SIMULATOR_FIELD_NUMBER: _ClassVar[int]
+    TECHNOLOGY_FIELD_NUMBER: _ClassVar[int]
     target_id: str
     display_name: str
     vendor: str
     modality: str
     simulator: bool
-    def __init__(self, target_id: _Optional[str] = ..., display_name: _Optional[str] = ..., vendor: _Optional[str] = ..., modality: _Optional[str] = ..., simulator: _Optional[bool] = ...) -> None: ...
+    technology: str
+    def __init__(self, target_id: _Optional[str] = ..., display_name: _Optional[str] = ..., vendor: _Optional[str] = ..., modality: _Optional[str] = ..., simulator: _Optional[bool] = ..., technology: _Optional[str] = ...) -> None: ...
 
 class Capabilities(_message.Message):
-    __slots__ = ("target", "num_qubits", "coupling_map", "native_gates", "program_formats", "max_shots", "sessions", "cancellation", "billing_units", "coupling_class", "vendor_extensions")
+    __slots__ = ("target", "num_qubits", "coupling_map", "native_gates", "program_formats", "max_shots", "sessions", "cancellation", "billing_units", "coupling_class", "vendor_extensions", "cloud_queue")
     class VendorExtensionsEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -61,6 +63,7 @@ class Capabilities(_message.Message):
     BILLING_UNITS_FIELD_NUMBER: _ClassVar[int]
     COUPLING_CLASS_FIELD_NUMBER: _ClassVar[int]
     VENDOR_EXTENSIONS_FIELD_NUMBER: _ClassVar[int]
+    CLOUD_QUEUE_FIELD_NUMBER: _ClassVar[int]
     target: TargetInfo
     num_qubits: int
     coupling_map: _containers.RepeatedCompositeFieldContainer[CouplingEdge]
@@ -72,7 +75,8 @@ class Capabilities(_message.Message):
     billing_units: _containers.RepeatedScalarFieldContainer[str]
     coupling_class: str
     vendor_extensions: _containers.ScalarMap[str, str]
-    def __init__(self, target: _Optional[_Union[TargetInfo, _Mapping]] = ..., num_qubits: _Optional[int] = ..., coupling_map: _Optional[_Iterable[_Union[CouplingEdge, _Mapping]]] = ..., native_gates: _Optional[_Iterable[str]] = ..., program_formats: _Optional[_Iterable[str]] = ..., max_shots: _Optional[int] = ..., sessions: _Optional[bool] = ..., cancellation: _Optional[bool] = ..., billing_units: _Optional[_Iterable[str]] = ..., coupling_class: _Optional[str] = ..., vendor_extensions: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    cloud_queue: bool
+    def __init__(self, target: _Optional[_Union[TargetInfo, _Mapping]] = ..., num_qubits: _Optional[int] = ..., coupling_map: _Optional[_Iterable[_Union[CouplingEdge, _Mapping]]] = ..., native_gates: _Optional[_Iterable[str]] = ..., program_formats: _Optional[_Iterable[str]] = ..., max_shots: _Optional[int] = ..., sessions: _Optional[bool] = ..., cancellation: _Optional[bool] = ..., billing_units: _Optional[_Iterable[str]] = ..., coupling_class: _Optional[str] = ..., vendor_extensions: _Optional[_Mapping[str, str]] = ..., cloud_queue: _Optional[bool] = ...) -> None: ...
 
 class CouplingEdge(_message.Message):
     __slots__ = ("a", "b")

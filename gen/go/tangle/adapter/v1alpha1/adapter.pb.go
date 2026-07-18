@@ -340,12 +340,17 @@ func (x *TargetRef) GetTargetId() string {
 }
 
 type TargetInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TargetId      string                 `protobuf:"bytes,1,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"` // stable, unique within the adapter, e.g. "iqm-q20-a"
-	DisplayName   string                 `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
-	Vendor        string                 `protobuf:"bytes,3,opt,name=vendor,proto3" json:"vendor,omitempty"`     // "ibm", "iqm", "pasqal", "aer-sim", ...
-	Modality      string                 `protobuf:"bytes,4,opt,name=modality,proto3" json:"modality,omitempty"` // "gate-model" | "analog-hamiltonian" | "annealing" | "pulse" | "logical"
-	Simulator     bool                   `protobuf:"varint,5,opt,name=simulator,proto3" json:"simulator,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	TargetId    string                 `protobuf:"bytes,1,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"` // stable, unique within the adapter, e.g. "iqm-q20-a"
+	DisplayName string                 `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Vendor      string                 `protobuf:"bytes,3,opt,name=vendor,proto3" json:"vendor,omitempty"`     // "ibm", "iqm", "pasqal", "aer-sim", ...
+	Modality    string                 `protobuf:"bytes,4,opt,name=modality,proto3" json:"modality,omitempty"` // "gate-model" | "analog-hamiltonian" | "annealing" | "pulse" | "logical"
+	Simulator   bool                   `protobuf:"varint,5,opt,name=simulator,proto3" json:"simulator,omitempty"`
+	// RFC-0001: hardware technology from the open registry (spec/overview.md §2a).
+	// Lowercase kebab-case, e.g. "superconducting", "trapped-ion", "neutral-atom",
+	// "photonic", "annealer", "simulator". Exact, case-sensitive matching against
+	// QuantumJob requirements.technology.
+	Technology    string `protobuf:"bytes,6,opt,name=technology,proto3" json:"technology,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -415,6 +420,13 @@ func (x *TargetInfo) GetSimulator() bool {
 	return false
 }
 
+func (x *TargetInfo) GetTechnology() string {
+	if x != nil {
+		return x.Technology
+	}
+	return ""
+}
+
 type Capabilities struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Target           *TargetInfo            `protobuf:"bytes,1,opt,name=target,proto3" json:"target,omitempty"`
@@ -428,8 +440,11 @@ type Capabilities struct {
 	BillingUnits     []string               `protobuf:"bytes,9,rep,name=billing_units,json=billingUnits,proto3" json:"billing_units,omitempty"`     // native units this target reports, e.g. "qpu-seconds","shots"
 	CouplingClass    string                 `protobuf:"bytes,10,opt,name=coupling_class,json=couplingClass,proto3" json:"coupling_class,omitempty"` // highest supported: "loose" | "co-located" | "real-time"
 	VendorExtensions map[string]string      `protobuf:"bytes,11,rep,name=vendor_extensions,json=vendorExtensions,proto3" json:"vendor_extensions,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// RFC-0001: true when tasks traverse a shared vendor cloud queue outside the
+	// site's control. Drives backendSelector.preferOnPrem/allowCloudBurst filtering.
+	CloudQueue    bool `protobuf:"varint,12,opt,name=cloud_queue,json=cloudQueue,proto3" json:"cloud_queue,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Capabilities) Reset() {
@@ -537,6 +552,13 @@ func (x *Capabilities) GetVendorExtensions() map[string]string {
 		return x.VendorExtensions
 	}
 	return nil
+}
+
+func (x *Capabilities) GetCloudQueue() bool {
+	if x != nil {
+		return x.CloudQueue
+	}
+	return false
 }
 
 type CouplingEdge struct {
@@ -1735,14 +1757,17 @@ const file_tangle_adapter_v1alpha1_adapter_proto_rawDesc = "" +
 	"\x13ListTargetsResponse\x12=\n" +
 	"\atargets\x18\x01 \x03(\v2#.tangle.adapter.v1alpha1.TargetInfoR\atargets\"(\n" +
 	"\tTargetRef\x12\x1b\n" +
-	"\ttarget_id\x18\x01 \x01(\tR\btargetId\"\x9e\x01\n" +
+	"\ttarget_id\x18\x01 \x01(\tR\btargetId\"\xbe\x01\n" +
 	"\n" +
 	"TargetInfo\x12\x1b\n" +
 	"\ttarget_id\x18\x01 \x01(\tR\btargetId\x12!\n" +
 	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x12\x16\n" +
 	"\x06vendor\x18\x03 \x01(\tR\x06vendor\x12\x1a\n" +
 	"\bmodality\x18\x04 \x01(\tR\bmodality\x12\x1c\n" +
-	"\tsimulator\x18\x05 \x01(\bR\tsimulator\"\xd8\x04\n" +
+	"\tsimulator\x18\x05 \x01(\bR\tsimulator\x12\x1e\n" +
+	"\n" +
+	"technology\x18\x06 \x01(\tR\n" +
+	"technology\"\xf9\x04\n" +
 	"\fCapabilities\x12;\n" +
 	"\x06target\x18\x01 \x01(\v2#.tangle.adapter.v1alpha1.TargetInfoR\x06target\x12\x1d\n" +
 	"\n" +
@@ -1756,7 +1781,9 @@ const file_tangle_adapter_v1alpha1_adapter_proto_rawDesc = "" +
 	"\rbilling_units\x18\t \x03(\tR\fbillingUnits\x12%\n" +
 	"\x0ecoupling_class\x18\n" +
 	" \x01(\tR\rcouplingClass\x12h\n" +
-	"\x11vendor_extensions\x18\v \x03(\v2;.tangle.adapter.v1alpha1.Capabilities.VendorExtensionsEntryR\x10vendorExtensions\x1aC\n" +
+	"\x11vendor_extensions\x18\v \x03(\v2;.tangle.adapter.v1alpha1.Capabilities.VendorExtensionsEntryR\x10vendorExtensions\x12\x1f\n" +
+	"\vcloud_queue\x18\f \x01(\bR\n" +
+	"cloudQueue\x1aC\n" +
 	"\x15VendorExtensionsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"*\n" +

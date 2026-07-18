@@ -92,7 +92,8 @@
                   "properties": {
                     "twoQubitErrorMax": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
                     "readoutErrorMax": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
-                    "calibrationMaxAge": { "$ref": "#/$defs/duration" }
+                    "calibrationMaxAge": { "$ref": "#/$defs/duration" },
+                    "aggregate": { "enum": ["best", "median", "worst"], "default": "best" }
                   },
                   "additionalProperties": false
                 },
@@ -104,6 +105,13 @@
           "additionalProperties": false
         },
         "coupling": { "enum": ["loose", "co-located", "real-time"], "default": "loose" },
+        "scheduling": {
+          "type": "object",
+          "properties": {
+            "onConflict": { "enum": ["prefer-quality", "prefer-deadline", "reject"], "default": "prefer-quality" }
+          },
+          "additionalProperties": false
+        },
         "session": {
           "type": "object",
           "properties": {

@@ -60,10 +60,24 @@ status:                             # written by the control plane only
 **`spec.workload`** — exactly one modality payload, matching `kind`. Unknown `kind` values MUST be
 rejected at admission (not at placement). New modalities are additive spec changes via RFC.
 
+**`spec.scheduling.onConflict`** (RFC-0003) — resolves declared-intent conflicts between a
+quality floor and a deadline when both cannot be satisfied. `prefer-quality` (default; may
+wait past the deadline; condition `DeadlineExceededWaitingForQuality` recorded when it
+passes) · `prefer-deadline` (at the decision horizon, bind best-ESP ignoring floors;
+`status.placement.floorsRelaxed: true` with violated floors and actual values — never a
+silent violation) · `reject` (at the horizon, `FAILED` with `CAPABILITY_MISMATCH`,
+`retriable: true`, condition `UnsatisfiableBeforeDeadline`). The placement audit MUST name
+the mode in effect. Sessions inherit the opening job's setting.
+
 **`spec.requirements.quality`** — constraints are *floors/ceilings evaluated against a specific
 calibration snapshot at placement time*; the snapshot ID MUST be recorded in `status.placement`.
 A job with no feasible target stays `PENDING` with a condition explaining which constraint failed
-for how many targets. Quality keys are namespaced per modality; provider-specific extensions live
+for how many targets. Floors are evaluated under an **aggregate** (RFC-0002): the default
+`best` takes the most favorable metric value in the snapshot (minimum for error metrics)
+— a device is feasible when at least one qubit/edge/readout region satisfies the floor,
+since transpilation steers toward the good region. `aggregate: best | median | worst` may
+be set per modality block. Rejection reasons and placement audits MUST state the aggregate
+used and the winning value. Quality keys are namespaced per modality; provider-specific extensions live
 under `quality.extensions.<vendor>` and never participate in cross-vendor comparison.
 
 **`spec.coupling`** — declares the latency class the workload needs; `real-time` jobs can only bind

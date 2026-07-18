@@ -48,6 +48,11 @@ message TargetInfo {
   string vendor = 3;          // "ibm", "iqm", "pasqal", "aer-sim", ...
   string modality = 4;        // "gate-model" | "analog-hamiltonian" | "annealing" | "pulse" | "logical"
   bool simulator = 5;
+  // RFC-0001: hardware technology from the open registry (spec/overview.md §2a).
+  // Lowercase kebab-case, e.g. "superconducting", "trapped-ion", "neutral-atom",
+  // "photonic", "annealer", "simulator". Exact, case-sensitive matching against
+  // QuantumJob requirements.technology.
+  string technology = 6;
 }
 
 message Capabilities {
@@ -62,6 +67,9 @@ message Capabilities {
   repeated string billing_units = 9;        // native units this target reports, e.g. "qpu-seconds","shots"
   string coupling_class = 10;               // highest supported: "loose" | "co-located" | "real-time"
   map<string, string> vendor_extensions = 11;
+  // RFC-0001: true when tasks traverse a shared vendor cloud queue outside the
+  // site's control. Drives backendSelector.preferOnPrem/allowCloudBurst filtering.
+  bool cloud_queue = 12;
 }
 
 message CouplingEdge { uint32 a = 1; uint32 b = 2; }
