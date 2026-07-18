@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+# fleet-0: our reference deployment, plain compose-on-VM (the boring option
+# per phase1-build-plan.md M12). Feed to any cloud's cloud-init.
+#cloud-config
+package_update: true
+packages: [docker.io, docker-compose-v2, git]
+write_files:
+  - path: /opt/rabi/provision.env
+    content: |
+      RABI_TAG=v0.4.0
+      RABI_PROBE_EVERY=15m
+runcmd:
+  - [bash, -c, "curl -fsSL https://raw.githubusercontent.com/rabi-project/rabi/main/deploy/fleet0/provision.sh | bash"]

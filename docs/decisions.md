@@ -602,3 +602,24 @@ would leave role mapping untested.
   seeds a denyTargets job so a real rejection is always on screen.
 - Playwright itself is fetched at TEST time via npx (test tooling is
   outside the air-gap rule, which governs runtime).
+
+## D-046 · 2026-07-19 · P1-M12 — pilot package boring choices
+
+- Probes: Bell pairs (probe_results append-only; fidelity = 1−TVD vs
+  ideal; |predicted−measured| feeds the pilot estimator SLO), pinned per
+  target via requireTargets under system/probes, scheduled in-binary
+  (RABI_PROBE_EVERY, default 15m). /metrics is hand-rolled Prometheus
+  text (zero new deps), tenant-blind aggregates only, unauthenticated
+  like /healthz (see security checklist).
+- Grafana dashboards are provisioned files (deploy/observability) behind
+  a compose profile; anonymous-viewer Grafana for the demo, sites front
+  their own.
+- Release CI: govulncheck + trivy fs scan gate (no HIGH/CRITICAL,
+  unfixed ignored), then linux-amd64 binaries + fresh conformance
+  reports for all five adapters attached to the GitHub release.
+- fleet-0 = compose-on-VM via cloud-init + idempotent provision.sh with
+  a systemd unit (the plan's named boring option). Install guide targets
+  ≤60 min; the stranger-test is a human event to run with a pilot.
+- Dex tamper flake root cause worth remembering: the last base64url char
+  of an RS256 signature carries 2 significant bits — tamper tests must
+  flip a fully significant character.
