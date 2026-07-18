@@ -18,6 +18,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	adminv1alpha1 "github.com/rabi-project/rabi/gen/go/rabi/admin/v1alpha1"
 	apiv1alpha1 "github.com/rabi-project/rabi/gen/go/tangle/api/v1alpha1"
 	"github.com/rabi-project/rabi/internal/job"
 	"github.com/rabi-project/rabi/internal/store"
@@ -73,6 +74,7 @@ func New(cfg Config) (*Server, error) {
 	})
 	apiv1alpha1.RegisterTargetsServiceServer(grpcServer, &targetsService{registry: cfg.Registry})
 	apiv1alpha1.RegisterUsageServiceServer(grpcServer, &usageService{store: cfg.Store})
+	adminv1alpha1.RegisterAdminServiceServer(grpcServer, &adminService{store: cfg.Store})
 
 	grpcLis, err := net.Listen("tcp", cfg.GRPCAddr)
 	if err != nil {

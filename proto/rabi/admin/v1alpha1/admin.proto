@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Implementation-defined administrative surface of the rabi control plane.
+// This is deliberately NOT part of the vendored Tangle spec: the spec's
+// client API covers jobs/targets/usage and calls tenancy administration
+// "RFC territory" — flagged as a SPEC QUESTION in docs/decisions.md D-033.
+// Served over gRPC only (no REST mapping); qctl is the client.
+
+syntax = "proto3";
+
+package rabi.admin.v1alpha1;
+
+import "google/protobuf/timestamp.proto";
+
+service AdminService {
+  // WhoAmI echoes the authenticated principal — the "did my login work" call.
+  rpc WhoAmI(WhoAmIRequest) returns (WhoAmIResponse);
+  // CreateToken mints a per-project API token. The plaintext is returned
+  // exactly once and stored only as a hash.
+  rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse);
+  rpc ListTokens(ListTokensRequest) returns (ListTokensResponse);
+  // RevokeToken invalidates a token immediately; rotation = create + revoke.
+  rpc RevokeToken(RevokeTokenRequest) returns (RevokeTokenResponse);
+}
+
+message WhoAmIRequest {}
+
+message WhoAmIResponse {
+  string subject = 1;
+  string name = 2;
+  string role = 3;
+  string principal_type = 4;  // oidc | token | bootstrap
+  string project = 5;         // token scope; empty = unscoped
+}
+
+message TokenInfo {
+  string id = 1;
+  string name = 2;
+  string project = 3;
+  string role = 4;
+  string created_by = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp last_used_at = 7;  // unset = never used
+  google.protobuf.Timestamp revoked_at = 8;    // unset = active
+}
+
+message CreateTokenRequest {
+  string name = 1;     // human label, e.g. "ci-bot"
+  string project = 2;  // tenant/project the token is scoped to
+  string role = 3;     // viewer | member | operator | admin
+}
+
+message CreateTokenResponse {
+  string token = 1;  // plaintext; never retrievable again
+  TokenInfo info = 2;
+}
+
+message ListTokensRequest {
+  string project = 1;  // empty = all projects (operator/admin view)
+}
+
+message ListTokensResponse {
+  repeated TokenInfo tokens = 1;
+}
+
+message RevokeTokenRequest {
+  string id = 1;
+}
+
+message RevokeTokenResponse {
+  bool found = 1;
+}

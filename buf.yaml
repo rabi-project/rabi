@@ -2,6 +2,9 @@
 version: v2
 modules:
   - path: spec/proto
+  # Implementation-defined surfaces (rabi.admin.*) live outside the vendored
+  # spec; the spec module above is never edited here.
+  - path: proto
 lint:
   use:
     - STANDARD
