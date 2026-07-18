@@ -265,7 +265,9 @@ class AdapterService(pb_grpc.AdapterServiceServicer):
             if time.time() >= sess["expires"]:
                 return taskmod.TaskError(taskmod.SESSION_LOST, True, "session expired")
             if sess["target"] != target_id:
-                return taskmod.TaskError(taskmod.SESSION_LOST, True, "session bound to another target")
+                return taskmod.TaskError(
+                    taskmod.SESSION_LOST, True, "session bound to another target"
+                )
         return None
 
     # -- helpers --------------------------------------------------------------
