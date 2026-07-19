@@ -24,7 +24,7 @@ Type=oneshot
 RemainAfterExit=true
 WorkingDirectory=/opt/rabi/repo
 Environment=RABI_PROBE_EVERY=${RABI_PROBE_EVERY:-15m}
-ExecStartPre=/bin/bash -c 'echo "RABI_BOOTSTRAP_TOKEN=$(cat /opt/rabi/bootstrap.token)" > /opt/rabi/repo/.env'
+ExecStartPre=/bin/bash -c 'printf "RABI_BOOTSTRAP_TOKEN=%s\nRABI_PROBE_EVERY=%s\n" "$(cat /opt/rabi/bootstrap.token)" "${RABI_PROBE_EVERY:-15m}" > /opt/rabi/repo/deploy/compose/.env'
 ExecStart=/usr/bin/docker compose -f deploy/compose/docker-compose.yml --profile observability up -d --build --wait
 ExecStop=/usr/bin/docker compose -f deploy/compose/docker-compose.yml --profile observability down
 
