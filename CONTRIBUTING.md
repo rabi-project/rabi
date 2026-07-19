@@ -6,7 +6,7 @@
   [Developer Certificate of Origin](https://developercertificate.org/).
   There is no CLA, by design.
 - **The spec is law.** `spec/` is a read-only vendored copy of
-  [`tangle-spec`](../tangle-spec). Wire-contract changes happen there via RFC,
+  [`rabi-spec`](../rabi-spec). Wire-contract changes happen there via RFC,
   never here.
 - **Milestone discipline:** work lands milestone by milestone per
   `spec/mvp-build-plan.md`; a milestone PR without its test suites green

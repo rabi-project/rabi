@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package v1alpha1 defines the QuantumJob custom resource. The spec document
-// in the Tangle specification is already shaped like a Kubernetes resource
+// in the Rabi specification is already shaped like a Kubernetes resource
 // (apiVersion tangle.dev/v1alpha1, kind QuantumJob, metadata/spec/status),
 // so the CRD mirrors it directly: the CR's spec is the document's spec
 // verbatim (validated server-side by rabi's admission against the JSON

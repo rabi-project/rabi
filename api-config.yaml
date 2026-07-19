@@ -2,7 +2,7 @@
 #
 # gRPC API Configuration for the REST gateway (grpc-gateway conventions per
 # spec/proto/tangle/api/v1alpha1/jobs.proto header). Kept outside the spec so
-# the vendored protos stay byte-identical to tangle-spec.
+# the vendored protos stay byte-identical to rabi-spec.
 type: google.api.Service
 config_version: 3
 http:

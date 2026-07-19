@@ -3,7 +3,7 @@
 # REST gateway codegen for the client-facing API only. Invoked as:
 #   buf generate --template buf.gen.gateway.yaml --path spec/proto/tangle/api
 # HTTP bindings come from api-config.yaml, not proto annotations, so the
-# vendored spec stays byte-identical to tangle-spec.
+# vendored spec stays byte-identical to rabi-spec.
 version: v2
 managed:
   enabled: true

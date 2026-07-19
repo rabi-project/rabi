@@ -5,7 +5,7 @@ recorded so they stay arguable. Format: ID · date · decision · why.
 
 ## D-001 · 2026-07-17 · Spec vendored by copy at `spec/`
 
-The `tangle-spec` repository is copied (not submoduled) into `spec/` and
+The `rabi-spec` repository is copied (not submoduled) into `spec/` and
 treated as read-only. A copy keeps fresh clones self-contained (no submodule
 init step in the quickstart) and CI hermetic. Syncing is a manual
 `rsync` from the spec repo, reviewed like any other PR.
@@ -25,7 +25,7 @@ The spec's protos use compact shared request/response types (`TargetRef`,
 STANDARD rules `RPC_REQUEST_STANDARD_NAME`, `RPC_RESPONSE_STANDARD_NAME`,
 `RPC_REQUEST_RESPONSE_UNIQUE`, `ENUM_VALUE_PREFIX`. The spec is law, so those
 four rules are excepted in `buf.yaml` instead of renaming spec messages.
-**Flagged as a spec question:** `tangle-spec/CONTRIBUTING.md` claims
+**Flagged as a spec question:** `rabi-spec/CONTRIBUTING.md` claims
 "buf lint (DEFAULT)" compliance, but the published protos do not pass it;
 either the spec should adopt the standard names via RFC or officially declare
 the relaxed lint profile.
@@ -324,7 +324,7 @@ adapters/scheduler intentionally keep using it), RFC-0002 ratifies D-016b
 `scheduling.onConflict` (motivated by the benchmark's deadline trade-off).
 Admission accepts the new fields today (schema-merged, tested); their
 scheduler/adapter semantics land in phase1 M5 per the patch's own scoping.
-Note: the upstream `tangle-spec` folder is now behind this vendored copy.
+Note: the upstream `rabi-spec` folder is now behind this vendored copy.
 
 ## D-032 · 2026-07-19 · P1-M0 completion state — PLAN QUESTION on the @v0.1.0 install criterion
 
@@ -623,3 +623,21 @@ would leave role mapping untested.
 - Dex tamper flake root cause worth remembering: the last base64url char
   of an RS256 signature carries 2 significant bits — tamper tests must
   flip a fully significant character.
+
+## D-047 · 2026-07-19 · spec repo renamed: tangle-spec → rabi-spec
+
+Edward (spec owner) directed the rename of all "tangle-spec" /
+"Tangle spec(ification)" references inside this repo to rabi-spec /
+"Rabi spec(ification)" — including the vendored spec's own README and the
+historical Phase-0 plan text, plus three mentions inside earlier decision
+entries (recorded here so the log's history is explicit about having been
+renamed, not rewritten).
+
+**Unchanged, deliberately:** the wire identifiers — proto packages
+`tangle.adapter.v1alpha1` / `tangle.api.v1alpha1`, `apiVersion:
+tangle.dev/v1alpha1`, the schema `$id`s, and the adapters' generated
+`src/tangle/...` stub paths derived from them. Renaming those breaks
+every existing client, adapter, and stored document; that is a breaking
+spec release (v0.3+ RFC territory, alongside the already-parked
+extension-key removals), not a documentation rename. D-028's boundary
+still stands, with the spec now named rabi-spec.

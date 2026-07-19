@@ -6,7 +6,7 @@
 [![ci](https://github.com/rabi-project/rabi/actions/workflows/ci.yml/badge.svg)](https://github.com/rabi-project/rabi/actions/workflows/ci.yml)
 
 Rabi (named for the Rabi oscillation) is an open-source control plane for
-quantum compute fleets, implementing the Tangle specification. You declare
+quantum compute fleets, implementing the Rabi specification. You declare
 a `QuantumJob` — what to run, how good the result must be, by when, and at what
 cost — and Rabi places it across a heterogeneous fleet of QPUs, simulators,
 and vendor cloud queues, using each device's *current calibration* to decide
@@ -30,7 +30,7 @@ placement against static best-device selection — real calibration baselines,
 seeded synthetic drift, exact simulator ground truth, byte-identical reruns.
 
 **Naming:** the project is **Rabi**; the wire contracts it implements come
-from the vendored [Tangle spec](spec/) (`tangle.adapter.v1alpha1`,
+from the vendored [Rabi spec](spec/) (`tangle.adapter.v1alpha1`,
 `tangle.api.v1alpha1`, proto packages) — the spec is law, so
 spec-derived identifiers keep their names (docs/decisions.md D-028).
 

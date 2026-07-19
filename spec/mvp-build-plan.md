@@ -1,13 +1,13 @@
 # Tangle MVP — Agent-Executable Build Plan
-### v1.0 · July 2026 · Hand this document, plus the `tangle-spec` skeleton, to the coding agent.
+### v1.0 · July 2026 · Hand this document, plus the `rabi-spec` skeleton, to the coding agent.
 
 ---
 
-## Kickoff prompt (paste this to the agent, attaching this file + tangle-spec/)
+## Kickoff prompt (paste this to the agent, attaching this file + rabi-spec/)
 
 > You are building the MVP of Tangle, an open-source control plane for quantum compute fleets.
 > Read `mvp-build-plan.md` completely before writing any code — it defines the mission, hard
-> constraints, milestones M0–M8, and explicit non-goals. The `tangle-spec/` directory is the
+> constraints, milestones M0–M8, and explicit non-goals. The `rabi-spec/` directory is the
 > source of truth for all protocols and schemas; do not modify it without flagging the change
 > as a spec question. Work strictly milestone by milestone: do not start milestone N+1 until
 > milestone N's acceptance criteria all pass and are demonstrated by a committed test or script.
@@ -43,9 +43,9 @@ in this plan exists to serve one of them.
 
 - **Languages:** Go ≥1.22 for the control plane, CLI, and operator. Python ≥3.11 for adapters
   and SDK. Nothing else.
-- **The spec is law.** All wire contracts come from `tangle-spec/proto/` (vendor the protos or
+- **The spec is law.** All wire contracts come from `rabi-spec/proto/` (vendor the protos or
   add the repo as a submodule; generate code — never hand-write message types). The `QuantumJob`
-  document validates against `tangle-spec/schemas/quantumjob.schema.json` at admission.
+  document validates against `rabi-spec/schemas/quantumjob.schema.json` at admission.
 - **Storage:** PostgreSQL 15 via `pgx`. Single node. No etcd, no Redis, no NATS, no Kafka, no
   message broker of any kind — job dispatch uses Postgres (`FOR UPDATE SKIP LOCKED` work queues
   + `LISTEN/NOTIFY` for wakeups).
@@ -81,7 +81,7 @@ tangle/
 ├── bench/                  # workload generator, runner, analysis, report template, data/
 ├── deploy/compose/         # docker-compose.yml + seed.sh (Artifact A)
 ├── docs/                   # quickstart.md, architecture.md, decisions.md
-└── spec/                   # vendored tangle-spec (read-only)
+└── spec/                   # vendored rabi-spec (read-only)
 ```
 
 ## 4. The calibration-replay fleet (the MVP's soul — build it well)

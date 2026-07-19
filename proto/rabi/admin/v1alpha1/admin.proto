@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Implementation-defined administrative surface of the rabi control plane.
-// This is deliberately NOT part of the vendored Tangle spec: the spec's
+// This is deliberately NOT part of the vendored Rabi spec: the spec's
 // client API covers jobs/targets/usage and calls tenancy administration
 // "RFC territory" — flagged as a SPEC QUESTION in docs/decisions.md D-033.
 // Served over gRPC only (no REST mapping); qctl is the client.

@@ -1,4 +1,4 @@
-# tangle-spec
+# rabi-spec
 
 **The specification for Tangle: a vendor-neutral control plane for quantum compute fleets.**
 
