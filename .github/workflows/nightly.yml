@@ -83,11 +83,14 @@ jobs:
             echo "no QRMI credentials configured (need QRMI_RESOURCE, IBM_TOKEN, QRMI_SERVICE_CRN); skipping live certification"
             exit 0
           fi
+          # QRMI's convention: every variable is prefixed with the
+          # resource id (first-contact finding, 2026-07-19).
+          RID="${QRMI_RESOURCE%%=*}"
           {
-            echo "QRMI_IBM_QRS_ENDPOINT=https://quantum.cloud.ibm.com/api/v1"
-            echo "QRMI_IBM_QRS_IAM_ENDPOINT=https://iam.cloud.ibm.com"
-            echo "QRMI_IBM_QRS_IAM_APIKEY=$IBM_TOKEN"
-            echo "QRMI_IBM_QRS_SERVICE_CRN=$QRMI_SERVICE_CRN"
+            echo "${RID}_QRMI_IBM_QRS_ENDPOINT=https://quantum.cloud.ibm.com/api/v1"
+            echo "${RID}_QRMI_IBM_QRS_IAM_ENDPOINT=https://iam.cloud.ibm.com"
+            echo "${RID}_QRMI_IBM_QRS_IAM_APIKEY=$IBM_TOKEN"
+            echo "${RID}_QRMI_IBM_QRS_SERVICE_CRN=$QRMI_SERVICE_CRN"
           } > adapters/qrmi/.env
           go build -o bin/rabi-conformance ./cmd/rabi-conformance
           # Pre-build the env so startup time is uv-resolution-free, keep

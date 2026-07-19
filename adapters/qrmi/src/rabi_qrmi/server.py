@@ -47,6 +47,13 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # QRMI reads per-resource-prefixed variables (e.g.
+    # ibm_torino_QRMI_IBM_QRS_ENDPOINT) from the environment; load the
+    # conventional .env explicitly so cwd placement is all a site needs.
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
     resources: dict[str, object] = {}
     if args.cassette:
         resources["cassette-qrmi"] = CassetteQrmi("cassette-qrmi")
