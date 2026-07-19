@@ -641,3 +641,25 @@ every existing client, adapter, and stored document; that is a breaking
 spec release (v0.3+ RFC territory, alongside the already-parked
 extension-key removals), not a documentation rename. D-028's boundary
 still stands, with the spec now named rabi-spec.
+
+## D-048 · 2026-07-19 · P1-M8 live QRMI needs Direct Access entitlement
+
+First live QRMI run (against a free IBM Cloud Open-plan Qiskit Runtime
+instance) 404s at `QuantumResource.acquire()`. Root cause (from the qrmi
+0.20 binary's request paths, `/core-fast/api/v1/...`): QRMI's
+`IBMQiskitRuntimeService` resource type targets IBM **Direct Access**, a
+premium dedicated-access product — NOT the standard Qiskit Runtime API.
+The Open plan grants the latter (which our *ibm* adapter uses via
+qiskit-ibm-runtime, and `ibm-live` passes), not the former.
+
+Consequences, all boring: the QRMI adapter stays fully conformance-
+certified via the cassette (CI); live QRMI certification is parked on a
+Direct Access entitlement, same shape as every other vendor driver's
+"live needs real credentials." The nightly treats an acquire-time 404 as
+an explicit skip-with-warning, not a red failure, so it doesn't nag about
+an entitlement we don't have. Fixing the debugging journey's real
+findings stays in the code: startup race (poll+log), per-resource env
+prefixing (`<id>_QRMI_*`), unversioned endpoint base. When a Direct
+Access instance exists, set QRMI_RESOURCE=<da-backend>=IBMQuantumSystem
+(or keep IBMQiskitRuntimeService if the account is Direct-Access-enabled)
+and the same job certifies live.
