@@ -87,7 +87,8 @@ jobs:
           # resource id (first-contact finding, 2026-07-19).
           RID="${QRMI_RESOURCE%%=*}"
           {
-            echo "${RID}_QRMI_IBM_QRS_ENDPOINT=https://quantum.cloud.ibm.com/api/v1"
+            # qrmi appends /v1/... itself; a versioned base 404s everything
+            echo "${RID}_QRMI_IBM_QRS_ENDPOINT=https://quantum.cloud.ibm.com/api"
             echo "${RID}_QRMI_IBM_QRS_IAM_ENDPOINT=https://iam.cloud.ibm.com"
             echo "${RID}_QRMI_IBM_QRS_IAM_APIKEY=$IBM_TOKEN"
             echo "${RID}_QRMI_IBM_QRS_SERVICE_CRN=$QRMI_SERVICE_CRN"
