@@ -21,6 +21,22 @@ COMPOSE="docker compose \
   -f deploy/fleet0/compose.images.yml \
   --profile observability"
 
+# Render deploy/compose/.env (compose v2 reads it from the compose file's
+# dir). A script file avoids systemd specifier expansion (%s = user shell).
+cat > /opt/rabi/render-env.sh <<RENDER
+#!/usr/bin/env bash
+{
+  echo "RABI_BOOTSTRAP_TOKEN=\$(cat /opt/rabi/bootstrap.token)"
+  echo "RABI_IMAGE_TAG=${RABI_IMAGE_TAG}"
+  echo "RABI_PROBE_EVERY=${RABI_PROBE_EVERY}"
+} > /opt/rabi/repo/deploy/compose/.env
+# Authenticate to GHCR if a pull token is present (private packages).
+if [ -s /opt/rabi/ghcr.token ]; then
+  docker login ghcr.io -u inch900 --password-stdin < /opt/rabi/ghcr.token >/dev/null 2>&1 || true
+fi
+RENDER
+chmod +x /opt/rabi/render-env.sh
+
 cat > /etc/systemd/system/rabi-fleet0.service <<UNIT
 [Unit]
 Description=Rabi fleet-0 (compose, pulls prebuilt images)
@@ -34,7 +50,7 @@ WorkingDirectory=/opt/rabi/repo
 Environment=RABI_IMAGE_TAG=${RABI_IMAGE_TAG}
 Environment=RABI_PROBE_EVERY=${RABI_PROBE_EVERY}
 # compose v2 reads .env from the compose file's directory, not the cwd.
-ExecStartPre=/bin/bash -c 'printf "RABI_BOOTSTRAP_TOKEN=%s\nRABI_IMAGE_TAG=%s\nRABI_PROBE_EVERY=%s\n" "\$(cat /opt/rabi/bootstrap.token)" "${RABI_IMAGE_TAG}" "${RABI_PROBE_EVERY}" > /opt/rabi/repo/deploy/compose/.env'
+ExecStartPre=/opt/rabi/render-env.sh
 ExecStartPre=/usr/bin/${COMPOSE} pull
 ExecStart=/usr/bin/${COMPOSE} up -d --no-build --wait
 ExecStop=/usr/bin/${COMPOSE} down
