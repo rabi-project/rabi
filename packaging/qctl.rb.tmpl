@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: Apache-2.0
+# typed: false
+# frozen_string_literal: true
+# Rendered by rabi-project/rabi's release workflow — do not edit by hand.
+class Qctl < Formula
+  desc "CLI for Rabi, a control plane for quantum compute fleets"
+  homepage "https://rabi-project.github.io/rabi/"
+  version "__VERSION__"
+  license "Apache-2.0"
+
+  on_macos do
+    on_arm do
+      url "__BASE__/qctl-darwin-arm64"
+      sha256 "__SHA_DARWIN_ARM64__"
+    end
+    on_intel do
+      url "__BASE__/qctl-darwin-amd64"
+      sha256 "__SHA_DARWIN_AMD64__"
+    end
+  end
+
+  on_linux do
+    on_arm do
+      url "__BASE__/qctl-linux-arm64"
+      sha256 "__SHA_LINUX_ARM64__"
+    end
+    on_intel do
+      url "__BASE__/qctl-linux-amd64"
+      sha256 "__SHA_LINUX_AMD64__"
+    end
+  end
+
+  def install
+    bin.install Dir["qctl-*"].first => "qctl"
+  end
+
+  test do
+    assert_match "qctl version", shell_output("#{bin}/qctl --version")
+  end
+end
