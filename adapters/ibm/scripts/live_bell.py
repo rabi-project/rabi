@@ -43,8 +43,19 @@ def main() -> int:
         print("IBM_TOKEN not set — live path dormant by design")
         return 0
 
-    runtime = QiskitRuntimeService(channel="ibm_quantum_platform", token=token)
-    backend = runtime.least_busy(operational=True, simulator=False)
+    # New IBM Quantum Platform (quantum.cloud.ibm.com) needs the instance
+    # CRN alongside the IAM API key. IBM_BACKEND pins a device (else least_busy).
+    instance = os.environ.get("IBM_INSTANCE") or os.environ.get("QRMI_SERVICE_CRN")
+    kwargs = {"channel": "ibm_quantum_platform", "token": token}
+    if instance:
+        kwargs["instance"] = instance
+    print(f"connecting (instance={'set' if instance else 'none'})...")
+    runtime = QiskitRuntimeService(**kwargs)
+    want = os.environ.get("IBM_BACKEND")
+    if want:
+        backend = runtime.backend(want)
+    else:
+        backend = runtime.least_busy(operational=True, simulator=False)
     print(f"live probe on {backend.name}")
     service = IBMAdapterService({backend.name: backend})
 
@@ -73,4 +84,9 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception:  # noqa: BLE001 — surface the full cause in CI logs
+        import traceback
+        traceback.print_exc()
+        sys.exit(2)

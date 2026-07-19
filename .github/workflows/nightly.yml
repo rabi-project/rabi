@@ -42,19 +42,21 @@ jobs:
   ibm-live:
     runs-on: ubuntu-latest
     environment: ibm-quantum
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
-        if: ${{ vars.IBM_LIVE_ENABLED == 'true' }}
       - uses: astral-sh/setup-uv@v5
-        if: ${{ vars.IBM_LIVE_ENABLED == 'true' }}
-      - name: live Bell on a real backend (token-gated)
-        if: ${{ vars.IBM_LIVE_ENABLED == 'true' }}
+      - name: live Bell on a real backend (skips without token)
         env:
           IBM_TOKEN: ${{ secrets.IBM_TOKEN }}
-        run: cd adapters/ibm && uv run python scripts/live_bell.py
-      - name: dormant without token
-        if: ${{ vars.IBM_LIVE_ENABLED != 'true' }}
-        run: echo "IBM live path dormant (no token configured) — by design"
+          IBM_INSTANCE: ${{ secrets.QRMI_SERVICE_CRN }}
+          IBM_BACKEND: ${{ vars.IBM_BACKEND }}
+        run: |
+          if [ -z "$IBM_TOKEN" ]; then
+            echo "IBM_TOKEN not set; skipping live Bell (dormant by design)"
+            exit 0
+          fi
+          cd adapters/ibm && uv run python scripts/live_bell.py
 
   # Live QRMI certification: needs provider credentials in the qrmi-live
   # environment (QRMI reads its .env convention; see adapters/qrmi). Until
