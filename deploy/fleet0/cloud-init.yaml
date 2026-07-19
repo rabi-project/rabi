@@ -8,8 +8,8 @@ packages: [docker.io, docker-compose-v2, git]
 write_files:
   - path: /opt/rabi/provision.env
     content: |
-      RABI_TAG=v0.4.0
-      RABI_IMAGE_TAG=v0.4.0
+      RABI_TAG=main
+      RABI_IMAGE_TAG=latest
       RABI_PROBE_EVERY=15m
 runcmd:
   - [bash, -c, "curl -fsSL https://raw.githubusercontent.com/rabi-project/rabi/main/deploy/fleet0/provision.sh | bash"]
