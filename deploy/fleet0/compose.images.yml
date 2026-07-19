@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Fleet-0 override: PULL prebuilt amd64 images from GHCR instead of building
+# on the VM. Layer over the base compose:
+#   docker compose -f deploy/compose/docker-compose.yml \
+#     -f deploy/fleet0/compose.images.yml pull
+#   docker compose ... up -d --no-build --wait
+# RABI_IMAGE_TAG pins the version (a g<sha> or vX.Y.Z published by images.yml).
+services:
+  rabi:
+    build: !reset null
+    image: ghcr.io/rabi-project/rabi:${RABI_IMAGE_TAG:-latest}
+    pull_policy: always
+  adapter-aer:
+    build: !reset null
+    image: ghcr.io/rabi-project/rabi-adapter-aer:${RABI_IMAGE_TAG:-latest}
+    pull_policy: always
