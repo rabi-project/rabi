@@ -52,8 +52,14 @@ jobs:
           IBM_INSTANCE: ${{ secrets.QRMI_SERVICE_CRN }}
           IBM_BACKEND: ${{ vars.IBM_BACKEND }}
         run: |
+          # Real hardware costs QPU budget + hours of queue. Run only on a
+          # deliberate manual dispatch, never on the daily schedule.
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "scheduled run: skipping real-hardware Bell (dispatch manually to run it)"
+            exit 0
+          fi
           if [ -z "$IBM_TOKEN" ]; then
-            echo "IBM_TOKEN not set; skipping live Bell (dormant by design)"
+            echo "IBM_TOKEN not set; skipping live Bell"
             exit 0
           fi
           cd adapters/ibm && uv run python scripts/live_bell.py
