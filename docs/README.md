@@ -18,6 +18,7 @@ recording a human-readable reason for every placement.
 
 ## Operate a deployment
 
+- **[Operating a fleet](fleet.md)** — add & steer many devices; how breadth scales.
 - **[Site install guide](site-install-guide.md)** — clean machine to a working
   fleet in ≤ 60 minutes (compose or Helm).
 - **[Security checklist](security-checklist.md)** — secrets, network matrix,

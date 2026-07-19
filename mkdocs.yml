@@ -40,6 +40,7 @@ nav:
       - qctl reference: qctl-reference.md
       - API guide: api-guide.md
   - Operate:
+      - Operating a fleet: fleet.md
       - Site install guide: site-install-guide.md
       - Security checklist: security-checklist.md
       - Backup & restore: backup-restore.md

@@ -170,6 +170,8 @@ added without touching Rabi. Every adapter must pass a **conformance harness**
 for the capabilities it declares before it is trusted — Rabi ships five
 certified adapters (Aer simulator, IBM, QRMI, QDMI, IQM) and a documented
 recipe for writing your own ([conformance-authors.md](conformance-authors.md)).
+See [operating a fleet](fleet.md) for how to register many devices and how
+fleet breadth scales.
 
 ## Where to go next
 
