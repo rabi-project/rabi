@@ -21,10 +21,14 @@ var (
 	flagOutput string
 )
 
+// version is stamped at release via -ldflags "-X main.version=vX.Y.Z".
+var version = "dev"
+
 func main() {
 	root := &cobra.Command{
 		Use:           "qctl",
 		Short:         "Control a Rabi fleet: submit and track QuantumJobs, inspect the fleet",
+		Version:       version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
