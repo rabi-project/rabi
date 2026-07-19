@@ -1,7 +1,8 @@
+#cloud-config
 # SPDX-License-Identifier: Apache-2.0
 # fleet-0: our reference deployment, plain compose-on-VM (the boring option
 # per phase1-build-plan.md M12). Feed to any cloud's cloud-init.
-#cloud-config
+# NOTE: #cloud-config MUST be the first line or cloud-init ignores the file.
 package_update: true
 packages: [docker.io, docker-compose-v2, git]
 write_files:
