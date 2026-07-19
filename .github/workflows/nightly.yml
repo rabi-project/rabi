@@ -90,14 +90,29 @@ jobs:
             echo "QRMI_IBM_QRS_SERVICE_CRN=$QRMI_SERVICE_CRN"
           } > adapters/qrmi/.env
           go build -o bin/rabi-conformance ./cmd/rabi-conformance
+          # Pre-build the env so startup time is uv-resolution-free, keep
+          # the adapter's log (it was /dev/null'd once; never again).
+          (cd adapters/qrmi && uv sync --extra qrmi)
           (cd adapters/qrmi && exec uv run --extra qrmi rabi-adapter-qrmi \
-            --resource "$QRMI_RESOURCE" --listen 127.0.0.1:50053) >/dev/null 2>&1 &
-          sleep 20
+            --resource "$QRMI_RESOURCE" --listen 127.0.0.1:50053) > bin/qrmi-adapter.log 2>&1 &
+          ADAPTER_PID=$!
+          for i in $(seq 1 120); do
+            if python3 -c "import socket; socket.create_connection(('127.0.0.1', 50053), 1).close()" 2>/dev/null; then
+              break
+            fi
+            if ! kill -0 "$ADAPTER_PID" 2>/dev/null; then
+              echo "adapter exited during startup:"; cat bin/qrmi-adapter.log; exit 1
+            fi
+            sleep 2
+          done
           bin/rabi-conformance run --target 127.0.0.1:50053 --out bin/conformance/qrmi-live \
-            --task-timeout 20m --note "live QRMI vs IBM Qiskit Runtime (open plan; real queue times)"
+            --task-timeout 20m --note "live QRMI vs IBM Qiskit Runtime (open plan; real queue times)" \
+            || { echo "--- adapter log ---"; tail -50 bin/qrmi-adapter.log; exit 1; }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: qrmi-live-report
-          path: bin/conformance/qrmi-live/
+          path: |
+            bin/conformance/qrmi-live/
+            bin/qrmi-adapter.log
           if-no-files-found: ignore
