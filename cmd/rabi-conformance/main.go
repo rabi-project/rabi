@@ -49,12 +49,17 @@ func main() {
 func newRunCmd() *cobra.Command {
 	var target, targetID, outDir, keyPath string
 	var notes []string
+	var taskTimeout time.Duration
 	cmd := &cobra.Command{
 		Use:   "run",
 		Short: "Run the suite against a live adapter and write the signed report",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			ctx, cancel := context.WithTimeout(cmd.Context(), 10*time.Minute)
+			runFor := 10 * time.Minute
+			if taskTimeout > 0 {
+				runFor = 10*time.Minute + 8*taskTimeout // several queued tasks may wait serially
+			}
+			ctx, cancel := context.WithTimeout(cmd.Context(), runFor)
 			defer cancel()
 
 			if targetID == "" {
@@ -68,6 +73,7 @@ func newRunCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			suite.TaskTimeout = taskTimeout
 
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "certifying %s target %q (harness %s, spec %s)\n",
 				target, targetID, version, conformance.SpecVersion)
@@ -102,6 +108,8 @@ func newRunCmd() *cobra.Command {
 	cmd.Flags().StringVar(&outDir, "out", "conformance-report", "output directory")
 	cmd.Flags().StringVar(&keyPath, "key", "", "ed25519 private key (PEM); generated if omitted")
 	cmd.Flags().StringArrayVar(&notes, "note", nil, "context note recorded in the report (repeatable)")
+	cmd.Flags().DurationVar(&taskTimeout, "task-timeout", 0,
+		"per-task terminal-state wait (default 60s; raise for live cloud queues, e.g. 20m)")
 	_ = cmd.MarkFlagRequired("target")
 	return cmd
 }

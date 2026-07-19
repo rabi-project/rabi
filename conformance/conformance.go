@@ -58,6 +58,10 @@ type Suite struct {
 	Caps     *adapterv1alpha1.Capabilities
 	// KeyPrefix isolates idempotency keys between runs.
 	KeyPrefix string
+	// TaskTimeout bounds each task's wait for a terminal state. Zero means
+	// the 60s default — right for simulators; live cloud queues need the
+	// CLI's --task-timeout.
+	TaskTimeout time.Duration
 }
 
 // Dial connects and fetches capabilities for the named target.
@@ -111,7 +115,11 @@ func (s *Suite) submit(ctx context.Context, key, format string, program []byte, 
 
 func (s *Suite) awaitTerminal(ctx context.Context, t T, handle *adapterv1alpha1.TaskHandle) *adapterv1alpha1.TaskStatus {
 	t.Helper()
-	deadline := time.Now().Add(60 * time.Second)
+	timeout := s.TaskTimeout
+	if timeout <= 0 {
+		timeout = 60 * time.Second
+	}
+	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		st, err := s.Client.GetTask(ctx, &adapterv1alpha1.TaskRef{
 			Target: handle.GetTarget(), TaskId: handle.GetTaskId()})

@@ -63,7 +63,7 @@ jobs:
   qrmi-live:
     runs-on: ubuntu-latest
     environment: qrmi-live
-    timeout-minutes: 45
+    timeout-minutes: 200
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -93,7 +93,8 @@ jobs:
           (cd adapters/qrmi && exec uv run --extra qrmi rabi-adapter-qrmi \
             --resource "$QRMI_RESOURCE" --listen 127.0.0.1:50053) >/dev/null 2>&1 &
           sleep 20
-          bin/rabi-conformance run --target 127.0.0.1:50053 --out bin/conformance/qrmi-live
+          bin/rabi-conformance run --target 127.0.0.1:50053 --out bin/conformance/qrmi-live \
+            --task-timeout 20m --note "live QRMI vs IBM Qiskit Runtime (open plan; real queue times)"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
