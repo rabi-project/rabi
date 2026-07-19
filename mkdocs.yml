@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: Apache-2.0
+site_name: Rabi
+site_description: A control plane for quantum compute fleets.
+site_url: https://rabi-project.github.io/rabi/
+repo_url: https://github.com/rabi-project/rabi
+repo_name: rabi-project/rabi
+docs_dir: docs
+copyright: Apache-2.0
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: teal
+      toggle: { icon: material/weather-night, name: Dark mode }
+    - scheme: slate
+      primary: teal
+      toggle: { icon: material/weather-sunny, name: Light mode }
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc: { permalink: true }
+  - pymdownx.superfences
+  - pymdownx.highlight
+
+nav:
+  - Home: README.md
+  - Learn & use:
+      - Concepts: concepts.md
+      - Quickstart: quickstart.md
+      - QuantumJob reference: quantumjob-reference.md
+      - qctl reference: qctl-reference.md
+      - API guide: api-guide.md
+  - Operate:
+      - Site install guide: site-install-guide.md
+      - Security checklist: security-checklist.md
+      - Backup & restore: backup-restore.md
+  - Extend:
+      - Conformance for driver authors: conformance-authors.md
+      - QDMI site recipe: qdmi-site-recipe.md
+  - Internals:
+      - Architecture: architecture.md
+      - Decisions log: decisions.md

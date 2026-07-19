@@ -36,4 +36,4 @@ recording a human-readable reason for every placement.
 
 ## Brand
 
-- **[Brand assets](brand/)** — the Rabi-oscillation mark and palette.
+- **[Brand assets](brand/README.md)** — the Rabi-oscillation mark and palette.
