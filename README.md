@@ -41,9 +41,11 @@ sessions, five conformance-certified adapters (Aer, IBM, QRMI, QDMI, IQM),
 a read-only console, and the pilot package (probes, dashboards, CVE-gated
 releases). See `phase1-build-plan.md` and `docs/decisions.md`.
 
+- [Documentation](docs/) — concepts, quickstart, job & CLI & API references, ops
+- [Concepts](docs/concepts.md) — the mental model, start here
 - [Quickstart](docs/quickstart.md) — clone to routed jobs in 5 commands
-- [Architecture](docs/architecture.md)
-- [Decisions log](docs/decisions.md)
+- [QuantumJob reference](docs/quantumjob-reference.md) · [qctl reference](docs/qctl-reference.md) · [API guide](docs/api-guide.md)
+- [Architecture](docs/architecture.md) · [Decisions log](docs/decisions.md)
 - Spec (vendored, read-only): [`spec/`](spec/)
 
 ## License
