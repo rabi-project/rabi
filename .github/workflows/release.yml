@@ -42,19 +42,28 @@ jobs:
       - uses: actions/setup-go@v5
         with: { go-version-file: go.mod }
       - uses: astral-sh/setup-uv@v5
-      - name: build binaries
+      - name: build cross-platform binaries + checksums
         run: |
           mkdir -p dist
           VERSION="${GITHUB_REF_NAME}"
-          for BIN in rabi qctl rabi-conformance; do
-            CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-              -ldflags "-X main.version=$VERSION" -o "dist/${BIN}-linux-amd64" "./cmd/$BIN"
+          # qctl is the client users install (kubectl-style); rabi and
+          # rabi-conformance ship too for operators.
+          for OSARCH in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64; do
+            GOOS="${OSARCH%/*}"; GOARCH="${OSARCH#*/}"
+            for BIN in qctl rabi rabi-conformance; do
+              CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" go build \
+                -ldflags "-X main.version=$VERSION" \
+                -o "dist/${BIN}-${GOOS}-${GOARCH}" "./cmd/$BIN"
+            done
           done
+          ( cd dist && sha256sum * > SHA256SUMS )
       - name: conformance reports (all in-tree adapters)
         run: ./hack/conformance-report.sh dist/conformance
-      - name: package
-        run: tar -C dist -czf "rabi-${GITHUB_REF_NAME}-linux-amd64.tgz" .
       - uses: softprops/action-gh-release@v2
         with:
-          files: rabi-*.tgz
+          files: |
+            dist/qctl-*
+            dist/rabi-*
+            dist/rabi-conformance-*
+            dist/SHA256SUMS
           generate_release_notes: true

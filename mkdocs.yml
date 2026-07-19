@@ -33,6 +33,7 @@ markdown_extensions:
 nav:
   - Home: README.md
   - Learn & use:
+      - Install: install.md
       - Concepts: concepts.md
       - Quickstart: quickstart.md
       - QuantumJob reference: quantumjob-reference.md

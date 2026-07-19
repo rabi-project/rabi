@@ -48,6 +48,17 @@ releases). See `phase1-build-plan.md` and `docs/decisions.md`.
 - [Architecture](docs/architecture.md) · [Decisions log](docs/decisions.md)
 - Spec (vendored, read-only): [`spec/`](spec/)
 
+## Install
+
+```sh
+# the qctl client (macOS, Linux)
+curl -fsSL https://rabi-project.github.io/rabi/install.sh | sh
+# or: brew install rabi-project/tap/qctl
+# or: go install github.com/rabi-project/rabi/cmd/qctl@latest
+```
+
+Full options in the [install guide](https://rabi-project.github.io/rabi/install/).
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE) and [CONTRIBUTING.md](CONTRIBUTING.md) (DCO).

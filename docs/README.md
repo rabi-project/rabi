@@ -7,6 +7,7 @@ recording a human-readable reason for every placement.
 
 ## Learn & use
 
+- **[Install](install.md)** — get the `qctl` client in one command.
 - **[Concepts](concepts.md)** — start here. The mental model: calibration-aware
   placement, the QuantumJob, quality floors, sessions, the job lifecycle.
 - **[Quickstart](quickstart.md)** — clone to routed jobs in five commands.
