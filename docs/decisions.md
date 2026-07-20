@@ -642,6 +642,56 @@ spec release (v0.3+ RFC territory, alongside the already-parked
 extension-key removals), not a documentation rename. D-028's boundary
 still stands, with the spec now named rabi-spec.
 
+## D-049 · 2026-07-21 · P2-M1 chaos & invariants harness — boring choices
+
+First Phase-2 milestone: the chaos & invariants harness (E4). Five load-bearing
+choices, all deliberately boring:
+
+**Invariants operate on the store alone.** `chaos.CheckAll(ctx, store, accepted,
+declared)` runs the five invariants (no job lost · no duplicate execution ·
+terminal immutable · usage within caps · audit gapless) by reading Postgres —
+nothing about the fault-injection mechanism leaks in. This is why the *same*
+checks run unchanged in the CI component suite and in the live `--fleet0`
+game-day: the invariants don't know or care how the state got there.
+
+**The harness must prove it can fail.** `TestSelfTest_InvariantsCatchPlanted­Violations`
+plants an over-cap ledger row, a post-terminal event, an illegal transition, and
+a missing job, and asserts each is caught. A chaos suite whose invariants can't
+go red is theater; the self-test runs first in CI, before the eight scenarios.
+
+**The Postgres-restart scenario needs a pinned host port.** testcontainers
+remaps the host port when a container is stopped and started, which stranded the
+shared pool and cascaded failures into every subsequent test (301 s hang → all-
+red). Fix: pin Postgres to a fixed host port in `TestMain` so a restart is
+transparent to the pool. The scenario now runs in ~5 s. (This is a test-harness
+fact, not a product fact — production uses a real restart, not testcontainers.)
+
+**The `--fleet0` game-day is a read-only invariant sweep, not fault injection.**
+`rabi-chaos sweep` lists recent jobs and asserts the five invariants hold on the
+system's *actual current state*. Against production that is the honest, safe
+first game-day: it verifies the live ledger and event chains without injecting a
+fault or mutating a job. Destructive fault-injection drills against fleet-0
+remain scheduled, supervised, and gated behind `--i-mean-it` — and, per the
+"Fleet-0 is production" constraint, go through the rehearsed upgrade path (M3),
+never an ad-hoc SSH mutation. The eight destructive scenarios are exercised in
+CI against the disposable compose/testcontainer stack, which is their home.
+
+**Game-day annotations live in Postgres (`game_days` table), append-only.** No
+new datastore (the no-new-infrastructure constraint). Each drill writes one
+finalized row — both timestamps and the result in a single INSERT, so a drill is
+never rewritten after it ran, matching every other measurement table. `Store.
+LastGameDay` is the read the M7 status page renders for "last game-day date and
+result."
+
+**Forward dependency, recorded honestly:** M1's accept criterion has two clauses
+— "one supervised `--fleet0` game-day executed with invariants green" AND "the
+drill visible as an annotation on the status page." The second clause cannot be
+satisfied before the status page exists (M7). So M1 ships the full capability
+(driver, `--i-mean-it` guard, annotation storage, verified end to end) and the
+weekly-green CI scenarios now; the *supervised production game-day execution and
+its status-page rendering* complete in the M7 window. This split is inherent to
+the plan's own cross-references, not a shortcut.
+
 ## D-048 · 2026-07-19 · P1-M8 live QRMI needs Direct Access entitlement
 
 First live QRMI run (against a free IBM Cloud Open-plan Qiskit Runtime

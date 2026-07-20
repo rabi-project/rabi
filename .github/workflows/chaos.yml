@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: Apache-2.0
+# Chaos & invariants harness (phase2-build-plan.md P2.M1). The eight test-plan
+# §4 fault scenarios run against a real Postgres + the real dispatcher, and the
+# five invariants are asserted after each. Weekly on schedule, plus on demand
+# and whenever the harness itself changes. The invariant self-test proves the
+# checks have teeth (they catch planted violations) before the scenarios run.
+name: chaos
+
+on:
+  schedule:
+    - cron: "23 4 * * 1" # Mondays 04:23 UTC
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "internal/chaos/**"
+      - "internal/adaptertest/**"
+      - "cmd/rabi-chaos/**"
+      - "internal/store/migrations/**"
+      - ".github/workflows/chaos.yml"
+
+jobs:
+  chaos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: invariant self-test (the checks must catch planted violations)
+        run: go test ./internal/chaos/ -run TestSelfTest -count=1 -v
+      - name: eight fault scenarios + invariants
+        run: go test ./internal/chaos/ -run 'TestChaos_' -count=1 -v | tee chaos-report.txt
+      - name: assert all eight scenarios ran
+        run: |
+          ran=$(grep -c -- '--- PASS: TestChaos_' chaos-report.txt || true)
+          echo "scenarios passed: $ran / 8"
+          if [ "$ran" -ne 8 ]; then
+            echo "expected 8 green chaos scenarios, got $ran"
+            exit 1
+          fi
+      - name: build game-day driver
+        run: go build ./cmd/rabi-chaos/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chaos-report
+          path: chaos-report.txt

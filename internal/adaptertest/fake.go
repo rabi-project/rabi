@@ -14,6 +14,7 @@ import (
 	"net"
 	"slices"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -59,6 +60,27 @@ type Fake struct {
 	byKey    map[string]string
 	nextID   int
 	sessions map[string]bool
+	garbage  atomic.Bool // when set, results come back semantically corrupt
+}
+
+// SetGarbage toggles corrupt-result mode: SUCCEEDED tasks return an
+// unparseable result body, so the control plane must degrade gracefully
+// rather than crash (chaos scenario "garbage from an adapter").
+func (f *Fake) SetGarbage(on bool) { f.garbage.Store(on) }
+
+// ServeControllable serves on addr ("127.0.0.1:0" for an ephemeral port) and
+// returns the bound address plus a stop func the caller controls — chaos uses
+// it to kill and restart the adapter on a fixed port. Unlike Serve, it does
+// not register test cleanup; the caller owns the lifecycle.
+func (f *Fake) ServeControllable(addr string) (string, func(), error) {
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		return "", nil, err
+	}
+	srv := grpc.NewServer()
+	adapterv1alpha1.RegisterAdapterServiceServer(srv, f)
+	go func() { _ = srv.Serve(lis) }()
+	return lis.Addr().String(), srv.Stop, nil
 }
 
 func New(specs ...*TargetSpec) *Fake {
@@ -290,6 +312,11 @@ func (f *Fake) advance(s *TargetSpec, id string, shots uint64) {
 		counts, _ := json.Marshal(map[string]any{
 			"counts": map[string]int{"00": int(shots) / 2, "11": int(shots) - int(shots)/2},
 		})
+		if f.garbage.Load() {
+			// A result the control plane cannot parse: it must reach a
+			// queryable terminal state, never panic.
+			counts = []byte("\x00\xff not json at all \xfe")
+		}
 		tk.status.State = adapterv1alpha1.TaskStatus_SUCCEEDED
 		tk.status.Result = &adapterv1alpha1.Result{
 			Format: "counts-json",

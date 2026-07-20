@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Render the qctl Homebrew formula for a release tag. Usage: render-formula.sh vX.Y.Z
 set -euo pipefail
 VERSION="$1"
