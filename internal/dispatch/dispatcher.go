@@ -307,9 +307,17 @@ func (d *Dispatcher) execute(ctx context.Context, rec *store.JobRecord, taskID, 
 	}
 	_ = d.store.UpdateTask(ctx, taskID, handle.GetTaskId(), "QUEUED", nil, nil)
 	if _, err := d.transition(ctx, rec.JobID, job.Submitted, nil); err != nil {
-		// Job likely cancelled concurrently: stop the adapter task.
-		_, _ = client.CancelTask(ctx, taskRef(targetID, handle.GetTaskId()))
-		return
+		// The transition is illegal in two very different situations: the job was
+		// cancelled/failed concurrently (stop and cancel the adapter task), or
+		// this is resume() re-attaching to a job that is ALREADY submitted or
+		// running (expected — keep following it). Distinguish by the live phase,
+		// so a control-plane restart never strands in-flight work.
+		cur, gerr := d.store.GetJob(ctx, rec.JobID)
+		if gerr != nil || cur.Phase.Terminal() {
+			_, _ = client.CancelTask(ctx, taskRef(targetID, handle.GetTaskId()))
+			return
+		}
+		rec = cur // adopt the resumed phase and follow to completion
 	}
 
 	d.follow(ctx, rec, taskID, targetName, targetID, handle.GetTaskId(), client)
@@ -378,8 +386,13 @@ func (d *Dispatcher) applyTaskStatus(ctx context.Context, rec *store.JobRecord, 
 			*running = true
 			_ = d.store.UpdateTask(ctx, taskID, adapterTaskID, "RUNNING", nil, nil)
 			if _, err := d.transition(ctx, rec.JobID, job.Running, nil); err != nil {
-				_, _ = client.CancelTask(ctx, taskRef(targetID, adapterTaskID))
-				return true
+				// Only a terminal conclusion (cancelled in our absence) means
+				// stop; an already-RUNNING job on resume re-observing RUNNING is
+				// expected and must keep being followed to completion.
+				if cur, gerr := d.store.GetJob(ctx, rec.JobID); gerr != nil || cur.Phase.Terminal() {
+					_, _ = client.CancelTask(ctx, taskRef(targetID, adapterTaskID))
+					return true
+				}
 			}
 		}
 		return false

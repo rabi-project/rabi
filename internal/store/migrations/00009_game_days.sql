@@ -22,3 +22,6 @@ REVOKE UPDATE, DELETE, TRUNCATE ON game_days FROM rabi_app;
 -- The driver writes one finalized row when a drill completes (both timestamps
 -- and the result in a single INSERT), so the record is append-only end to end —
 -- no drill is ever rewritten after it ran.
+
+-- +goose Down
+DROP TABLE IF EXISTS game_days;

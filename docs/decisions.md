@@ -776,3 +776,50 @@ exits non-zero, and `release.yml`'s `perf-gate` runs storm+soak so a performance
 regression blocks the release tag (test-plan §4 accept). The `rabi-load` CLI
 drives the fleet-0-sized variant (1,000 jobs) against a *throwaway* DB — never
 production, since the harness runs its own dispatcher and would double-schedule.
+
+## D-051 · 2026-07-21 · P2-M3 upgrade & migration hardening — and a resume bug it caught
+
+Third Phase-2 milestone: upgrade & migration hardening (E4). Boring choices, plus
+a real correctness bug the upgrade rehearsal surfaced.
+
+**Goldens are reconstructed from immutable migrations, not committed dumps.**
+`store.OpenAt(dsn, version)` (which already existed, commented "for upgrade
+tests") migrates a fresh database to exactly the schema a released tag shipped —
+v0.1.0/v0.2.0 = migration 3, v0.4.x = 8. The golden's *data* is a committed seed
+per tag (`internal/upgrade/testdata/`); the schema comes from OpenAt. Goose
+migrations are immutable by convention, so OpenAt(8) reproduces v0.4.2's schema
+exactly — cleaner than committing multi-MB dumps that would drift. The matrix
+restores each golden, migrates forward, and asserts jobs/events/usage survive.
+
+**Rollback is additive-compatibility, not a goose-down chain.** Only 3 of 9
+migrations ship a `Down`, and re-migrating forward is the tested direction. The
+real rollback guarantee for a single-node deployment is that the schema stays a
+strict superset of the last release, so the N-1 binary serves the N schema
+unchanged — roll the image tag back, leave the schema. `TestRollbackSafety`
+asserts every v8 table.column still exists at HEAD (78 → 87, additive). The
+newest migration (00009) did get a `Down` for hygiene, but that is not the
+routine rollback path.
+
+**BUG (correctness, load-bearing): a control-plane restart stranded in-flight
+jobs.** The upgrade rehearsal — roll the plane while jobs execute on a persistent
+adapter — found that only 14 of 60 jobs completed after the roll; 46 that were
+SUBMITTED/RUNNING at the cut hung forever. Root cause: `resume()` re-runs
+`execute()`, which unconditionally transitions the job to SUBMITTED, and
+`applyTaskStatus` transitions to RUNNING — both illegal for a job already at or
+past that phase (the FSM is linear with no self-edges). The illegal transition
+was mis-read as "cancelled concurrently", so the code cancelled the adapter task
+and abandoned the job. This fires on EVERY restart with in-flight RUNNING work —
+a direct violation of the zero-lost-jobs SLO, invisible until something forced a
+restart under load. Fix: on a failed forward transition, distinguish a genuine
+terminal conclusion (stop, cancel the task) from resume re-attaching to an
+already-advanced job (adopt the live phase, keep following). After the fix: 60/60
+complete, API unavailability ~21 ms. The SUCCEEDED path was already tolerant
+(best-effort RUNNING first), so only the SUBMITTED and RUNNING transitions needed
+the guard.
+
+**Fleet-0 adopts the rehearsed path.** `docs/fleet0/upgrade.md` is the runbook:
+pin the tag, pull, recreate `rabi` with `--no-deps` (Postgres and the adapter
+stay up so in-flight tasks survive and `resume()` re-attaches), health-gate on
+`/healthz`, roll back by reverting the tag (additive schema). CI runs the whole
+suite weekly (`upgrade.yml`) and on any PR touching migrations, the store, the
+dispatcher, or the goldens.

@@ -1,0 +1,8 @@
+{
+  "_comment": "Golden databases per released tag (phase2-build-plan.md P2.M3). Each entry pins the goose migration version that tag shipped and a seed of representative data valid at that schema. The forward-migration matrix restores each golden, migrates to the current schema, and asserts the data survives. Versions: v0.1.0/v0.2.0 shipped migration 3; v0.4.x shipped 8.",
+  "goldens": [
+    { "tag": "v0.1.0", "version": 3, "seed": "v0.1.0.sql" },
+    { "tag": "v0.2.0", "version": 3, "seed": "v0.2.0.sql" },
+    { "tag": "v0.4.2", "version": 8, "seed": "v0.4.2.sql" }
+  ]
+}
