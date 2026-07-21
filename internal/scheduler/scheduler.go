@@ -33,6 +33,18 @@ func Register(name string, factory func() SchedulingPolicy) {
 	factories[name] = factory
 }
 
+// RegisteredPolicies returns every registered policy name, sorted. The policy
+// conformance suite iterates this, so a newly-absorbed policy is automatically
+// held to the same properties as the built-ins (P2.M6).
+func RegisteredPolicies() []string {
+	names := make([]string, 0, len(factories))
+	for n := range factories {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	return names
+}
+
 // NewPolicy returns a fresh instance of the named policy.
 func NewPolicy(name string) (SchedulingPolicy, error) {
 	f, ok := factories[name]

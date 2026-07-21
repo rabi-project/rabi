@@ -922,3 +922,37 @@ operational — the machinery, storage, report, and `RABI_SHADOW_POLICIES` confi
 ship now; the 2-week accumulation happens on fleet-0. M6's absorbed policies are
 the first real candidates to shadow (compose default active policy is already
 `calib-aware/v0`, so a candidate must differ).
+
+## D-054 · 2026-07-21 · P2-M6 absorption wave 1 — two attributed policies
+
+Sixth Phase-2 milestone: two policy plugins from the literature, both
+shadow-only, both attributed.
+
+**pareto/v0 (Qonductor lineage) and adaptive-deferral/v0 (Ravi et al. lineage).**
+Registered behind the standard `SchedulingPolicy` interface in
+`internal/scheduler/absorbed.go`, with the citation and a "differences from the
+paper" section in the code header, in `docs/scheduling-policies.md`, and in the
+release notes. pareto keeps NSGA-II's non-dominated sorting (fidelity vs wait)
+but drops the evolutionary population — one job at a time, deterministic front
+scalarization. adaptive-deferral contributes freshness-weighted ranking
+(exponential calibration-age decay over the job's window) and leaves the actual
+wall-clock deferral to the existing calibrationMaxAge filter + dispatcher
+re-cycle. The honest adaptations, not claims of reimplementing the papers.
+
+**Both ship shadow-only.** They are candidates, never the default; promotion
+runs through the M5 pipeline (shadow evidence + `policy-promotion` PR). The
+compose default active policy stays `calib-aware/v0`; these are the first real
+`RABI_SHADOW_POLICIES` candidates.
+
+**Conformance is automatic.** `TestPolicyConformance` iterates
+`scheduler.RegisteredPolicies()` (new exported lister), so every registered
+policy — the two new ones included — is held to the same properties: it only
+selects a target ITS OWN filter accepts (the calibration-blind baselines
+legitimately use a narrower filter, D-024), it is deterministic for a fresh
+instance, and it reroutes when its choice is removed. A new policy is
+conformance-tested the moment it is `Register`ed. Absorbed-policy behavior is
+also unit-tested directly (pareto picks the dominating target; adaptive-deferral
+prefers fresh calibration).
+
+**Human hook (not agent work):** these implementations are the artifacts for
+recruiting the papers' authors as maintainers — flagged as merged.
