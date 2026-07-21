@@ -44,6 +44,13 @@ predicted quality, and **every rejected device with the reason** — so scheduli
 > vs **0.349** for static best-device selection, with **0%** quality-SLO violations vs
 > 9.4% — on real IBM calibration data with exact simulator ground truth.
 
+**Runs alongside your CPU/GPU scheduler — it doesn't replace it.** Rabi schedules the
+machine that *drifts*; Kubernetes and Slurm already schedule CPUs and GPUs superbly. A
+hybrid pipeline keeps its classical pre/post stages on your scheduler and delegates only
+the quantum stage to Rabi via `qctl submit`. See
+[`examples/hybrid-workflow`](examples/hybrid-workflow/) — runnable on Kubernetes (kind)
+and Slurm.
+
 ## Install
 
 ```sh

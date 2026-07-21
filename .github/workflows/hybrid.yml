@@ -1,0 +1,127 @@
+# SPDX-License-Identifier: Apache-2.0
+# Hybrid workflow example (phase2-build-plan.md P2.M8): the classical+quantum
+# pipeline run end to end three ways — against the compose stack, on Kubernetes
+# (kind), and on Slurm (single-node). A green run proves the classical stages ran
+# on the host scheduler and the quantum stage's Bell state came back entangled.
+name: hybrid
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "examples/hybrid-workflow/**"
+      - ".github/workflows/hybrid.yml"
+  schedule:
+    - cron: "51 4 * * 6" # Saturdays 04:51 UTC
+
+jobs:
+  # The pipeline itself, against the compose stack. Proves pre -> quantum -> post
+  # with a real rabi + adapter.
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.26" }
+      - name: bring up rabi + adapter
+        run: make compose-up
+      - name: build qctl
+        run: go build -o /usr/local/bin/qctl ./cmd/qctl
+      - name: run hybrid pipeline
+        run: RABI_SERVER=localhost:9090 RABI_TOKEN=dev-key ./examples/hybrid-workflow/run.sh
+      - name: tear down
+        if: always()
+        run: make compose-down
+
+  # Kubernetes variant on kind: rabi stack in-cluster, pipeline as a Job.
+  kubernetes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: hybrid
+      - name: build images
+        run: |
+          docker build -t rabi:local -f Dockerfile .
+          docker build -t rabi-adapter-aer:local -f adapters/aer/Dockerfile .
+          docker build -t rabi-hybrid-runner:local -f examples/hybrid-workflow/Dockerfile.runner .
+      - name: load images into kind
+        run: |
+          kind load docker-image rabi:local rabi-adapter-aer:local rabi-hybrid-runner:local --name hybrid
+      - name: deploy rabi stack
+        run: |
+          kubectl apply -f examples/hybrid-workflow/kubernetes/rabi-stack.yaml
+          kubectl wait --for=condition=available deploy/rabi deploy/adapter-aer --timeout=240s
+      - name: run pipeline Job
+        run: |
+          kubectl apply -f examples/hybrid-workflow/kubernetes/pipeline.yaml
+          for i in $(seq 1 120); do
+            s=$(kubectl get job/hybrid-bell-pipeline -o jsonpath='{.status.succeeded}' 2>/dev/null || true)
+            f=$(kubectl get job/hybrid-bell-pipeline -o jsonpath='{.status.failed}' 2>/dev/null || true)
+            [ "$s" = "1" ] && { echo "pipeline Job succeeded"; exit 0; }
+            [ -n "$f" ] && [ "$f" -ge 1 ] && { echo "pipeline Job failed"; exit 1; }
+            sleep 3
+          done
+          echo "pipeline Job timed out"; exit 1
+      - name: pipeline logs
+        if: always()
+        run: |
+          kubectl logs job/hybrid-bell-pipeline --all-containers=true || true
+      - name: diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get pods -o wide || true
+          kubectl describe job/hybrid-bell-pipeline || true
+          kubectl logs deploy/rabi --tail=50 || true
+
+  # Slurm variant: single-node Slurm on the runner, quantum stage calls compose.
+  slurm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.26" }
+      - name: bring up rabi + adapter
+        run: make compose-up
+      - name: build qctl
+        run: go build -o /usr/local/bin/qctl ./cmd/qctl
+      - name: install single-node Slurm
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y slurm-wlm munge jq
+          sudo /usr/sbin/create-munge-key -f || sudo bash -c 'dd if=/dev/urandom bs=1 count=1024 > /etc/munge/munge.key'
+          sudo chown munge:munge /etc/munge/munge.key && sudo chmod 400 /etc/munge/munge.key
+          cpus=$(nproc)
+          sudo tee /etc/slurm/slurm.conf >/dev/null <<EOF
+          ClusterName=hybrid
+          SlurmctldHost=localhost
+          SlurmUser=slurm
+          StateSaveLocation=/var/spool/slurmctld
+          SlurmdSpoolDir=/var/spool/slurmd
+          ProctrackType=proctrack/linuxproc
+          TaskType=task/none
+          SchedulerType=sched/backfill
+          SelectType=select/cons_tres
+          NodeName=localhost CPUs=${cpus} State=UNKNOWN
+          PartitionName=debug Nodes=ALL Default=YES MaxTime=INFINITE State=UP
+          EOF
+          sudo mkdir -p /var/spool/slurmctld /var/spool/slurmd
+          sudo chown slurm: /var/spool/slurmctld
+          sudo systemctl start munge
+          sudo slurmctld && sudo slurmd
+          sleep 3
+          sinfo
+      - name: submit hybrid batch and wait
+        run: |
+          export RABI_SERVER=localhost:9090 RABI_TOKEN=dev-key
+          cd examples/hybrid-workflow
+          sbatch --wait --export=ALL,PIPELINE_DIR=$PWD/pipeline slurm/pipeline.sbatch
+          echo "--- job output ---"; cat hybrid-*.out
+          grep -q "post: PASS" hybrid-*.out
+      - name: tear down
+        if: always()
+        run: make compose-down

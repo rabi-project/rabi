@@ -1,0 +1,94 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# A minimal in-cluster Rabi control plane for the hybrid-workflow example:
+# Postgres + the Aer replay adapter + rabi. In production Rabi is usually a
+# SHARED endpoint outside your workload cluster (the quantum stage just needs its
+# address); this self-contained stack keeps the example runnable in kind/CI.
+# Build and load the images first (see the workflow / README).
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: postgres, labels: { app: postgres } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: postgres } }
+  template:
+    metadata: { labels: { app: postgres } }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - { name: POSTGRES_USER, value: rabi }
+            - { name: POSTGRES_PASSWORD, value: rabi }
+            - { name: POSTGRES_DB, value: rabi }
+          ports: [{ containerPort: 5432 }]
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", "rabi", "-d", "rabi"] }
+            periodSeconds: 2
+---
+apiVersion: v1
+kind: Service
+metadata: { name: postgres }
+spec:
+  selector: { app: postgres }
+  ports: [{ port: 5432, targetPort: 5432 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: adapter-aer, labels: { app: adapter-aer } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: adapter-aer } }
+  template:
+    metadata: { labels: { app: adapter-aer } }
+    spec:
+      containers:
+        - name: adapter-aer
+          image: rabi-adapter-aer:local
+          imagePullPolicy: Never
+          args: ["--config", "config/replay.yaml", "--listen", "[::]:50051"]
+          ports: [{ containerPort: 50051 }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: adapter-aer }
+spec:
+  selector: { app: adapter-aer }
+  ports: [{ port: 50051, targetPort: 50051 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: rabi, labels: { app: rabi } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: rabi } }
+  template:
+    metadata: { labels: { app: rabi } }
+    spec:
+      containers:
+        - name: rabi
+          image: rabi:local
+          imagePullPolicy: Never
+          env:
+            - { name: RABI_DB_URL, value: "postgres://rabi:rabi@postgres:5432/rabi?sslmode=disable" }
+            - { name: RABI_ADAPTERS, value: "sim=adapter-aer:50051" }
+            - { name: RABI_BOOTSTRAP_TOKEN, value: "dev-key" }
+            - { name: RABI_GRPC_ADDR, value: ":9090" }
+            - { name: RABI_HTTP_ADDR, value: ":8080" }
+            - { name: RABI_PROBE_EVERY, value: "off" }
+          ports:
+            - { containerPort: 9090 }
+            - { containerPort: 8080 }
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            periodSeconds: 2
+---
+apiVersion: v1
+kind: Service
+metadata: { name: rabi }
+spec:
+  selector: { app: rabi }
+  ports:
+    - { name: grpc, port: 9090, targetPort: 9090 }
+    - { name: http, port: 8080, targetPort: 8080 }

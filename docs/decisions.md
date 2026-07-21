@@ -992,3 +992,30 @@ and "status page live at fleet-0's address" are operational — the endpoint, th
 drill, and the schedules ship now; the two-month drill history and the fleet-0
 deploy accrue in operation. The supervised fleet-0 game-day (M1) records into
 `game_days` and this page renders it, closing that loop.
+
+## D-056 · 2026-07-21 · P2-M8 hybrid workflow example
+
+Eighth (final Wave A) milestone: the canonical answer to "can Rabi manage
+CPU/GPU?" — it doesn't, and shouldn't.
+
+**The boundary is one pipeline step.** `examples/hybrid-workflow` is a three-stage
+pipeline: a classical pre-stage (emit the QuantumJob), a quantum stage (`qctl
+submit` → wait → fetch counts), and a classical post-stage (verify the Bell
+correlation). The classical stages run natively on the host scheduler; only the
+quantum stage touches Rabi. The README states it plainly: "Rabi schedules the
+machine that drifts; your scheduler runs everything else."
+
+**Same pipeline, two orchestrators.** The three stage scripts (`pipeline/*.sh`)
+are shared; the Kubernetes variant wraps them in a plain `batch/v1` Job (pre and
+quantum as init containers, post as the main container, a shared emptyDir), and
+the Slurm variant wraps them in an sbatch with three `srun` steps. A runner image
+(`Dockerfile.runner`: qctl + jq + the stages) serves both.
+
+**Verified end to end in CI three ways** (`hybrid.yml`): against the compose stack
+(proves the pipeline with a real rabi + adapter — verified locally: 94% Bell
+correlation), on kind (in-cluster rabi stack + the pipeline Job), and on a
+single-node Slurm on the runner. In production the quantum stage points
+`RABI_SERVER` at a shared Rabi endpoint and the workload cluster deploys none of
+it; the in-cluster stack exists only to keep the example self-contained.
+
+Linked from the landing README's "Why Rabi" (the CPU/GPU boundary callout).

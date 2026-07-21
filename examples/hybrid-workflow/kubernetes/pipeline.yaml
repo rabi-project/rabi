@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# The hybrid pipeline as a plain Kubernetes Job. The two CLASSICAL stages run
+# natively in the cluster (pre as an init container, post as the main
+# container); the QUANTUM stage (also an init container) delegates to Rabi via
+# qctl. A shared emptyDir carries the job document and result counts between
+# stages. This is the canonical answer to "can Rabi manage CPU/GPU?" — your
+# scheduler runs the classical work; Rabi schedules only the quantum stage.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hybrid-bell-pipeline
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      volumes:
+        - name: work
+          emptyDir: {}
+      initContainers:
+        # Stage 1 — classical: generate the QuantumJob document.
+        - name: pre
+          image: rabi-hybrid-runner:local
+          imagePullPolicy: Never
+          command: ["sh", "/pipeline/pre.sh"]
+          env:
+            - { name: WORK, value: /work }
+            - { name: SHOTS, value: "2000" }
+          volumeMounts: [{ name: work, mountPath: /work }]
+        # Stage 2 — quantum: submit to Rabi and wait for the result.
+        - name: quantum
+          image: rabi-hybrid-runner:local
+          imagePullPolicy: Never
+          command: ["sh", "/pipeline/quantum.sh"]
+          env:
+            - { name: WORK, value: /work }
+            - { name: RABI_SERVER, value: "rabi:9090" }
+            - { name: RABI_TOKEN, value: "dev-key" }
+          volumeMounts: [{ name: work, mountPath: /work }]
+      containers:
+        # Stage 3 — classical: verify the Bell correlation.
+        - name: post
+          image: rabi-hybrid-runner:local
+          imagePullPolicy: Never
+          command: ["sh", "/pipeline/post.sh"]
+          env:
+            - { name: WORK, value: /work }
+          volumeMounts: [{ name: work, mountPath: /work }]
