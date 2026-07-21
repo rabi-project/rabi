@@ -1,0 +1,105 @@
+# SPDX-License-Identifier: Apache-2.0
+# Load & soak automation (phase2-build-plan.md P2.M2). The storm harness seeds
+# 10,000 jobs across 100 synthetic targets and asserts the test-plan §4 load
+# thresholds (scheduler-cycle p99 < 2s, API read p99 < 300ms, write p99 < 1s,
+# bounded queue growth). The soak harness churns jobs under accelerated replay
+# and asserts memory/goroutine/stuck-job bounds. Storm runs weekly, soak
+# monthly; a PR touching the harness runs a fast smoke. Reports are published as
+# artifacts; a breached threshold exits non-zero (and blocks a release tag via
+# the release workflow's perf-gate).
+name: load
+
+on:
+  schedule:
+    - cron: "0 5 * * 2" # storm: Tuesdays 05:00 UTC
+    - cron: "0 6 1 * *" # soak: 1st of month 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      jobs:
+        description: storm backlog size
+        default: "10000"
+      soak_seconds:
+        description: soak duration (seconds)
+        default: "1200"
+  pull_request:
+    paths:
+      - "internal/loadtest/**"
+      - "internal/dispatch/**"
+      - "cmd/rabi-load/**"
+      - ".github/workflows/load.yml"
+
+jobs:
+  # Fast smoke on every relevant PR: exercises the full stack at small size and
+  # asserts the thresholds, guarding the drain-throughput and goroutine-leak
+  # regressions the harness was built to catch.
+  smoke:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: storm + soak smoke
+        run: go test ./internal/loadtest/ -count=1 -v
+
+  storm:
+    # Weekly schedule or a manual run; not on the monthly-soak cron.
+    if: github.event_name != 'pull_request' && github.event.schedule != '0 6 1 * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env: { POSTGRES_USER: rabi, POSTGRES_PASSWORD: rabi, POSTGRES_DB: rabi }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U rabi -d rabi"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      LOAD_DATABASE_URL: postgres://rabi:rabi@localhost:5432/rabi?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: build driver
+        run: go build -o bin/rabi-load ./cmd/rabi-load
+      - name: storm (10,000 jobs / 100 targets)
+        run: ./bin/rabi-load storm --jobs "${{ github.event.inputs.jobs || '10000' }}" --targets 100 --out storm.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: storm-report
+          path: storm.json
+
+  soak:
+    # Monthly schedule or a manual run; not on the weekly-storm cron.
+    if: github.event_name != 'pull_request' && github.event.schedule != '0 5 * * 2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env: { POSTGRES_USER: rabi, POSTGRES_PASSWORD: rabi, POSTGRES_DB: rabi }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U rabi -d rabi"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      LOAD_DATABASE_URL: postgres://rabi:rabi@localhost:5432/rabi?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: build driver
+        run: go build -o bin/rabi-load ./cmd/rabi-load
+      - name: soak (accelerated replay)
+        run: ./bin/rabi-load soak --seconds "${{ github.event.inputs.soak_seconds || '1200' }}" --out soak.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: soak-report
+          path: soak.json

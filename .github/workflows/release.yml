@@ -33,8 +33,25 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
 
+  # Performance regression gate (P2.M2): a breached load or soak threshold
+  # blocks the release tag. Runs the harness at a solid-but-bounded size (the
+  # weekly/monthly jobs run the full sizes); testcontainers supplies Postgres.
+  perf-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RABI_STORM_JOBS: "8000"
+      RABI_STORM_TARGETS: "80"
+      RABI_SOAK_SECONDS: "60"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - name: storm + soak thresholds
+        run: go test ./internal/loadtest/ -run 'TestStorm|TestSoak' -count=1 -v
+
   artifacts:
-    needs: cve-gate
+    needs: [cve-gate, perf-gate]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:

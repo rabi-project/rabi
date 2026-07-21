@@ -48,6 +48,8 @@ type Dispatcher struct {
 	mu       sync.Mutex
 	inFlight map[string]bool // job ids with an active executor goroutine
 	wg       sync.WaitGroup
+
+	cycles *cycleRing // scheduler-cycle latency, for the load & soak harness
 }
 
 // New wires the dispatcher with the named scheduling policy (RABI_POLICY;
@@ -66,6 +68,7 @@ func New(st *store.Store, reg *registry.Registry, policyName string, logger *slo
 	return &Dispatcher{
 		store: st, reg: reg, policy: policy, now: time.Now,
 		logger: logger, inFlight: map[string]bool{},
+		cycles: newCycleRing(8192),
 	}, nil
 }
 
@@ -74,7 +77,15 @@ func New(st *store.Store, reg *registry.Registry, policyName string, logger *slo
 func (d *Dispatcher) Run(ctx context.Context) {
 	d.resume(ctx)
 	for ctx.Err() == nil {
-		d.cycle(ctx)
+		claimed, bound := d.cycle(ctx)
+		// A full batch that made progress means the backlog almost certainly
+		// holds more schedulable work: cycle again immediately rather than
+		// draining one batch per notify/tick. Requiring bound > 0 avoids a hot
+		// loop when the batch is full of currently-infeasible jobs (those wait
+		// for the next wakeup, as before).
+		if claimed >= claimBatch && bound > 0 {
+			continue
+		}
 		if err := d.store.WaitForJobNotify(ctx, cycleEvery); err != nil && ctx.Err() == nil {
 			d.logger.Warn("job notify wait failed; falling back to tick", "error", err)
 			select {
@@ -105,19 +116,31 @@ func (d *Dispatcher) resume(ctx context.Context) {
 	}
 }
 
-func (d *Dispatcher) cycle(ctx context.Context) {
+// cycle runs one filter→score→bind pass over a batch of pending jobs. It
+// returns how many jobs it claimed and how many it bound (moved out of
+// PENDING), which Run uses to decide whether to keep draining.
+func (d *Dispatcher) cycle(ctx context.Context) (claimed, bound int) {
+	start := time.Now()
+	defer func() { d.cycles.record(time.Since(start)) }()
 	d.sweepExpiredSessions(ctx)
 	pending, err := d.store.PendingJobs(ctx, claimBatch)
 	if err != nil {
 		d.logger.Error("listing pending jobs", "error", err)
-		return
+		return 0, 0
 	}
+	claimed = len(pending)
 	for _, rec := range d.orderPending(ctx, pending) {
-		d.dispatchOne(ctx, rec)
+		if d.dispatchOne(ctx, rec) {
+			bound++
+		}
 	}
+	return claimed, bound
 }
 
-func (d *Dispatcher) dispatchOne(ctx context.Context, rec *store.JobRecord) {
+// dispatchOne runs filter→score→bind for one job. It returns true only when
+// the job was bound (moved out of PENDING); infeasible, session-lost, and
+// lost-race outcomes return false, leaving the job PENDING for a later cycle.
+func (d *Dispatcher) dispatchOne(ctx context.Context, rec *store.JobRecord) bool {
 	jobView, err := scheduler.ParseJob(rec.JobID, rec.Tenant, rec.Doc)
 	if err != nil {
 		// Admission should make this impossible; surface it, don't loop hot.
@@ -126,16 +149,16 @@ func (d *Dispatcher) dispatchOne(ctx context.Context, rec *store.JobRecord) {
 			"type": "Schedulable", "status": "False", "reason": "UnparseableDocument",
 			"message": err.Error(),
 		})
-		return
+		return false
 	}
 
 	if _, ok := d.sessionAffinity(ctx, rec, jobView); !ok {
-		return // failed with SESSION_LOST; never silently rescheduled
+		return false // failed with SESSION_LOST; never silently rescheduled
 	}
 	decision := scheduler.Schedule(d.policy, jobView, d.fleetViews(), d.now())
 	if decision.Target == "" {
 		if d.resolveConflict(ctx, rec, jobView, decision) {
-			return
+			return false
 		}
 		// Infeasible now: the job stays PENDING with a condition explaining
 		// which constraint failed for how many targets (spec §quantumjob).
@@ -148,7 +171,7 @@ func (d *Dispatcher) dispatchOne(ctx context.Context, rec *store.JobRecord) {
 		} else if changed {
 			d.logger.Info("job not placeable", "job", rec.JobID, "reason", decision.Reason)
 		}
-		return
+		return false
 	}
 
 	taskID := uuid.NewString()
@@ -156,11 +179,12 @@ func (d *Dispatcher) dispatchOne(ctx context.Context, rec *store.JobRecord) {
 	if err != nil {
 		// Lost the race (another cycle, or a concurrent cancel): not an error.
 		d.logger.Debug("bind skipped", "job", rec.JobID, "cause", err)
-		return
+		return false
 	}
 	d.logger.Info("job bound", "job", rec.JobID, "target", decision.Target,
 		"policy", decision.Policy, "task", taskID)
 	d.startExecutor(ctx, bound, taskID, decision.Target)
+	return true
 }
 
 // fleetViews converts the registry cache into the scheduler's plain values.
@@ -298,8 +322,15 @@ func (d *Dispatcher) follow(ctx context.Context, rec *store.JobRecord, taskID, t
 
 	running := false
 	for ctx.Err() == nil {
-		stream, err := client.WatchTask(ctx, taskRef(targetID, adapterTaskID))
+		// Each WatchTask gets its own cancellable context so that when this
+		// task finishes (or we reconnect) the client-side stream goroutine is
+		// released immediately. Watching on the long-lived dispatcher context
+		// alone leaked one gRPC stream goroutine per completed job until process
+		// exit — invisible at low volume, unbounded over a 72h soak (P2.M2).
+		streamCtx, cancel := context.WithCancel(ctx)
+		stream, err := client.WatchTask(streamCtx, taskRef(targetID, adapterTaskID))
 		if err != nil {
+			cancel()
 			d.logger.Warn("watch task failed; retrying", "task", taskID, "error", err)
 			select {
 			case <-time.After(watchBackoff):
@@ -307,10 +338,12 @@ func (d *Dispatcher) follow(ctx context.Context, rec *store.JobRecord, taskID, t
 			}
 			continue
 		}
+		terminal := false
 		for {
 			status, err := stream.Recv()
 			if err != nil {
 				if ctx.Err() != nil {
+					cancel()
 					return
 				}
 				d.logger.Warn("watch stream broke; reconnecting", "task", taskID, "error", err)
@@ -320,11 +353,15 @@ func (d *Dispatcher) follow(ctx context.Context, rec *store.JobRecord, taskID, t
 				}
 				break
 			}
-			done := d.applyTaskStatus(ctx, rec, taskID, targetName, targetID, adapterTaskID,
-				client, status, &running)
-			if done {
-				return
+			if d.applyTaskStatus(ctx, rec, taskID, targetName, targetID, adapterTaskID,
+				client, status, &running) {
+				terminal = true
+				break
 			}
+		}
+		cancel() // release the stream before returning or reconnecting
+		if terminal {
+			return
 		}
 	}
 }

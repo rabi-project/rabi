@@ -642,6 +642,28 @@ spec release (v0.3+ RFC territory, alongside the already-parked
 extension-key removals), not a documentation rename. D-028's boundary
 still stands, with the spec now named rabi-spec.
 
+## D-048 · 2026-07-19 · P1-M8 live QRMI needs Direct Access entitlement
+
+First live QRMI run (against a free IBM Cloud Open-plan Qiskit Runtime
+instance) 404s at `QuantumResource.acquire()`. Root cause (from the qrmi
+0.20 binary's request paths, `/core-fast/api/v1/...`): QRMI's
+`IBMQiskitRuntimeService` resource type targets IBM **Direct Access**, a
+premium dedicated-access product — NOT the standard Qiskit Runtime API.
+The Open plan grants the latter (which our *ibm* adapter uses via
+qiskit-ibm-runtime, and `ibm-live` passes), not the former.
+
+Consequences, all boring: the QRMI adapter stays fully conformance-
+certified via the cassette (CI); live QRMI certification is parked on a
+Direct Access entitlement, same shape as every other vendor driver's
+"live needs real credentials." The nightly treats an acquire-time 404 as
+an explicit skip-with-warning, not a red failure, so it doesn't nag about
+an entitlement we don't have. Fixing the debugging journey's real
+findings stays in the code: startup race (poll+log), per-resource env
+prefixing (`<id>_QRMI_*`), unversioned endpoint base. When a Direct
+Access instance exists, set QRMI_RESOURCE=<da-backend>=IBMQuantumSystem
+(or keep IBMQiskitRuntimeService if the account is Direct-Access-enabled)
+and the same job certifies live.
+
 ## D-049 · 2026-07-21 · P2-M1 chaos & invariants harness — boring choices
 
 First Phase-2 milestone: the chaos & invariants harness (E4). Five load-bearing
@@ -692,24 +714,55 @@ weekly-green CI scenarios now; the *supervised production game-day execution and
 its status-page rendering* complete in the M7 window. This split is inherent to
 the plan's own cross-references, not a shortcut.
 
-## D-048 · 2026-07-19 · P1-M8 live QRMI needs Direct Access entitlement
 
-First live QRMI run (against a free IBM Cloud Open-plan Qiskit Runtime
-instance) 404s at `QuantumResource.acquire()`. Root cause (from the qrmi
-0.20 binary's request paths, `/core-fast/api/v1/...`): QRMI's
-`IBMQiskitRuntimeService` resource type targets IBM **Direct Access**, a
-premium dedicated-access product — NOT the standard Qiskit Runtime API.
-The Open plan grants the latter (which our *ibm* adapter uses via
-qiskit-ibm-runtime, and `ibm-live` passes), not the former.
+## D-050 · 2026-07-21 · P2-M2 load & soak harness — and two real bugs it caught
 
-Consequences, all boring: the QRMI adapter stays fully conformance-
-certified via the cassette (CI); live QRMI certification is parked on a
-Direct Access entitlement, same shape as every other vendor driver's
-"live needs real credentials." The nightly treats an acquire-time 404 as
-an explicit skip-with-warning, not a red failure, so it doesn't nag about
-an entitlement we don't have. Fixing the debugging journey's real
-findings stays in the code: startup race (poll+log), per-resource env
-prefixing (`<id>_QRMI_*`), unversioned endpoint base. When a Direct
-Access instance exists, set QRMI_RESOURCE=<da-backend>=IBMQuantumSystem
-(or keep IBMQiskitRuntimeService if the account is Direct-Access-enabled)
-and the same job certifies live.
+Second Phase-2 milestone: the load & soak harness (E4). Boring choices, plus two
+genuine fixes the harness surfaced — which is the point of building it.
+
+**One in-process stack, real code paths, synthetic fleet.** `loadtest.NewStack`
+boots the real store, registry, dispatcher, and API server against a caller-
+provided Postgres, with one `adaptertest.Fake` presenting N targets. The storm
+seeds a backlog and measures scheduler-cycle p99 (read from the dispatcher) and
+API read/write p99 (client-side, over real gRPC) while it drains; the soak
+churns jobs and watches memory, goroutines, and stuck jobs. Same code production
+runs — a load test that stubbed the scheduler would measure nothing.
+
+**Scheduler cycle timing lives in the dispatcher, zero-dependency.** A bounded
+ring buffer (`cycleRing`) records each cycle's duration; `Dispatcher.CycleP99`
+exposes it. A ring, not a slice, so p99 stays computable over a 72h run without
+unbounded sample growth. No Prometheus client was added — the metrics emitter
+stays hand-rolled per the air-gap constraint.
+
+**BUG 1 (throughput): the dispatcher drained one batch per wakeup.** `Run` called
+`cycle` then always waited for a notify or the 5s tick, so a large backlog with
+no new arrivals drained at `claimBatch` (32) per 5s — a 10k backlog would take
+~26 min. Fix: `cycle` now reports how many jobs it *bound*, and `Run` re-cycles
+immediately when it filled a batch AND made progress. Requiring progress avoids a
+hot loop on a batch of currently-infeasible jobs. Draining 400 jobs went 123s →
+2.9s. This is a real scheduler-throughput improvement, not a test artifact.
+
+**BUG 2 (leak): one gRPC stream goroutine leaked per completed job.** `follow`
+opened `WatchTask` on the long-lived dispatcher context and returned on the
+terminal status without cancelling it, so every finished job left a client-side
+stream goroutine alive until process exit — invisible at low volume, unbounded
+over a soak. The smoke soak showed goroutines climbing 1:1 with jobs (peak 1221,
+never released). Fix: each `WatchTask` gets a child context cancelled when the
+task finishes or we reconnect. After the fix, goroutines peak at 24 and return to
+the 20-goroutine baseline; heap growth dropped 80% → 17%. The soak harness exists
+precisely to catch this class of bug, and it did on its first real run.
+
+**Thresholds are the test-plan's, asserted in code.** `MaxSchedulerCycleP99` 2s,
+`MaxAPIReadP99` 300ms, `MaxAPIWriteP99` 1s (`storm.go`); post-warmup heap growth,
+a quiescent-baseline goroutine bound, and zero stuck jobs (`soak.go`). The
+goroutine baseline is captured quiescent *before* load — the honest reference: a
+leak makes the post-drain count exceed it regardless of how many jobs ran. Soak
+"RSS growth < 5%/24h" is asserted in accelerated form: a genuine leak balloons
+the GC'd heap, so a modest growth tripwire catches it without flapping on noise.
+
+**Scheduled + gated.** Storm weekly, soak monthly (`load.yml`), reports published
+as artifacts; a PR touching the harness runs a fast smoke. A breached threshold
+exits non-zero, and `release.yml`'s `perf-gate` runs storm+soak so a performance
+regression blocks the release tag (test-plan §4 accept). The `rabi-load` CLI
+drives the fleet-0-sized variant (1,000 jobs) against a *throwaway* DB — never
+production, since the harness runs its own dispatcher and would double-schedule.
