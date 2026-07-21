@@ -49,7 +49,15 @@ type task struct {
 	status   *adapterv1alpha1.TaskStatus
 	cancel   bool
 	failWith *adapterv1alpha1.ErrorDetail
+	key      string // idempotency key, for eviction from byKey
 }
+
+// fakeTaskCap bounds how many task records the in-process fake retains. A real
+// adapter is a separate process, so its backend history never counts against
+// the control plane's memory; without a cap the fake would accumulate one task
+// per job forever and confound the load & soak harness's heap measurement
+// (P2.M2). Far above any functional test's task count, so those are unaffected.
+const fakeTaskCap = 8192
 
 // Fake implements AdapterService in memory.
 type Fake struct {
@@ -58,6 +66,7 @@ type Fake struct {
 	targets  map[string]*TargetSpec
 	tasks    map[string]*task
 	byKey    map[string]string
+	order    []string // task ids in submission order, for bounded eviction
 	nextID   int
 	sessions map[string]bool
 	garbage  atomic.Bool // when set, results come back semantically corrupt
@@ -262,16 +271,51 @@ func (f *Fake) SubmitTask(_ context.Context, req *adapterv1alpha1.SubmitTaskRequ
 			VendorMessage: "shots above declared max_shots",
 		}
 	}
-	tk := &task{failWith: failWith, status: &adapterv1alpha1.TaskStatus{
+	tk := &task{failWith: failWith, key: key, status: &adapterv1alpha1.TaskStatus{
 		Task: &adapterv1alpha1.TaskRef{
 			Target: &adapterv1alpha1.TargetRef{TargetId: s.ID}, TaskId: id},
 		State:     adapterv1alpha1.TaskStatus_QUEUED,
 		UpdatedAt: timestamppb.Now(),
 	}}
 	f.tasks[id] = tk
+	f.order = append(f.order, id)
+	f.evictTerminal()
 	go f.advance(s, id, req.GetShots())
 	return &adapterv1alpha1.TaskHandle{
 		Target: &adapterv1alpha1.TargetRef{TargetId: s.ID}, TaskId: id}, nil
+}
+
+// evictTerminal drops the oldest terminal tasks once retention exceeds the cap,
+// bounding the fake's memory during a long soak. Non-terminal tasks are kept
+// (an executor may still be watching), so eviction never strands live work.
+// Caller holds f.mu.
+func (f *Fake) evictTerminal() {
+	if len(f.order) <= fakeTaskCap {
+		return
+	}
+	target := len(f.order) - fakeTaskCap
+	kept := f.order[:0]
+	removed := 0
+	for _, id := range f.order {
+		t, ok := f.tasks[id]
+		if ok && removed < target && isTerminalState(t.status.GetState()) {
+			delete(f.tasks, id)
+			delete(f.byKey, t.key)
+			removed++
+			continue
+		}
+		kept = append(kept, id)
+	}
+	f.order = kept
+}
+
+func isTerminalState(s adapterv1alpha1.TaskStatus_State) bool {
+	switch s {
+	case adapterv1alpha1.TaskStatus_SUCCEEDED, adapterv1alpha1.TaskStatus_FAILED,
+		adapterv1alpha1.TaskStatus_CANCELLED:
+		return true
+	}
+	return false
 }
 
 func (f *Fake) advance(s *TargetSpec, id string, shots uint64) {

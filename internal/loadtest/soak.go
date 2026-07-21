@@ -54,7 +54,10 @@ func (c *SoakConfig) withDefaults() {
 		c.ArrivalRate = DefaultSoakArrivalRate
 	}
 	if c.WarmupFraction == 0 {
-		c.WarmupFraction = 0.2
+		// Baseline late enough that the working set — including the fake's
+		// capped task retention — has stabilized, so post-warmup growth measures
+		// leaks, not warm-up fill.
+		c.WarmupFraction = 0.35
 	}
 	if c.StuckJobMaxAge == 0 {
 		c.StuckJobMaxAge = DefaultStuckJobMaxAge

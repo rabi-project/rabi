@@ -760,6 +760,16 @@ leak makes the post-drain count exceed it regardless of how many jobs ran. Soak
 "RSS growth < 5%/24h" is asserted in accelerated form: a genuine leak balloons
 the GC'd heap, so a modest growth tripwire catches it without flapping on noise.
 
+**The in-process fake needed a retention cap.** The first full-scale CI soak
+(36k jobs) tripped the heap tripwire at 244% — not a product leak (goroutines
+were flat) but the `adaptertest.Fake` retaining every task record in a map. A
+real adapter is a separate process, so its backend history never counts against
+the control plane; the in-process fake does. Fix: the fake now evicts oldest
+*terminal* tasks past a cap (8192, far above any functional test), so its memory
+plateaus and the soak's whole-process heap reflects the control plane. Growth at
+18k jobs fell 244% → 32%. The heap baseline is also taken later (35% warmup) so
+the working set — fake cap included — has stabilized before it's measured.
+
 **Scheduled + gated.** Storm weekly, soak monthly (`load.yml`), reports published
 as artifacts; a PR touching the harness runs a fast smoke. A breached threshold
 exits non-zero, and `release.yml`'s `perf-gate` runs storm+soak so a performance
