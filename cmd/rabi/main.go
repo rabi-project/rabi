@@ -16,6 +16,7 @@ import (
 
 	"github.com/rabi-project/rabi/internal/api"
 	"github.com/rabi-project/rabi/internal/dispatch"
+	"github.com/rabi-project/rabi/internal/ha"
 	"github.com/rabi-project/rabi/internal/job"
 	"github.com/rabi-project/rabi/internal/probe"
 	"github.com/rabi-project/rabi/internal/registry"
@@ -130,6 +131,19 @@ func main() {
 	if err := enableShadowPolicies(dispatcher, os.Getenv("RABI_SHADOW_POLICIES"), logger); err != nil {
 		logger.Error("configuring shadow policies", "error", err)
 		os.Exit(1)
+	}
+	// HA leader election (P2.M8+): OFF by default. When on, only the leader runs
+	// scheduling cycles; a standby waits. Correctness does not depend on it (the
+	// binder is row-locked), so this is a performance/coordination optimization.
+	if os.Getenv("RABI_HA_LEADER_ELECTION") == "true" {
+		elector, err := ha.NewElector(ctx, dbURL, ha.DefaultLockKey, 2*time.Second, logger)
+		if err != nil {
+			logger.Error("configuring leader election", "error", err)
+			os.Exit(1)
+		}
+		go elector.Campaign(ctx)
+		dispatcher.SetLeaderGate(elector.IsLeader)
+		logger.Info("HA leader election enabled (advisory-lock)")
 	}
 	go dispatcher.Run(ctx)
 

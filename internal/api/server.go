@@ -128,6 +128,19 @@ func (s *Server) Run(ctx context.Context) error {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok\n"))
 	})
+	// Readiness (P2.M8+): serve traffic only when the datastore is reachable.
+	// Liveness (/healthz) says "the process is up"; readiness says "it can work".
+	httpMux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+		if err := s.cfg.Store.Pool.Ping(ctx); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte("not ready: database unreachable\n"))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ready\n"))
+	})
 	httpMux.Handle("/", gwMux)
 	s.http = &http.Server{Addr: s.cfg.HTTPAddr, Handler: httpMux, ReadHeaderTimeout: 10 * time.Second}
 

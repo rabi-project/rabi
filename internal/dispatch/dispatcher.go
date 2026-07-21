@@ -55,9 +55,16 @@ type Dispatcher struct {
 	inFlight map[string]bool // job ids with an active executor goroutine
 	wg       sync.WaitGroup
 
-	cycles *cycleRing                   // scheduler-cycle latency, for the load & soak harness
-	shadow []scheduler.SchedulingPolicy // candidate policies evaluated but never executed (P2.M5)
+	cycles     *cycleRing                   // scheduler-cycle latency, for the load & soak harness
+	shadow     []scheduler.SchedulingPolicy // candidate policies evaluated but never executed (P2.M5)
+	leaderGate func() bool                  // when set, only cycle while it returns true (P2.M8+)
 }
+
+// SetLeaderGate installs an optional leadership predicate: while it returns
+// false this dispatcher does not run scheduling cycles (a standby waits). Nil
+// (the default) means always schedule — safe because the row-locked binder makes
+// double-binding impossible regardless (P2.M8+). Set before Run.
+func (d *Dispatcher) SetLeaderGate(fn func() bool) { d.leaderGate = fn }
 
 // EnableShadow registers candidate ("shadow") policies. On every scheduling
 // decision each computes the placement it WOULD make; the result is recorded
@@ -92,6 +99,15 @@ func New(st *store.Store, reg *registry.Registry, policyName string, logger *slo
 func (d *Dispatcher) Run(ctx context.Context) {
 	d.resume(ctx)
 	for ctx.Err() == nil {
+		// HA (P2.M8+): a standby holds off scheduling until it is leader. The
+		// binder stays correct either way; this just avoids redundant work.
+		if d.leaderGate != nil && !d.leaderGate() {
+			select {
+			case <-time.After(cycleEvery):
+			case <-ctx.Done():
+			}
+			continue
+		}
 		claimed, bound := d.cycle(ctx)
 		// A full batch that made progress means the backlog almost certainly
 		// holds more schedulable work: cycle again immediately rather than

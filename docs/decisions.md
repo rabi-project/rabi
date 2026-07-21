@@ -1019,3 +1019,36 @@ single-node Slurm on the runner. In production the quantum stage points
 it; the in-cluster stack exists only to keep the example self-contained.
 
 Linked from the landing README's "Why Rabi" (the CPU/GPU boundary callout).
+
+## D-057 · 2026-07-21 · P2-M8+ HA-readiness mechanics (sanctioned overflow)
+
+Wave A finished before the pilot-gate file exists, so the plan sanctions the
+pilot-INDEPENDENT high-availability mechanics. Built exactly those; topology and
+pilot-shaped decisions stay Wave B.
+
+**Double-binding is already impossible — now it is a test.** `BindJob` selects
+`FOR UPDATE SKIP LOCKED` and rejects a non-PENDING job, so a job can be bound
+once. `TestBindJob_NoDoubleBindUnderConcurrency` fires 100 goroutines at the same
+job and asserts exactly one bind succeeds and exactly one task row exists.
+Replica safety is a property of the binder, not of leader election — which is why
+leader election can default OFF.
+
+**Leader election is a Postgres advisory lock, no new infrastructure.**
+`internal/ha.Elector` holds a session-level `pg_try_advisory_lock` on a dedicated
+connection; the holder is leader. If its process dies, the session ends and
+Postgres releases the lock automatically, so a standby's next attempt wins — the
+failover path needs no coordinator. `TestFailoverDrill` runs two electors, proves
+only one leads, kills the leader, and measures the recovery time (RTO ≈ one poll
+interval, ~105 ms in the test). The dispatcher gains an optional `SetLeaderGate`:
+when set, a standby holds off scheduling; nil (default) always schedules, safe
+because of the binder.
+
+**Flag defaults OFF.** `RABI_HA_LEADER_ELECTION=true` enables it in `cmd/rabi`;
+unset, every process schedules (correct, just not coordinated). Health/readiness
+split: `/healthz` (liveness, unchanged) and new `/readyz` (readiness — 200 only
+when the datastore is reachable).
+
+**Explicitly OUT of scope, even here:** deployment topology, managed-vs-local
+Postgres posture, and site-shaped failover expectations (RTO/RPO targets tied to
+a site). Those consume pilot-gate fields and remain Wave B (M9). This milestone
+is the mechanics; the posture is the pilot's.
