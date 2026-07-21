@@ -93,17 +93,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y slurm-wlm munge jq
-          sudo /usr/sbin/create-munge-key -f || sudo bash -c 'dd if=/dev/urandom bs=1 count=1024 > /etc/munge/munge.key'
+          sudo bash -c 'dd if=/dev/urandom bs=1 count=1024 > /etc/munge/munge.key'
           sudo chown munge:munge /etc/munge/munge.key && sudo chmod 400 /etc/munge/munge.key
           cpus=$(nproc)
           sudo tee /etc/slurm/slurm.conf >/dev/null <<EOF
           ClusterName=hybrid
           SlurmctldHost=localhost
           SlurmUser=slurm
+          AuthType=auth/munge
           StateSaveLocation=/var/spool/slurmctld
           SlurmdSpoolDir=/var/spool/slurmd
           ProctrackType=proctrack/linuxproc
-          TaskType=task/none
+          TaskPlugin=task/none
           SchedulerType=sched/backfill
           SelectType=select/cons_tres
           NodeName=localhost CPUs=${cpus} State=UNKNOWN
@@ -111,10 +112,15 @@ jobs:
           EOF
           sudo mkdir -p /var/spool/slurmctld /var/spool/slurmd
           sudo chown slurm: /var/spool/slurmctld
-          sudo systemctl start munge
-          sudo slurmctld && sudo slurmd
+          sudo systemctl restart munge
+          sudo slurmctld
+          sudo slurmd
           sleep 3
+          sudo scontrol update NodeName=localhost State=RESUME || true
+          sleep 1
           sinfo
+          # Fail fast if the partition has no idle node.
+          sinfo -h -o '%a %t' | grep -q idle || { echo "no idle node"; sudo cat /var/log/slurm*/*.log 2>/dev/null | tail -30; exit 1; }
       - name: submit hybrid batch and wait
         run: |
           export RABI_SERVER=localhost:9090 RABI_TOKEN=dev-key
