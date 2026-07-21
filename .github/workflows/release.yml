@@ -54,6 +54,10 @@ jobs:
     needs: [cve-gate, perf-gate]
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: write
+      id-token: write # provenance attestation (OIDC)
+      attestations: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -63,11 +67,11 @@ jobs:
         run: |
           mkdir -p dist
           VERSION="${GITHUB_REF_NAME}"
-          # qctl is the client users install (kubectl-style); rabi and
-          # rabi-conformance ship too for operators.
+          # qctl is the client users install (kubectl-style); rabi and the
+          # operator tools (rabi-conformance, rabi-chaos, rabi-load) ship too.
           for OSARCH in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64; do
             GOOS="${OSARCH%/*}"; GOARCH="${OSARCH#*/}"
-            for BIN in qctl rabi rabi-conformance; do
+            for BIN in qctl rabi rabi-conformance rabi-chaos rabi-load; do
               CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" go build \
                 -ldflags "-X main.version=$VERSION" \
                 -o "dist/${BIN}-${GOOS}-${GOARCH}" "./cmd/$BIN"
@@ -76,12 +80,23 @@ jobs:
           ( cd dist && sha256sum * > SHA256SUMS )
       - name: conformance reports (all in-tree adapters)
         run: ./hack/conformance-report.sh dist/conformance
+      - name: SBOM (SPDX) for the module + dependencies
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: dist/rabi.spdx.json
+          artifact-name: rabi.spdx.json
+      - name: build-provenance attestation for the release binaries
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: "dist/qctl-*, dist/rabi-*, dist/rabi.spdx.json"
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/qctl-*
             dist/rabi-*
-            dist/rabi-conformance-*
+            dist/rabi.spdx.json
             dist/SHA256SUMS
           generate_release_notes: true
 

@@ -8,6 +8,7 @@ dist/
 bench/out*/
 bench/det-*/
 *.test
+*.mutbak
 coverage.out
 __pycache__/
 *.pyc

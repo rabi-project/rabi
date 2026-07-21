@@ -82,7 +82,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer st.Close()
-	logger.Info("store ready", "url", dbURL)
+	logger.Info("store ready", "url", store.RedactDSN(dbURL))
 
 	reg, err := registry.NewFromSpec(os.Getenv("RABI_ADAPTERS"))
 	if err != nil {

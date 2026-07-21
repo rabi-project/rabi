@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: Apache-2.0
+# Security wave (phase2-build-plan.md P2.M4): fuzzing every untrusted-input
+# parser and mutation-testing the scheduler + FSM. The CVE gate, SBOM, and
+# provenance attestation live in release.yml; the log-secret and DSN-redaction
+# tests run in the normal `ci` suite.
+name: security
+
+on:
+  schedule:
+    - cron: "13 5 * * 4"  # fuzz: Thursdays 05:13 UTC
+    - cron: "13 6 1 1,4,7,10 *"  # mutation: quarterly, 1st of Jan/Apr/Jul/Oct
+  workflow_dispatch:
+    inputs:
+      fuzztime:
+        description: executions per fuzz target (Nx) or duration (e.g. 60s)
+        default: "1000000x"
+  pull_request:
+    paths:
+      - "internal/scheduler/**"
+      - "internal/job/**"
+      - "internal/dispatch/**"
+      - "internal/accounting/**"
+      - "hack/mutation-test.sh"
+      - ".github/workflows/security.yml"
+
+jobs:
+  # Each untrusted-input parser is fuzzed for >= 1,000,000 executions with zero
+  # crashes/hangs. Committed seed corpora live in the FuzzX functions (f.Add).
+  fuzz:
+    if: github.event.schedule != '13 6 1 1,4,7,10 *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { pkg: ./internal/scheduler/, fn: FuzzProfileQASM }
+          - { pkg: ./internal/job/, fn: FuzzAdmit }
+          - { pkg: ./internal/dispatch/, fn: FuzzPayloadFor }
+          - { pkg: ./internal/dispatch/, fn: FuzzResultDecode }
+          - { pkg: ./internal/accounting/, fn: FuzzParsePolicy }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: fuzz ${{ matrix.fn }} (>= 1M execs, zero crashers)
+        run: go test ${{ matrix.pkg }} -run '^$' -fuzz '^${{ matrix.fn }}$' -fuzztime '${{ github.event.inputs.fuzztime || ''1000000x'' }}'
+      - name: upload any crashers
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashers-${{ matrix.fn }}
+          path: internal/**/testdata/fuzz/**
+
+  # Mutation testing on the scheduler + FSM. A surviving mutant is a test gap;
+  # efficacy must meet the floor (a planted logic mutant must be killed).
+  mutation:
+    if: github.event.schedule != '13 5 * * 4'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: mutation testing (scheduler + FSM)
+        run: ./hack/mutation-test.sh

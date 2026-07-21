@@ -823,3 +823,49 @@ stay up so in-flight tasks survive and `resume()` re-attaches), health-gate on
 `/healthz`, roll back by reverting the tag (additive schema). CI runs the whole
 suite weekly (`upgrade.yml`) and on any PR touching migrations, the store, the
 dispatcher, or the goldens.
+
+## D-052 · 2026-07-21 · P2-M4 security wave — fuzzing, supply chain, secret hygiene, mutation
+
+Fourth Phase-2 milestone: the security wave (E4). Findings and boring choices.
+
+**Fuzzing every untrusted-input parser.** Native Go fuzz harnesses for the four
+parsers that touch attacker-controlled bytes: OpenQASM ingestion
+(`FuzzProfileQASM`), admission (`FuzzAdmit`, JSON → map → `Admit`), adapter
+result decoding (`FuzzPayloadFor`, `FuzzResultDecode`), and policy YAML
+(`FuzzParsePolicy`). Seed corpora are committed in the `f.Add` calls. CI runs
+each for ≥ 1,000,000 executions (`-fuzztime=1000000x`) weekly and on any parser
+PR. Result: 18M+ executions against `Admit` alone, **zero crashers** — the
+flagged unchecked type assertions are in fact guarded by JSON-Schema validation
+running first. Good news, now enforced.
+
+**BUG (secret hygiene): the DB password was logged at startup.** `cmd/rabi`
+logged `"store ready", "url", dbURL` — and the DSN embeds the password
+(`postgres://rabi:PASSWORD@…`). Fix: `store.RedactDSN` masks the password (URL
+and libpq keyword forms) and the startup log uses it. A new log-scan test
+(`TestNoSecretsInLogs`) drives the authenticator with sentinel bootstrap/bearer
+values and asserts neither reaches the log stream, then proves the scanner has
+teeth by planting one. Tokens were already hashed-at-rest and compared in
+constant time; this closes the one place a credential leaked in cleartext.
+
+**Supply chain on releases.** `release.yml` now generates an SPDX SBOM (syft via
+anchore/sbom-action) and a signed build-provenance attestation
+(`actions/attest-build-provenance`, keyless OIDC) for the binaries and SBOM,
+published alongside `SHA256SUMS`. The operator tools (`rabi-chaos`, `rabi-load`)
+join the shipped binaries. The CVE gate (govulncheck + trivy) stays blocking.
+
+**Mutation testing without gremlins.** gremlins 0.5.0 does not run under this
+module (its module-wide coverage baseline pulls in the testcontainer suites and
+every mutant reports "timed out"). Rather than depend on a stale tool, the
+mutation harness is a small curated script (`hack/mutation-test.sh`): each mutant
+is one semantic edit to a load-bearing line in the FSM (`phase.go`) or the
+scheduler filter (`filter.go`) — negate a terminal check, invert a transition,
+flip a `>` to `<`. A mutant is KILLED when the pure `internal/job` +
+`internal/scheduler` tests fail with it applied. Both packages are Docker-free,
+so it runs anywhere. Result: 9/9 mutants killed, 100% efficacy (floor 65%),
+proving the suite catches planted logic errors. Runs quarterly and on any
+scheduler/FSM PR. Curated mutants are the honest bootstrap; the list grows as
+the code does.
+
+**SECURITY.md** publishes the disclosure process (GitHub private advisories),
+response-time commitments (ack ≤ 3 business days, triage ≤ 7, critical fix ≤ 30
+days), and coordinated-disclosure terms.
