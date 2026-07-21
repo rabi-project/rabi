@@ -869,3 +869,56 @@ the code does.
 **SECURITY.md** publishes the disclosure process (GitHub private advisories),
 response-time commitments (ack ≤ 3 business days, triage ≤ 7, critical fix ≤ 30
 days), and coordinated-disclosure terms.
+
+## D-053 · 2026-07-21 · P2-M5 shadow scheduling & policy promotion
+
+Fifth Phase-2 milestone: the machinery that turns scheduling changes from claims
+into evidence-gated promotions. Boring choices, and the two testable acceptance
+criteria met in code.
+
+**Shadow evaluation hooks the dispatcher, not `Schedule`.** On every decision,
+each candidate ("shadow") policy computes the placement it WOULD make over the
+SAME fleet snapshot — recorded to `shadow_placements` (migration 00010,
+append-only), never bound. The hook is in `dispatchOne`, computing the fleet
+once and reusing it, because the pure `scheduler.Schedule` path is regression-
+locked by the golden tests; touching it there would be fragile. Candidates are
+named in `RABI_SHADOW_POLICIES` and wired before `Run` so the shadow set is
+never mutated concurrently.
+
+**The fidelity/wait proxy is policy-independent.** A shadow row needs a
+comparable ESP and wait for whatever target each policy chose, but fifo doesn't
+predict ESP. So the proxy is computed from the chosen target directly —
+`scheduler.PredictedESP(job, target)` (exported: `ESP(profileFor(j), t)`) and
+`TargetView.WaitSeconds` — putting every policy on the same footing regardless
+of what it does internally. Infeasible placements record NULL proxies.
+
+**Promotion is a confident fidelity gain without a confident SLO regression.**
+`internal/shadow.Analyze` computes the ESP delta, an SLO-proxy delta (violation
+= placement below a quality floor), and the wait delta, each with a
+deterministic bootstrap 95% CI. `Promotable` requires ≥100 paired samples, an
+ESP-delta CI entirely above 0, and an SLO-delta CI not entirely above 0. Wait is
+reported but not gated — calibration-aware policies trade wait for fidelity by
+design. **A deliberately-worse policy has a negative ESP-delta CI and is
+correctly not promotable** (tested). `rabi-shadow report` renders this;
+`--require-promotable` makes it a gate.
+
+**Benchmark-as-regression gate.** `internal/benchgate` compares Artifact B's
+committed `summary.csv` headline metrics for the value-carrying policy
+(`calib-aware/v0`) against a pinned `bench/baseline.json`. A >5% regression on
+fidelity, deadline-met, or SLO-violation rate blocks the release
+(`release.yml` `bench-gate`, `cmd/rabi-bench-gate`) **unless** `--rfc RFC-XXXX`
+justifies a deliberate trade-off — at which point the baseline moves in a
+promotion PR. A planted 15% fidelity drop is blocked; the stock results pass
+(both tested).
+
+**Changing the default is human-gated.** The default policy is a named constant
+`dispatch.DefaultPolicy`; `.github/workflows/policy-guard.yml` fails any PR that
+changes it (or moves `bench/baseline.json`) without the `policy-promotion`
+label. The label is applied by a human after reviewing the shadow evidence — the
+guard enforces the process, not the judgment.
+
+**Forward dependency:** "shadow reports over ≥2 weeks of fleet-0 operation" is
+operational — the machinery, storage, report, and `RABI_SHADOW_POLICIES` config
+ship now; the 2-week accumulation happens on fleet-0. M6's absorbed policies are
+the first real candidates to shadow (compose default active policy is already
+`calib-aware/v0`, so a candidate must differ).

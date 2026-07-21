@@ -6,9 +6,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -17,6 +19,7 @@ import (
 	"github.com/rabi-project/rabi/internal/job"
 	"github.com/rabi-project/rabi/internal/probe"
 	"github.com/rabi-project/rabi/internal/registry"
+	"github.com/rabi-project/rabi/internal/scheduler"
 	"github.com/rabi-project/rabi/internal/store"
 )
 
@@ -61,6 +64,31 @@ func envOr(key, fallback string) string {
 	return fallback
 }
 
+// enableShadowPolicies wires the comma-separated candidate policy names into the
+// dispatcher as shadow evaluators (P2.M5). An unknown name is a hard error — a
+// misconfigured shadow set should fail loudly at startup, not silently drop.
+func enableShadowPolicies(d *dispatch.Dispatcher, spec string, logger *slog.Logger) error {
+	spec = strings.TrimSpace(spec)
+	if spec == "" {
+		return nil
+	}
+	var policies []scheduler.SchedulingPolicy
+	for _, name := range strings.Split(spec, ",") {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			continue
+		}
+		p, err := scheduler.Lookup(name)
+		if err != nil {
+			return fmt.Errorf("shadow policy %q: %w", name, err)
+		}
+		policies = append(policies, p)
+		logger.Info("shadow policy enabled", "policy", name)
+	}
+	d.EnableShadow(policies...)
+	return nil
+}
+
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 	slog.SetDefault(logger)
@@ -94,6 +122,13 @@ func main() {
 	dispatcher, err := dispatch.New(st, reg, os.Getenv("RABI_POLICY"), logger)
 	if err != nil {
 		logger.Error("configuring scheduling policy", "error", err)
+		os.Exit(1)
+	}
+	// Shadow policies (P2.M5): candidate policies named in RABI_SHADOW_POLICIES
+	// are evaluated on every decision and recorded, never executed. Enabled
+	// before Run so the dispatcher never mutates its shadow set concurrently.
+	if err := enableShadowPolicies(dispatcher, os.Getenv("RABI_SHADOW_POLICIES"), logger); err != nil {
+		logger.Error("configuring shadow policies", "error", err)
 		os.Exit(1)
 	}
 	go dispatcher.Run(ctx)

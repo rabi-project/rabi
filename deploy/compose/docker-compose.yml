@@ -105,6 +105,11 @@ services:
       RABI_HTTP_ADDR: ":8080"
       RABI_ADAPTERS: "sim=adapter-aer:50051${RABI_ADAPTERS_EXTRA:-}"
       RABI_POLICY: ${RABI_POLICY:-calib-aware/v0}
+      # Candidate policies evaluated in shadow (P2.M5): computed on every
+      # decision, recorded, never executed. Compare with `rabi-shadow report`.
+      # Empty by default; fleet-0 sets it to the candidate under evaluation
+      # (M6's absorbed policies land here). Shadowing the active policy is a no-op.
+      RABI_SHADOW_POLICIES: ${RABI_SHADOW_POLICIES:-}
       RABI_RECONCILE_EVERY: ${RABI_RECONCILE_EVERY:-}
       RABI_PROBE_EVERY: ${RABI_PROBE_EVERY:-15m}
     ports:

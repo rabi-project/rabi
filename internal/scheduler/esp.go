@@ -93,3 +93,12 @@ func maxInt(a, b int) int {
 	}
 	return b
 }
+
+// PredictedESP is the fidelity proxy for placing job j on target t: the ESP of
+// the job's circuit profile (or a width-derived fallback) against the target's
+// current calibration. It is policy-independent, so the shadow-scheduling
+// pipeline (P2.M5) can compare where any two policies would place a job on the
+// same footing, regardless of whether either policy predicts ESP itself.
+func PredictedESP(j *JobView, t *TargetView) float64 {
+	return ESP(profileFor(j), t)
+}

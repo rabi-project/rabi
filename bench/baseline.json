@@ -1,0 +1,8 @@
+{
+  "_note": "Pinned headline metrics for the value-carrying policy, from bench/results/summary.csv (Artifact B). The benchmark-as-regression gate (P2.M5, internal/benchgate) blocks a release when the regenerated benchmark regresses more than 5% against these numbers. This file moves only in a human-approved PR labeled policy-promotion, with an RFC-referenced justification.",
+  "policy": "calib-aware/v0",
+  "mean_fidelity": 0.407417,
+  "slo_violation_rate": 0.0,
+  "deadline_met_rate": 0.970149,
+  "mean_wait_s": 718.734
+}

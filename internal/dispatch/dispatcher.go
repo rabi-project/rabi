@@ -37,6 +37,12 @@ const (
 	watchBackoff = time.Second
 )
 
+// DefaultPolicy is the scheduling policy used when RABI_POLICY is unset.
+// Changing it is a policy promotion: it requires a human-approved PR labeled
+// `policy-promotion` (enforced by .github/workflows/policy-guard.yml), backed by
+// the shadow-scheduling evidence (P2.M5). Do not change it casually.
+const DefaultPolicy = "fifo/v0"
+
 // Dispatcher owns the job execution loop. One instance per rabi process.
 type Dispatcher struct {
 	store  *store.Store
@@ -49,7 +55,16 @@ type Dispatcher struct {
 	inFlight map[string]bool // job ids with an active executor goroutine
 	wg       sync.WaitGroup
 
-	cycles *cycleRing // scheduler-cycle latency, for the load & soak harness
+	cycles *cycleRing                   // scheduler-cycle latency, for the load & soak harness
+	shadow []scheduler.SchedulingPolicy // candidate policies evaluated but never executed (P2.M5)
+}
+
+// EnableShadow registers candidate ("shadow") policies. On every scheduling
+// decision each computes the placement it WOULD make; the result is recorded
+// for the promotion pipeline but never executed and never affects the active
+// decision (phase2-build-plan.md P2.M5). Idempotent-ish: call once at startup.
+func (d *Dispatcher) EnableShadow(policies ...scheduler.SchedulingPolicy) {
+	d.shadow = append(d.shadow, policies...)
 }
 
 // New wires the dispatcher with the named scheduling policy (RABI_POLICY;
@@ -59,7 +74,7 @@ func New(st *store.Store, reg *registry.Registry, policyName string, logger *slo
 		logger = slog.Default()
 	}
 	if policyName == "" {
-		policyName = "fifo/v0"
+		policyName = DefaultPolicy
 	}
 	policy, err := scheduler.Lookup(policyName)
 	if err != nil {
@@ -155,7 +170,15 @@ func (d *Dispatcher) dispatchOne(ctx context.Context, rec *store.JobRecord) bool
 	if _, ok := d.sessionAffinity(ctx, rec, jobView); !ok {
 		return false // failed with SESSION_LOST; never silently rescheduled
 	}
-	decision := scheduler.Schedule(d.policy, jobView, d.fleetViews(), d.now())
+	now := d.now()
+	fleet := d.fleetViews()
+	decision := scheduler.Schedule(d.policy, jobView, fleet, now)
+	// Shadow: candidate policies compute their placement over the SAME fleet
+	// snapshot, recorded but never executed. Cheap (scoring only) and isolated
+	// from the active path.
+	if len(d.shadow) > 0 {
+		d.recordShadow(ctx, jobView, decision, fleet, now)
+	}
 	if decision.Target == "" {
 		if d.resolveConflict(ctx, rec, jobView, decision) {
 			return false
@@ -185,6 +208,63 @@ func (d *Dispatcher) dispatchOne(ctx context.Context, rec *store.JobRecord) bool
 		"policy", decision.Policy, "task", taskID)
 	d.startExecutor(ctx, bound, taskID, decision.Target)
 	return true
+}
+
+// recordShadow computes each candidate policy's placement over the same fleet
+// snapshot the active policy saw, and records the comparison with a
+// policy-independent fidelity/wait proxy for each chosen target. Best-effort: a
+// recording failure must never disturb the active decision.
+func (d *Dispatcher) recordShadow(ctx context.Context, j *scheduler.JobView, active scheduler.Decision,
+	fleet []*scheduler.TargetView, now time.Time) {
+
+	for _, p := range d.shadow {
+		if p.Name() == active.Policy {
+			continue // shadowing the active policy against itself is a no-op
+		}
+		sd := scheduler.Schedule(p, j, fleet, now)
+		sp := store.ShadowPlacement{
+			JobID: j.ID, Tenant: j.Tenant, Policy: p.Name(), ActivePolicy: active.Policy,
+			ActiveTarget: active.Target, ShadowTarget: sd.Target,
+			Agreed:     active.Target == sd.Target,
+			ActiveESP:  targetESP(j, fleet, active.Target),
+			ShadowESP:  targetESP(j, fleet, sd.Target),
+			ActiveWait: targetWait(fleet, active.Target),
+			ShadowWait: targetWait(fleet, sd.Target),
+		}
+		if err := d.store.RecordShadowPlacement(ctx, sp); err != nil {
+			d.logger.Warn("recording shadow placement", "policy", p.Name(), "job", j.ID, "error", err)
+		}
+	}
+}
+
+func findTargetView(fleet []*scheduler.TargetView, name string) *scheduler.TargetView {
+	if name == "" {
+		return nil
+	}
+	for _, t := range fleet {
+		if t.Name == name {
+			return t
+		}
+	}
+	return nil
+}
+
+func targetESP(j *scheduler.JobView, fleet []*scheduler.TargetView, name string) *float64 {
+	t := findTargetView(fleet, name)
+	if t == nil {
+		return nil
+	}
+	v := scheduler.PredictedESP(j, t)
+	return &v
+}
+
+func targetWait(fleet []*scheduler.TargetView, name string) *float64 {
+	t := findTargetView(fleet, name)
+	if t == nil {
+		return nil
+	}
+	v := t.WaitSeconds
+	return &v
 }
 
 // fleetViews converts the registry cache into the scheduler's plain values.

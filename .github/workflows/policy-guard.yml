@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: Apache-2.0
+# Policy-promotion guard (phase2-build-plan.md P2.M5 hard constraint): changing
+# the default scheduling policy is a promotion and requires a human-approved PR
+# labeled `policy-promotion`, backed by shadow-scheduling evidence. This blocks
+# a silent default change; it does not judge the evidence — a human applies the
+# label after reviewing the shadow report.
+name: policy-guard
+
+on:
+  pull_request:
+    paths:
+      - "internal/dispatch/dispatcher.go"
+      - "bench/baseline.json"
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: require policy-promotion label to change the default policy or the bench baseline
+        env:
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          changed=0
+          # The default policy constant.
+          if git diff "$BASE" "$HEAD" -- internal/dispatch/dispatcher.go | grep -qE '^[-+].*DefaultPolicy[[:space:]]*='; then
+            echo "This PR changes the default scheduling policy (DefaultPolicy)."
+            changed=1
+          fi
+          # The pinned benchmark baseline (moving it accepts a new headline number).
+          if git diff "$BASE" "$HEAD" -- bench/baseline.json | grep -qE '^[-+][[:space:]]*"(mean_fidelity|slo_violation_rate|deadline_met_rate)"'; then
+            echo "This PR moves the pinned benchmark baseline."
+            changed=1
+          fi
+          if [ "$changed" -eq 0 ]; then
+            echo "No guarded change; OK."
+            exit 0
+          fi
+          case ",$LABELS," in
+            *,policy-promotion,*)
+              echo "policy-promotion label present — approved."
+              ;;
+            *)
+              echo "::error::A policy promotion (default-policy or bench-baseline change) requires the 'policy-promotion' label and shadow-scheduling evidence."
+              exit 1
+              ;;
+          esac
