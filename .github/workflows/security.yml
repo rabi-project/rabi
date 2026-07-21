@@ -45,7 +45,9 @@ jobs:
         with:
           go-version: "1.26"
       - name: fuzz ${{ matrix.fn }} (>= 1M execs, zero crashers)
-        run: go test ${{ matrix.pkg }} -run '^$' -fuzz '^${{ matrix.fn }}$' -fuzztime '${{ github.event.inputs.fuzztime || ''1000000x'' }}'
+        env:
+          FUZZTIME: ${{ github.event.inputs.fuzztime }}
+        run: go test ${{ matrix.pkg }} -run '^$' -fuzz '^${{ matrix.fn }}$' -fuzztime "${FUZZTIME:-1000000x}"
       - name: upload any crashers
         if: failure()
         uses: actions/upload-artifact@v4
