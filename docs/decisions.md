@@ -956,3 +956,39 @@ prefers fresh calibration).
 
 **Human hook (not agent work):** these implementations are the artifacts for
 recruiting the papers' authors as maintainers — flagged as merged.
+
+## D-055 · 2026-07-21 · P2-M7 ops formalization & public status page
+
+Seventh Phase-2 milestone. The status page also resolves M1's forward
+dependency — the supervised game-day annotation now has somewhere to render.
+
+**The status page is rendered by the control plane, not a service.** `/status`
+is a new unauthenticated endpoint (aggregate-only, like `/healthz` and
+`/metrics`) that renders a self-contained static HTML document from the database
+on each request (`internal/status`): uptime, days-since-a-job-was-lost (a job is
+"lost" if non-terminal past 24h — the invariant suite's definition), probe
+success rate, median estimator calibration error **with the probe-circuit caveat
+printed honestly**, accounting-reconciliation state, and the last game-day result
+(`Store.LastGameDay`, the M1 hook). A single `Healthy`/`Degraded` badge answers
+"is Rabi healthy?" and the cards answer "how do you know?" — no external
+infrastructure, matching the no-new-infra constraint. Verified end to end (`GET
+/status` → 200, all sections render).
+
+**Backup → restore is a scripted, published drill.** `hack/backup-restore-drill.sh`
+pg_dumps the live database, restores into a throwaway database, and verifies the
+measurement tables (jobs, job_events, usage_ledger, tasks) match row-for-row,
+emitting a JSON result. `ops.yml` runs it monthly and publishes the artifact.
+Restores never touch production; the drill database is dropped on exit.
+
+**Runbooks and a drill calendar.** `docs/runbooks.md` covers the five most likely
+operator pages (stuck PENDING, adapter offline, Postgres down, queue not
+draining, reconciliation mismatch), each with confirm/cause/fix.
+`docs/ops-calendar.md` is the single schedule of every drill (game-day, storm,
+soak, upgrade, backup-restore, fuzz, mutation), its automation, and where its
+result is published.
+
+**Forward dependency:** "two consecutive scheduled drills executed and published"
+and "status page live at fleet-0's address" are operational — the endpoint, the
+drill, and the schedules ship now; the two-month drill history and the fleet-0
+deploy accrue in operation. The supervised fleet-0 game-day (M1) records into
+`game_days` and this page renders it, closing that loop.

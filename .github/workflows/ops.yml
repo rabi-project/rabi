@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: Apache-2.0
+# Ops drills (phase2-build-plan.md P2.M7): the monthly backup → restore drill,
+# scripted and with its JSON result published as an artifact. The game-day
+# (chaos) drills live in chaos.yml; this is the data-durability drill.
+name: ops
+
+on:
+  schedule:
+    - cron: "27 7 1 * *" # 1st of month, 07:27 UTC
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "hack/backup-restore-drill.sh"
+      - ".github/workflows/ops.yml"
+
+jobs:
+  backup-restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env: { POSTGRES_USER: rabi, POSTGRES_PASSWORD: rabi, POSTGRES_DB: rabi }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U rabi -d rabi"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      DSN: postgres://rabi:rabi@localhost:5432/rabi?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: install postgresql-client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: migrate schema (start rabi briefly)
+        run: |
+          go build -o /tmp/rabi ./cmd/rabi
+          RABI_DB_URL="$DSN" RABI_ADAPTERS="" RABI_BOOTSTRAP_TOKEN=dev-key \
+            RABI_HTTP_ADDR=127.0.0.1:18080 RABI_GRPC_ADDR=127.0.0.1:19090 \
+            RABI_PROBE_EVERY=off /tmp/rabi & sleep 5; kill %1 || true
+      - name: seed representative rows
+        run: |
+          psql "$DSN" -q -c "INSERT INTO jobs (job_id,tenant,name,phase,doc,status) VALUES (gen_random_uuid(),'acme/qa','drill','SUCCEEDED','{}','{}');"
+      - name: backup → restore drill
+        run: SRC_DSN="$DSN" ./hack/backup-restore-drill.sh --out drill.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backup-restore-drill
+          path: drill.json
