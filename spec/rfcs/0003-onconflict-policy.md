@@ -1,7 +1,7 @@
 # RFC-0003: Explicit deadline/quality-floor conflict policy (`scheduling.onConflict`)
 
 - **Status:** Accepted (2026-07-18)
-- **Author(s):** Edward (Levangie Laboratories), drafted with Claude
+- **Author(s):** Edward (Levangie Laboratories)
 - **Created:** 2026-07-18
 - **Affects:** `spec/quantumjob.md`, `schemas/quantumjob.schema.json`, `spec/overview.md` §3–4 (conditions), scheduler conformance + goldens
 

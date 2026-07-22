@@ -1,7 +1,7 @@
 # RFC-0002: Quality-floor evaluation semantics (`best`-value aggregate, with override)
 
 - **Status:** Accepted (2026-07-18)
-- **Author(s):** Edward (Levangie Laboratories), drafted with Claude
+- **Author(s):** Edward (Levangie Laboratories)
 - **Created:** 2026-07-18
 - **Affects:** `spec/quantumjob.md` (`requirements.quality`), `schemas/quantumjob.schema.json`, conformance (scheduler-side), golden placement suite
 

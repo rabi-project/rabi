@@ -1,7 +1,7 @@
 # RFC-0001: First-class `technology` and `cloud_queue` fields in the adapter protocol
 
 - **Status:** Accepted (2026-07-18)
-- **Author(s):** Edward (Levangie Laboratories), drafted with Claude
+- **Author(s):** Edward (Levangie Laboratories)
 - **Created:** 2026-07-18
 - **Affects:** `proto/tangle/adapter/v1alpha1/adapter.proto`, `spec/overview.md` §2, conformance category 1
 
