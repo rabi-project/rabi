@@ -8,7 +8,7 @@ git clone https://github.com/rabi-project/rabi.git
 cd rabi
 make compose-up               # 3 simulated QPUs replaying real IBM calibration + control plane
 ./deploy/compose/seed.sh      # submit the 20-job demo mix
-RABI_TOKEN=dev-key go run ./cmd/qctl watch --all   # live fleet view (Ctrl-C to exit)
+RABI_TOKEN=dev-key go run ./cmd/rabi watch --all   # live fleet view (Ctrl-C to exit)
 ```
 
 The fleet replays **real device calibration** (20-qubit subgraphs of IBM's
@@ -25,10 +25,10 @@ Poke at individual jobs:
 
 ```sh
 export RABI_TOKEN=dev-key
-go run ./cmd/qctl targets                 # fleet with live calibration state
-go run ./cmd/qctl list --tenant demo
-go run ./cmd/qctl get <job-id>            # full document, placement audit, counts
-go run ./cmd/qctl usage --tenant demo     # native-unit usage ledger
+go run ./cmd/rabi targets                 # fleet with live calibration state
+go run ./cmd/rabi list --tenant demo
+go run ./cmd/rabi get <job-id>            # full document, placement audit, counts
+go run ./cmd/rabi usage --tenant demo     # native-unit usage ledger
 ```
 
 The same API over REST:
@@ -42,13 +42,13 @@ curl -H "Authorization: Bearer dev-key" http://localhost:8080/v1alpha1/targets
 `dev-key` is the compose stack's **bootstrap token** (`RABI_BOOTSTRAP_TOKEN`
 in `deploy/compose/docker-compose.yml`) — an admin credential for demos and
 first-admin setup only. Production deployments configure OIDC
-(`RABI_OIDC_ISSUER` + `RABI_OIDC_CLIENT_ID`; log in with `qctl login`) and
+(`RABI_OIDC_ISSUER` + `RABI_OIDC_CLIENT_ID`; log in with `rabi login`) and
 mint per-project API tokens:
 
 ```sh
 export RABI_TOKEN=dev-key
-go run ./cmd/qctl token create ci-bot --project demo --role member
-go run ./cmd/qctl whoami         # check what any credential resolves to
+go run ./cmd/rabi token create ci-bot --project demo --role member
+go run ./cmd/rabi whoami         # check what any credential resolves to
 ```
 
 Tokens are stored only as hashes; roles are viewer < member < operator <
@@ -64,7 +64,7 @@ IBM_TOKEN=<token> RABI_ADAPTERS_EXTRA=",ibm=adapter-ibm:50052" \
   docker compose -f deploy/compose/docker-compose.yml --profile ibm up -d
 ```
 
-The IBM target then appears in `qctl targets` (vendor `ibm`, `cloud=true`);
+The IBM target then appears in `rabi targets` (vendor `ibm`, `cloud=true`);
 jobs reach it only when `backendSelector.allowCloudBurst` lists it.
 
 ## Kubernetes: quantum jobs as custom resources

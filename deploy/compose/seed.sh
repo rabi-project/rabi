@@ -12,8 +12,8 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 export RABI_TOKEN="${RABI_TOKEN:-dev-key}"
-QCTL="bin/qctl"
-go build -o "$QCTL" ./cmd/qctl
+RABI="bin/rabi"
+go build -o "$RABI" ./cmd/rabi
 
 b64() { printf '%s' "$1" | base64 | tr -d '\n'; }
 
@@ -61,7 +61,7 @@ YAML
     if [ -n "$extra" ]; then
       printf '%s\n' "$extra"
     fi
-  } | "$QCTL" submit -f - | cut -f1
+  } | "$RABI" submit -f - | cut -f1
 }
 
 echo "--- seeding 20 jobs"
@@ -120,10 +120,10 @@ ids+=("$(submit cancel-me-a 2 1000 "$bell" '  requirements:
 ids+=("$(submit cancel-me-b 8 4000 "$(ghz 8)" '  requirements:
     qubits: 8
     quality: { gateModel: { twoQubitErrorMax: 0.0006 } }')")
-"$QCTL" cancel "${ids[18]}" >/dev/null
-"$QCTL" cancel "${ids[19]}" >/dev/null
+"$RABI" cancel "${ids[18]}" >/dev/null
+"$RABI" cancel "${ids[19]}" >/dev/null
 
-echo "--- 20 jobs seeded. Live view: $QCTL watch --all"
+echo "--- 20 jobs seeded. Live view: $RABI watch --all"
 echo "--- summary (states settle within ~30s):"
 sleep 5
-"$QCTL" list --tenant demo | head -25
+"$RABI" list --tenant demo | head -25

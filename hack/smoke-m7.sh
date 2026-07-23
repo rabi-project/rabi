@@ -9,7 +9,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 export RABI_TOKEN="${RABI_TOKEN:-dev-key}"
-go build -o bin/qctl ./cmd/qctl
+go build -o bin/rabi ./cmd/rabi
 
 echo "--- IBM adapter dormant without profile"
 services="$(docker compose -f deploy/compose/docker-compose.yml config --services)"
@@ -25,7 +25,7 @@ echo "--- seed the 20-job mix"
 echo "--- wait for states to settle"
 deadline=$(( $(date +%s) + 300 ))
 while [ "$(date +%s)" -lt "$deadline" ]; do
-  bin/qctl list --tenant demo -o json > bin/demo-jobs.json
+  bin/rabi list --tenant demo -o json > bin/demo-jobs.json
   if python3 - <<'EOF'
 import json, sys
 jobs = json.load(open("bin/demo-jobs.json")).get("jobs", [])

@@ -3,7 +3,7 @@
 #
 # The hybrid pipeline as a Slurm batch job. The two CLASSICAL stages run as
 # native Slurm steps on the cluster's CPU/GPU nodes; the QUANTUM stage delegates
-# to Rabi via qctl. Submit with:
+# to Rabi via rabi. Submit with:
 #
 #   export RABI_SERVER=rabi.example.org:9090 RABI_TOKEN=...
 #   sbatch --export=ALL,PIPELINE_DIR=$PWD/pipeline pipeline.sbatch

@@ -1,7 +1,7 @@
 # API guide
 
 Rabi exposes one client API in two equivalent forms: **gRPC** (services in
-`tangle.api.v1alpha1`) and a **REST gateway** mapped from it. `qctl` uses
+`tangle.api.v1alpha1`) and a **REST gateway** mapped from it. `rabi` uses
 gRPC; anything else (curl, a language SDK, the console) uses REST. Both go
 through the same auth and the same handlers.
 
@@ -10,8 +10,8 @@ through the same auth and the same handlers.
 Every call carries `Authorization: Bearer <credential>`, where the credential
 is one of:
 
-- an **OIDC ID token** (JWT) — from `qctl login` or your IdP's flow;
-- a **per-project API token** (`rabi_<id>_<secret>`) — from `qctl token create`;
+- an **OIDC ID token** (JWT) — from `rabi login` or your IdP's flow;
+- a **per-project API token** (`rabi_<id>_<secret>`) — from `rabi token create`;
 - the **bootstrap token** — dev/first-admin only.
 
 Authorization is role-based (`viewer` < `member` < `operator` < `admin`) and,
@@ -40,12 +40,12 @@ maps directly).
 | `GET /v1alpha1/usage?tenant=&from=&to=` | Native-unit usage per target. |
 
 Administration (tokens, projects, quotas, ledger export) is served over gRPC
-only, on `rabi.admin.v1alpha1.AdminService` — use `qctl` for those; it is
+only, on `rabi.admin.v1alpha1.AdminService` — use `rabi` for those; it is
 deliberately not part of the vendored wire spec.
 
 ## Submitting a job over REST
 
-The `quantumJob` field is the same document you would pass to `qctl submit`,
+The `quantumJob` field is the same document you would pass to `rabi submit`,
 as JSON. A program is base64 in `inline`:
 
 ```sh
@@ -75,7 +75,7 @@ terminal, then read `status.tasks[].result` and `status.placement`.
 
 `GET /v1alpha1/jobs/{id}/watch` is a streaming response — each chunk is a Job
 snapshot at a new phase, replayed from an append-only event history so no
-transition is missed, closing when the job is terminal. `qctl watch` wraps
+transition is missed, closing when the job is terminal. `rabi watch` wraps
 this; over raw HTTP, read the response as a stream of JSON objects.
 
 ## Field naming

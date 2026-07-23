@@ -1,7 +1,7 @@
 #!/bin/sh
 # SPDX-License-Identifier: Apache-2.0
 #
-# Install the Rabi CLI (qctl). Usage:
+# Install the Rabi CLI (rabi). Usage:
 #   curl -fsSL https://rabi-project.github.io/rabi/install.sh | sh
 #   curl -fsSL https://rabi-project.github.io/rabi/install.sh | sh -s -- --version v0.4.1
 #
@@ -11,13 +11,13 @@
 set -eu
 
 REPO="rabi-project/rabi"
-BIN="qctl"
+BIN="rabi"
 VERSION="latest"
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --version) VERSION="$2"; shift 2 ;;
-    --bin)     BIN="$2";     shift 2 ;;   # qctl | rabi | rabi-conformance
+    --bin)     BIN="$2";     shift 2 ;;   # rabi | rabi | rabi-conformance
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
 done

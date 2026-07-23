@@ -33,7 +33,7 @@ Order matters — the control plane must not boot before the data is back
 
 ## Verify
 
-- `qctl get <job-id>` returns pre-backup jobs; `qctl watch` replays their
+- `rabi get <job-id>` returns pre-backup jobs; `rabi watch` replays their
   event history to the terminal phase.
 - The next reconciliation run logs `reconciliation clean`
   (`RABI_RECONCILE_EVERY=5s` to force one quickly).

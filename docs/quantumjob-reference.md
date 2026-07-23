@@ -210,4 +210,4 @@ status:
 `status.placement` is the whole promise of Rabi made concrete: the policy that
 chose, the snapshot it used, what it predicted, and **every rejected device
 with its reason**. Render it human-first in the console's placement-audit page,
-or read it with `qctl get <id>`.
+or read it with `rabi get <id>`.

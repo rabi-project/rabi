@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
-# Render the qctl Homebrew formula for a release tag. Usage: render-formula.sh vX.Y.Z
+# Render the rabi Homebrew formula for a release tag. Usage: render-formula.sh vX.Y.Z
 set -euo pipefail
 VERSION="$1"
 BASE="https://github.com/rabi-project/rabi/releases/download/${VERSION}"
 sums="$(curl -fsSL "${BASE}/SHA256SUMS")"
-sha() { echo "$sums" | grep " qctl-$1\$" | awk '{print $1}'; }
-tmpl="$(dirname "$0")/qctl.rb.tmpl"
+sha() { echo "$sums" | grep " rabi-$1$" | awk '{print $1}'; }
+tmpl="$(dirname "$0")/rabi.rb.tmpl"
 sed -e "s|__VERSION__|${VERSION#v}|" \
     -e "s|__BASE__|${BASE}|g" \
     -e "s|__SHA_DARWIN_ARM64__|$(sha darwin-arm64)|" \

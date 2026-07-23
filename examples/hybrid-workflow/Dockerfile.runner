@@ -1,17 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# The pipeline runner image: qctl + jq + the pipeline stages. The Kubernetes Job
+# The pipeline runner image: rabi + jq + the pipeline stages. The Kubernetes Job
 # and the Slurm batch both use it (or the same tools on PATH) to run the
-# classical pre/post stages and the qctl-driven quantum stage. Build from the
+# classical pre/post stages and the rabi-driven quantum stage. Build from the
 # repo root: docker build -f examples/hybrid-workflow/Dockerfile.runner -t rabi-hybrid-runner .
 FROM golang:1.26-alpine AS build
 WORKDIR /src
 COPY . .
-RUN CGO_ENABLED=0 go build -o /qctl ./cmd/qctl
+RUN CGO_ENABLED=0 go build -o /rabi ./cmd/rabi
 
 FROM alpine:3.20
 RUN apk add --no-cache jq bash coreutils
-COPY --from=build /qctl /usr/local/bin/qctl
+COPY --from=build /rabi /usr/local/bin/rabi
 COPY examples/hybrid-workflow/pipeline /pipeline
 ENV WORK=/work
 WORKDIR /pipeline

@@ -19,7 +19,7 @@ Rabi places it on the device where it will actually succeed, and tells you **why
 [**Concepts**](https://rabi-project.github.io/rabi/concepts/) ·
 [**Quickstart**](https://rabi-project.github.io/rabi/quickstart/) ·
 [**Install**](https://rabi-project.github.io/rabi/install/) ·
-[**CLI**](https://rabi-project.github.io/rabi/qctl-reference/) ·
+[**CLI**](https://rabi-project.github.io/rabi/rabi-reference/) ·
 [**API**](https://rabi-project.github.io/rabi/api-guide/)
 
 </div>
@@ -47,29 +47,29 @@ predicted quality, and **every rejected device with the reason** — so scheduli
 **Runs alongside your CPU/GPU scheduler — it doesn't replace it.** Rabi schedules the
 machine that *drifts*; Kubernetes and Slurm already schedule CPUs and GPUs superbly. A
 hybrid pipeline keeps its classical pre/post stages on your scheduler and delegates only
-the quantum stage to Rabi via `qctl submit`. See
+the quantum stage to Rabi via `rabi submit`. See
 [`examples/hybrid-workflow`](examples/hybrid-workflow/) — runnable on Kubernetes (kind)
 and Slurm.
 
 ## Install
 
 ```sh
-# the qctl client — macOS & Linux
+# the rabi client — macOS & Linux
 curl -fsSL https://rabi-project.github.io/rabi/install.sh | sh
 
 # or Homebrew
-brew install rabi-project/tap/qctl
+brew install rabi-project/tap/rabi
 
 # or Go
-go install github.com/rabi-project/rabi/cmd/qctl@latest
+go install github.com/rabi-project/rabi/cmd/rabi@latest
 ```
 
 Point it at a fleet and go:
 
 ```sh
 export RABI_SERVER=your-fleet:9090
-export RABI_TOKEN=<api token>      # or: qctl login
-qctl targets                       # live calibration state, per device
+export RABI_TOKEN=<api token>      # or: rabi login
+rabi targets                       # live calibration state, per device
 ```
 
 ## Try it in five minutes
@@ -81,7 +81,7 @@ calibration** (drifting at 600× wall-clock) and watch jobs route by live qualit
 git clone https://github.com/rabi-project/rabi && cd rabi
 make compose-up            # control plane + 3 replay QPUs
 ./deploy/compose/seed.sh   # submit a 20-job mix
-RABI_TOKEN=dev-key qctl watch --all
+RABI_TOKEN=dev-key rabi watch --all
 ```
 
 Then open the read-only console at **http://localhost:8080/console/** to see the fleet,
@@ -105,7 +105,7 @@ You submit a declarative **QuantumJob**. Rabi admits it, then the scheduler filt
 fleet to feasible devices, scores them on live calibration, and binds the best — writing
 a placement audit before anything runs. Every vendor is fronted by an **adapter** that
 speaks one gRPC protocol, so any device can join without changing Rabi. One control-plane
-binary (`rabi`), PostgreSQL for state, a `qctl` CLI, and a read-only web console.
+binary (`rabid`), PostgreSQL for state, a `rabi` CLI, and a read-only web console.
 
 <details>
 <summary><b>A job, and the audit it produces</b></summary>
@@ -129,8 +129,8 @@ spec:
 ```
 
 ```console
-$ qctl submit -f bell.yaml
-$ qctl get <id>
+$ rabi submit -f bell.yaml
+$ rabi get <id>
 status:
   phase: SUCCEEDED
   boundTarget: sim/ibm-sherbrooke-r
@@ -202,7 +202,7 @@ searchable, with these entry points:
 | [Concepts](https://rabi-project.github.io/rabi/concepts/) | [Install a fleet](https://rabi-project.github.io/rabi/site-install-guide/) | [Write an adapter](https://rabi-project.github.io/rabi/conformance-authors/) |
 | [Quickstart](https://rabi-project.github.io/rabi/quickstart/) | [Security checklist](https://rabi-project.github.io/rabi/security-checklist/) | [QDMI site recipe](https://rabi-project.github.io/rabi/qdmi-site-recipe/) |
 | [QuantumJob reference](https://rabi-project.github.io/rabi/quantumjob-reference/) | [Backup & restore](https://rabi-project.github.io/rabi/backup-restore/) | [Architecture](https://rabi-project.github.io/rabi/architecture/) |
-| [qctl reference](https://rabi-project.github.io/rabi/qctl-reference/) · [API](https://rabi-project.github.io/rabi/api-guide/) | | [Decisions log](https://rabi-project.github.io/rabi/decisions/) |
+| [rabi reference](https://rabi-project.github.io/rabi/rabi-reference/) · [API](https://rabi-project.github.io/rabi/api-guide/) | | [Decisions log](https://rabi-project.github.io/rabi/decisions/) |
 
 ## Status
 

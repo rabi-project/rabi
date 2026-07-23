@@ -3,8 +3,8 @@
 Start here. This explains what Rabi is, the mental model behind it, and the
 handful of ideas you need before submitting real work. No commands — see the
 [quickstart](quickstart.md) to run something, the [QuantumJob
-reference](quantumjob-reference.md) for every field, and the [qctl
-reference](qctl-reference.md) for the CLI.
+reference](quantumjob-reference.md) for every field, and the [rabi
+reference](rabi-reference.md) for the CLI.
 
 ## What Rabi is
 
@@ -140,7 +140,7 @@ PENDING → SCHEDULED → SUBMITTED → RUNNING → SUCCEEDED
 - **SUCCEEDED / FAILED / CANCELLED** — terminal and immutable. To retry, you
   submit a new job.
 
-Watch it live with `qctl watch <id>`; every transition is delivered in order
+Watch it live with `rabi watch <id>`; every transition is delivered in order
 from an append-only history, so you never miss one.
 
 ## Provenance: why you can trust the numbers
@@ -177,7 +177,7 @@ fleet breadth scales.
 
 - **Run something:** [quickstart.md](quickstart.md)
 - **Write a job:** [quantumjob-reference.md](quantumjob-reference.md)
-- **Use the CLI:** [qctl-reference.md](qctl-reference.md)
+- **Use the CLI:** [rabi-reference.md](rabi-reference.md)
 - **Call the API:** [api-guide.md](api-guide.md)
 - **Operate a deployment:** [site-install-guide.md](site-install-guide.md),
   [security-checklist.md](security-checklist.md)

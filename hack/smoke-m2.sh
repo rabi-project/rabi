@@ -10,27 +10,27 @@ cd "$(dirname "$0")/.."
 API_KEY="${RABI_TOKEN:-dev-key}"
 export RABI_TOKEN="$API_KEY"
 
-go build -o bin/qctl ./cmd/qctl
+go build -o bin/rabi ./cmd/rabi
 
 echo "--- fleet has the Aer target"
 targets=""
 for i in $(seq 1 30); do
-  targets="$(bin/qctl targets)"
+  targets="$(bin/rabi targets)"
   if echo "$targets" | grep -q "sim/ibm-torino-r"; then break; fi
   sleep 1
 done
 echo "$targets" | grep -q "sim/ibm-torino-r" || { echo "FAIL: target never registered"; exit 1; }
 
 echo "--- submit Bell job and wait for SUCCEEDED"
-job_id="$(bin/qctl submit -f examples/bell.yaml | cut -f1)"
+job_id="$(bin/rabi submit -f examples/bell.yaml | cut -f1)"
 phase=""
 for i in $(seq 1 60); do
-  bin/qctl get "$job_id" -o json > bin/job.json
+  bin/rabi get "$job_id" -o json > bin/job.json
   phase="$(python3 -c 'import json; print(json.load(open("bin/job.json"))["status"]["phase"])')"
   case "$phase" in SUCCEEDED|FAILED|CANCELLED) break ;; esac
   sleep 1
 done
-[ "$phase" = "SUCCEEDED" ] || { echo "FAIL: job ended $phase"; bin/qctl get "$job_id"; exit 1; }
+[ "$phase" = "SUCCEEDED" ] || { echo "FAIL: job ended $phase"; bin/rabi get "$job_id"; exit 1; }
 
 echo "--- counts histogram is Bell-dominant; placement audit present"
 python3 - <<'EOF'
@@ -51,7 +51,7 @@ print(f"placement: {placement['policy']} on {job['status']['boundTarget']}: {pla
 EOF
 
 echo "--- usage recorded (shots >= 1000 on the bound target)"
-bin/qctl usage --tenant demo -o json > bin/usage.json
+bin/rabi usage --tenant demo -o json > bin/usage.json
 python3 - <<'EOF'
 import json
 bound = json.load(open("bin/job.json"))["status"]["boundTarget"]

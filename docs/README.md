@@ -7,13 +7,13 @@ recording a human-readable reason for every placement.
 
 ## Learn & use
 
-- **[Install](install.md)** — get the `qctl` client in one command.
+- **[Install](install.md)** — get the `rabi` client in one command.
 - **[Concepts](concepts.md)** — start here. The mental model: calibration-aware
   placement, the QuantumJob, quality floors, sessions, the job lifecycle.
 - **[Quickstart](quickstart.md)** — clone to routed jobs in five commands.
 - **[QuantumJob reference](quantumjob-reference.md)** — every job field, keyed
   to the schema.
-- **[qctl reference](qctl-reference.md)** — the CLI, command by command.
+- **[rabi reference](rabi-reference.md)** — the CLI, command by command.
 - **[API guide](api-guide.md)** — the REST / gRPC surface for tools and SDKs.
 
 ## Operate a deployment

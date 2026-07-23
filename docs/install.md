@@ -1,11 +1,11 @@
 # Installing Rabi
 
-Rabi has two parts: the **`qctl` command-line client** (what you install on
+Rabi has two parts: the **`rabi` command-line client** (what you install on
 your machine to talk to a fleet) and the **`rabi` control plane** (what an
 operator deploys). This page covers installing the client; to deploy a fleet,
 see the [site install guide](site-install-guide.md).
 
-## Install `qctl`
+## Install `rabi`
 
 ### One-line installer (macOS, Linux)
 
@@ -25,41 +25,41 @@ curl -fsSL https://rabi-project.github.io/rabi/install.sh | sh -s -- --bin rabi-
 ### Homebrew (macOS, Linux)
 
 ```sh
-brew install rabi-project/tap/qctl
+brew install rabi-project/tap/rabi
 ```
 
 Uses the [Rabi Homebrew tap](https://github.com/rabi-project/homebrew-tap).
-`brew upgrade qctl` keeps it current.
+`brew upgrade rabi` keeps it current.
 
 ### With Go
 
 ```sh
-go install github.com/rabi-project/rabi/cmd/qctl@latest
+go install github.com/rabi-project/rabi/cmd/rabi@latest
 ```
 
 ### Manual download
 
 Grab the binary for your platform from the
 [latest release](https://github.com/rabi-project/rabi/releases/latest)
-(`qctl-<os>-<arch>`), verify it against `SHA256SUMS`, `chmod +x`, and move it
+(`rabi-<os>-<arch>`), verify it against `SHA256SUMS`, `chmod +x`, and move it
 onto your PATH.
 
 ## Verify
 
 ```sh
-qctl --help
-qctl --version        # prints the release version
+rabi --help
+rabi --version        # prints the release version
 ```
 
 ## Point it at a fleet
 
 ```sh
 export RABI_SERVER=your-fleet-host:9090
-export RABI_TOKEN=<your API token>      # or: qctl login
-qctl targets
+export RABI_TOKEN=<your API token>      # or: rabi login
+rabi targets
 ```
 
-See the [qctl reference](qctl-reference.md) for every command and the
+See the [rabi reference](rabi-reference.md) for every command and the
 [concepts guide](concepts.md) for the model.
 
 ## Deploy a control plane

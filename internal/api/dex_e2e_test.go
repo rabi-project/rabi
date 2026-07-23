@@ -4,7 +4,7 @@
 // the control plane verifies its JWTs via discovery + JWKS (coreos/go-oidc),
 // and dex's mock identity (groups: ["authors"]) exercises the group→role
 // mapping end to end. The password grant keeps the flow headless — the same
-// verification path `qctl login`'s browser flow produces tokens for.
+// verification path `rabi login`'s browser flow produces tokens for.
 package api_test
 
 import (
@@ -108,7 +108,7 @@ staticClients:
 // dexIDToken drives the real authorization-code flow headlessly: dex's
 // mockCallback connector approves without a login form (identity "Kilgore
 // Trout", groups ["authors"]), so following redirects until the registered
-// callback URI yields the code — the same flow `qctl login` runs with a
+// callback URI yields the code — the same flow `rabi login` runs with a
 // browser.
 func dexIDToken(t *testing.T, issuer string) string {
 	t.Helper()

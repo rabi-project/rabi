@@ -2,7 +2,7 @@ bin/
 dist/
 # stray `go build ./cmd/...` outputs in the repo root
 /rabi
-/qctl
+/rabid
 /rabi-conformance
 /rabi-chaos
 bench/out*/

@@ -86,8 +86,8 @@ done
 
 $KCTL -n demo delete quantumjob hold-me --timeout=60s >/dev/null
 
-go build -o bin/qctl ./cmd/qctl
-cancelled_phase="$(bin/qctl get "$held_id" -o json | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"]["phase"])')"
+go build -o bin/rabi ./cmd/rabi
+cancelled_phase="$(bin/rabi get "$held_id" -o json | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"]["phase"])')"
 [ "$cancelled_phase" = "CANCELLED" ] || {
   echo "FAIL: control-plane job is $cancelled_phase after CR deletion, want CANCELLED"; exit 1; }
 echo "deletion cancelled control-plane job $held_id"

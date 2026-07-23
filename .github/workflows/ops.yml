@@ -36,10 +36,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - name: migrate schema (start rabi briefly)
         run: |
-          go build -o /tmp/rabi ./cmd/rabi
+          go build -o /tmp/rabid ./cmd/rabid
           RABI_DB_URL="$DSN" RABI_ADAPTERS="" RABI_BOOTSTRAP_TOKEN=dev-key \
             RABI_HTTP_ADDR=127.0.0.1:18080 RABI_GRPC_ADDR=127.0.0.1:19090 \
-            RABI_PROBE_EVERY=off /tmp/rabi & sleep 5; kill %1 || true
+            RABI_PROBE_EVERY=off /tmp/rabid & sleep 5; kill %1 || true
       - name: seed representative rows
         run: |
           psql "$DSN" -q -c "INSERT INTO jobs (job_id,tenant,name,phase,doc,status) VALUES (gen_random_uuid(),'acme/qa','drill','SUCCEEDED','{}','{}');"

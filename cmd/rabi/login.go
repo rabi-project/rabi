@@ -22,7 +22,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// qctl login runs the OIDC authorization-code + PKCE flow against any
+// rabi login runs the OIDC authorization-code + PKCE flow against any
 // spec-compliant IdP, listening on a localhost callback, and stores the
 // resulting tokens (0600) for later commands. The bearer presented to rabi
 // is the ID token — its audience is the client id the server verifies.
@@ -113,7 +113,7 @@ func runLogin(ctx context.Context, cmd *cobra.Command, issuer, clientID, listen 
 				http.Error(w, q.Get("error_description"), http.StatusBadRequest)
 				got <- callback{err: fmt.Errorf("idp error: %s", q.Get("error"))}
 			default:
-				_, _ = fmt.Fprintln(w, "Logged in — you can close this tab and return to qctl.")
+				_, _ = fmt.Fprintln(w, "Logged in — you can close this tab and return to rabi.")
 				got <- callback{code: q.Get("code")}
 			}
 		})}
@@ -195,7 +195,7 @@ func loadLoginBearer(ctx context.Context) (string, error) {
 		return c.IDToken, nil
 	}
 	if c.RefreshToken == "" {
-		return "", fmt.Errorf("stored login expired; run `qctl login` again")
+		return "", fmt.Errorf("stored login expired; run `rabi login` again")
 	}
 
 	provider, err := oidc.NewProvider(ctx, c.Issuer)
@@ -205,11 +205,11 @@ func loadLoginBearer(ctx context.Context) (string, error) {
 	conf := oauth2.Config{ClientID: c.ClientID, Endpoint: provider.Endpoint()}
 	tok, err := conf.TokenSource(ctx, &oauth2.Token{RefreshToken: c.RefreshToken}).Token()
 	if err != nil {
-		return "", fmt.Errorf("stored login expired and refresh failed (%v); run `qctl login` again", err)
+		return "", fmt.Errorf("stored login expired and refresh failed (%v); run `rabi login` again", err)
 	}
 	rawID, _ := tok.Extra("id_token").(string)
 	if rawID == "" {
-		return "", errors.New("refresh returned no id_token; run `qctl login` again")
+		return "", errors.New("refresh returned no id_token; run `rabi login` again")
 	}
 	idTok, err := provider.Verifier(&oidc.Config{ClientID: c.ClientID}).Verify(ctx, rawID)
 	if err != nil {

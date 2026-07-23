@@ -4,9 +4,9 @@
 - No password storage exists anywhere (hard constraint; schema-tested —
   `TestNoPasswordColumnsExist`). Authentication is OIDC + hashed API tokens.
 - `RABI_BOOTSTRAP_TOKEN` is a first-admin/dev credential: rotate it away
-  after minting real tokens (`qctl token create`), then unset it.
+  after minting real tokens (`rabi token create`), then unset it.
 - API tokens are stored as SHA-256 digests only (DB-scan-tested). Treat
-  the one-time plaintext like any secret; revoke via `qctl token revoke`.
+  the one-time plaintext like any secret; revoke via `rabi token revoke`.
 - Vendor credentials (IBM/IQM/QRMI) live only in adapter process
   environments, never in the control plane, repo, or fixtures.
 - Postgres credentials: use a dedicated database; the app serves under

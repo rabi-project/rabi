@@ -37,7 +37,7 @@ nav:
       - Concepts: concepts.md
       - Quickstart: quickstart.md
       - QuantumJob reference: quantumjob-reference.md
-      - qctl reference: qctl-reference.md
+      - rabi reference: rabi-reference.md
       - API guide: api-guide.md
   - Operate:
       - Operating a fleet: fleet.md

@@ -13,13 +13,13 @@ Health at a glance: the status page (`/status`) and `/metrics`
 ## 1. Jobs stuck in PENDING
 
 **Confirm.** `rabi_jobs_total{phase="PENDING"}` is high and not falling; affected
-jobs carry a `Schedulable=False` condition (`qctl get job <id>`).
+jobs carry a `Schedulable=False` condition (`rabi get job <id>`).
 
 **Usual causes & fixes.**
 - **No feasible target.** The condition message names the failed dimension
   (qubits, technology, quality floor, calibration age). Either the fleet lacks a
   matching device or every device is filtered out. Confirm targets are online
-  (`qctl get targets`); if a quality floor is unmeetable, the job waits by design
+  (`rabi get targets`); if a quality floor is unmeetable, the job waits by design
   until calibration improves.
 - **Adapter offline.** See runbook 2 — a PENDING backlog with all targets
   `OFFLINE` is an adapter problem, not a scheduler one.
@@ -28,7 +28,7 @@ jobs carry a `Schedulable=False` condition (`qctl get job <id>`).
 
 ## 2. A target/adapter is offline or unreachable
 
-**Confirm.** `qctl get targets` shows the target `OFFLINE`; logs show
+**Confirm.** `rabi get targets` shows the target `OFFLINE`; logs show
 `watch task failed` / `adapter for site … is not configured`.
 
 **Usual causes & fixes.**

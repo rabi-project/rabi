@@ -18,11 +18,11 @@ mkdir -p bin
 
 echo "--- stack up + seed one finished job"
 $COMPOSE up -d --build --wait >/dev/null
-go build -o bin/qctl ./cmd/qctl
-job_id="$(bin/qctl submit -f examples/bell.yaml | cut -f1)"
+go build -o bin/rabi ./cmd/rabi
+job_id="$(bin/rabi submit -f examples/bell.yaml | cut -f1)"
 phase=""
 for _ in $(seq 1 90); do
-  phase="$(bin/qctl get "$job_id" -o json | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"].get("phase",""))')"
+  phase="$(bin/rabi get "$job_id" -o json | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"].get("phase",""))')"
   case "$phase" in SUCCEEDED|FAILED|CANCELLED) break ;; esac
   sleep 1
 done
@@ -43,9 +43,9 @@ $COMPOSE exec -T postgres psql -U rabi -v ON_ERROR_STOP=1 rabi < bin/backup-db.s
 $COMPOSE up -d --wait >/dev/null
 
 echo "--- restored job intact + watch stream replays to terminal"
-got="$(bin/qctl get "$job_id" -o json | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"].get("phase",""))')"
+got="$(bin/rabi get "$job_id" -o json | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"].get("phase",""))')"
 [ "$got" = "SUCCEEDED" ] || { echo "FAIL: restored job phase $got"; exit 1; }
-watch_out="$(bin/qctl watch "$job_id" 2>/dev/null | tail -1)"
+watch_out="$(bin/rabi watch "$job_id" 2>/dev/null | tail -1)"
 echo "$watch_out" | grep -q "SUCCEEDED" || { echo "FAIL: watch did not replay to terminal: $watch_out"; exit 1; }
 
 echo "--- reconciliation clean on the restored database"

@@ -80,11 +80,11 @@ jobs:
         run: |
           mkdir -p dist
           VERSION="${GITHUB_REF_NAME}"
-          # qctl is the client users install (kubectl-style); rabi and the
+          # rabi is the client users install; rabid (the daemon) and the
           # operator tools (rabi-conformance, rabi-chaos, rabi-load) ship too.
           for OSARCH in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64; do
             GOOS="${OSARCH%/*}"; GOARCH="${OSARCH#*/}"
-            for BIN in qctl rabi rabi-conformance rabi-chaos rabi-load rabi-shadow; do
+            for BIN in rabi rabid rabi-conformance rabi-chaos rabi-load rabi-shadow; do
               CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" go build \
                 -ldflags "-X main.version=$VERSION" \
                 -o "dist/${BIN}-${GOOS}-${GOARCH}" "./cmd/$BIN"
@@ -103,12 +103,12 @@ jobs:
       - name: build-provenance attestation for the release binaries
         uses: actions/attest-build-provenance@v1
         with:
-          subject-path: "dist/qctl-*, dist/rabi-*, dist/rabi.spdx.json"
+          subject-path: "dist/rabi-*, dist/rabid-*, dist/rabi.spdx.json"
       - uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/qctl-*
             dist/rabi-*
+            dist/rabid-*
             dist/rabi.spdx.json
             dist/SHA256SUMS
           generate_release_notes: true
@@ -129,7 +129,8 @@ jobs:
           fi
           git clone -q "https://x-access-token:${TAP_TOKEN}@github.com/rabi-project/homebrew-tap" tap
           mkdir -p tap/Formula
-          ./packaging/render-formula.sh "${GITHUB_REF_NAME}" > tap/Formula/qctl.rb
+          ./packaging/render-formula.sh "${GITHUB_REF_NAME}" > tap/Formula/rabi.rb
+          git -C tap rm -q --ignore-unmatch Formula/qctl.rb || true
           cd tap
-          git -c user.email=ci@rabi.dev -c user.name="rabi-release" commit -aqm "qctl ${GITHUB_REF_NAME#v}" \
+          git -c user.email=ci@rabi.dev -c user.name="rabi-release" commit -aqm "rabi ${GITHUB_REF_NAME#v}" \
             && git push -q && echo "tap updated to ${GITHUB_REF_NAME}" || echo "no change"

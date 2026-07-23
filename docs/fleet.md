@@ -42,7 +42,7 @@ RABI_ADAPTERS="ibm=ibm-host:50052,iqm=iqm-host:50055,sim=aer-host:50051"
 
 Each comma-separated entry is `site=host:port`. On start, the registry dials
 every adapter, caches its capabilities, and polls device state (calibration,
-queue depth, maintenance) continuously. `qctl targets` shows the live fleet.
+queue depth, maintenance) continuously. `rabi targets` shows the live fleet.
 
 **You never edit Rabi's code to add a device.** Adding hardware is one of:
 
@@ -111,15 +111,15 @@ jobs by `technology` and selector to the right segment. See the
 ## Provenance stays per target
 
 Each target carries its own calibration snapshot with provenance — measured
-when, by what methodology — surfaced in `qctl targets -o json` and the
+when, by what methodology — surfaced in `rabi targets -o json` and the
 console's fleet view. A large fleet doesn't blur this; every device's numbers
 remain individually traceable, which is what keeps placement auditable.
 
 ## Verify the fleet
 
 ```sh
-qctl targets                     # every target, live status + calibration age
-qctl targets -o json | jq '.targets[].name'
+rabi targets                     # every target, live status + calibration age
+rabi targets -o json | jq '.targets[].name'
 ```
 
 Submit a job with no selector and read `status.placement.rejected` — it lists

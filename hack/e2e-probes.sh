@@ -36,8 +36,8 @@ print(f'probe fidelity {f} plausible')"
 echo "$metrics" | grep -q '^rabi_probe_age_seconds{' || { echo "FAIL: no probe age metric"; exit 1; }
 
 echo "--- probes attributed to the system tenant"
-go build -o bin/qctl ./cmd/qctl
-n="$(bin/qctl list --tenant system/probes -o json | python3 -c 'import sys,json; print(len(json.load(sys.stdin)["jobs"]))')"
+go build -o bin/rabi ./cmd/rabi
+n="$(bin/rabi list --tenant system/probes -o json | python3 -c 'import sys,json; print(len(json.load(sys.stdin)["jobs"]))')"
 [ "$n" -ge 1 ] || { echo "FAIL: no jobs under system/probes"; exit 1; }
 echo "system/probes jobs: $n"
 

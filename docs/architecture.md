@@ -5,13 +5,13 @@ describes how this repository implements it; it grows with each milestone.
 
 ## The one binary: `rabi`
 
-`cmd/rabi` contains the entire control plane — API server, scheduler,
+`cmd/rabid` contains the entire control plane — API server, scheduler,
 target registry, and accounting. PostgreSQL 15 is the only stateful
 dependency: job dispatch uses `FOR UPDATE SKIP LOCKED` work queues with
 `LISTEN/NOTIFY` wakeups. There is no message broker and no other service.
 
 ```
-qctl / SDK / REST ──> internal/api (gRPC tangle.api.v1alpha1 + gateway)
+rabi / SDK / REST ──> internal/api (gRPC tangle.api.v1alpha1 + gateway)
                           │
                       internal/store (Postgres: jobs, placements, ledger)
                           │

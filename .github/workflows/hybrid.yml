@@ -26,8 +26,8 @@ jobs:
         with: { go-version: "1.26" }
       - name: bring up rabi + adapter
         run: make compose-up
-      - name: build qctl
-        run: go build -o /usr/local/bin/qctl ./cmd/qctl
+      - name: build rabi
+        run: go build -o /usr/local/bin/rabi ./cmd/rabi
       - name: run hybrid pipeline
         run: RABI_SERVER=localhost:9090 RABI_TOKEN=dev-key ./examples/hybrid-workflow/run.sh
       - name: tear down
@@ -87,8 +87,8 @@ jobs:
         with: { go-version: "1.26" }
       - name: bring up rabi + adapter
         run: make compose-up
-      - name: build qctl
-        run: go build -o /usr/local/bin/qctl ./cmd/qctl
+      - name: build rabi
+        run: go build -o /usr/local/bin/rabi ./cmd/rabi
       - name: install single-node Slurm
         run: |
           sudo apt-get update

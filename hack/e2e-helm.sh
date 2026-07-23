@@ -39,36 +39,36 @@ $KCTL port-forward svc/rabi 19090:9090 19080:8080 >/dev/null 2>&1 &
 PF_PID=$!
 sleep 3
 
-go build -o bin/qctl ./cmd/qctl
+go build -o bin/rabi ./cmd/rabi
 export RABI_SERVER=localhost:19090 RABI_TOKEN="$TOKEN"
 
 echo "--- whoami (bootstrap admin)"
-out="$(bin/qctl whoami)"
+out="$(bin/rabi whoami)"
 echo "$out" | grep -q "bootstrap" || { echo "FAIL: whoami: $out"; exit 1; }
 
 echo "--- targets (replay fleet up)"
 deadline=$(( $(date +%s) + 120 ))
 count=0
 while [ "$(date +%s)" -lt "$deadline" ]; do
-  count="$(bin/qctl targets -o json 2>/dev/null | python3 -c 'import sys,json; print(len(json.load(sys.stdin).get("targets",[])))' || echo 0)"
+  count="$(bin/rabi targets -o json 2>/dev/null | python3 -c 'import sys,json; print(len(json.load(sys.stdin).get("targets",[])))' || echo 0)"
   [ "$count" -ge 3 ] && break
   sleep 3
 done
 [ "$count" -ge 3 ] || { echo "FAIL: expected >=3 targets, got $count"; exit 1; }
 
 echo "--- submit bell → terminal"
-job_id="$(bin/qctl submit -f examples/bell.yaml | cut -f1)"
+job_id="$(bin/rabi submit -f examples/bell.yaml | cut -f1)"
 deadline=$(( $(date +%s) + 180 ))
 phase=""
 while [ "$(date +%s)" -lt "$deadline" ]; do
-  phase="$(bin/qctl get "$job_id" -o json | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"].get("phase",""))')"
+  phase="$(bin/rabi get "$job_id" -o json | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"].get("phase",""))')"
   case "$phase" in SUCCEEDED|FAILED|CANCELLED) break ;; esac
   sleep 2
 done
 [ "$phase" = "SUCCEEDED" ] || { echo "FAIL: job phase $phase"; exit 1; }
 
 echo "--- auth enforced"
-if RABI_TOKEN=wrong bin/qctl targets >/dev/null 2>&1; then
+if RABI_TOKEN=wrong bin/rabi targets >/dev/null 2>&1; then
   echo "FAIL: wrong token accepted"; exit 1
 fi
 

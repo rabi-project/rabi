@@ -3,7 +3,7 @@
 # The hybrid pipeline as a plain Kubernetes Job. The two CLASSICAL stages run
 # natively in the cluster (pre as an init container, post as the main
 # container); the QUANTUM stage (also an init container) delegates to Rabi via
-# qctl. A shared emptyDir carries the job document and result counts between
+# rabi. A shared emptyDir carries the job document and result counts between
 # stages. This is the canonical answer to "can Rabi manage CPU/GPU?" — your
 # scheduler runs the classical work; Rabi schedules only the quantum stage.
 apiVersion: batch/v1

@@ -47,8 +47,8 @@ echo "--- API answers"
 $KCTL port-forward svc/rabi 19091:9090 >/dev/null 2>&1 &
 PF_PID=$!
 sleep 3
-go build -o bin/qctl ./cmd/qctl
-out="$(RABI_SERVER=localhost:19091 RABI_TOKEN=$TOKEN bin/qctl whoami)"
+go build -o bin/rabi ./cmd/rabi
+out="$(RABI_SERVER=localhost:19091 RABI_TOKEN=$TOKEN bin/rabi whoami)"
 echo "$out" | grep -q bootstrap || { echo "FAIL: whoami: $out"; exit 1; }
 
 echo "AIRGAP-VERIFY OK"

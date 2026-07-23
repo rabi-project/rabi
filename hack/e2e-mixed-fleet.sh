@@ -17,9 +17,9 @@ trap cleanup EXIT
 
 echo "--- mixed fleet up (3 replay + iqm cassette + gpu-class sim)"
 $COMPOSE up -d --build --wait >/dev/null
-go build -o bin/qctl ./cmd/qctl
+go build -o bin/rabi ./cmd/rabi
 
-targets="$(bin/qctl targets -o json)"
+targets="$(bin/rabi targets -o json)"
 count="$(echo "$targets" | python3 -c 'import sys,json; print(len(json.load(sys.stdin)["targets"]))')"
 [ "$count" -ge 5 ] || { echo "FAIL: expected >=5 targets, got $count"; echo "$targets"; exit 1; }
 
@@ -41,7 +41,7 @@ doc = {
 doc["spec"].update(eval(extra))
 print(json.dumps(doc))
 PY
-  bin/qctl submit -f "bin/mixed-$1.yaml" | cut -f1
+  bin/rabi submit -f "bin/mixed-$1.yaml" | cut -f1
 }
 
 echo "--- mixed workload"
@@ -56,12 +56,12 @@ declare -a bounds=()
 for id in "${ids[@]}"; do
   phase=""
   for _ in $(seq 1 120); do
-    bin/qctl get "$id" -o json > bin/mixed-job.json
+    bin/rabi get "$id" -o json > bin/mixed-job.json
     phase="$(python3 -c 'import json; print(json.load(open("bin/mixed-job.json"))["status"].get("phase",""))')"
     case "$phase" in SUCCEEDED|FAILED|CANCELLED) break ;; esac
     sleep 1
   done
-  [ "$phase" = "SUCCEEDED" ] || { echo "FAIL: job $id ended $phase"; bin/qctl get "$id"; exit 1; }
+  [ "$phase" = "SUCCEEDED" ] || { echo "FAIL: job $id ended $phase"; bin/rabi get "$id"; exit 1; }
   bounds+=("$(python3 -c 'import json; print(json.load(open("bin/mixed-job.json"))["status"].get("boundTarget",""))')")
 done
 

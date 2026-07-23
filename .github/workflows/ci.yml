@@ -106,7 +106,7 @@ jobs:
         run: make compose-up
       - name: smoke (M0 — transport + auth over gRPC+REST)
         run: ./hack/smoke-m0.sh
-      - name: smoke (M1 — job lifecycle via qctl)
+      - name: smoke (M1 — job lifecycle via rabi)
         run: ./hack/smoke-m1.sh
       - name: smoke (M2 — Bell job end-to-end with usage)
         run: ./hack/smoke-m2.sh

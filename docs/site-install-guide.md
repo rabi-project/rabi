@@ -19,8 +19,8 @@ Verify (5 min):
 
 ```sh
 export RABI_TOKEN="$RABI_BOOTSTRAP_TOKEN"
-go run ./cmd/qctl whoami          # bootstrap admin
-go run ./cmd/qctl targets         # 3 replay QPUs online
+go run ./cmd/rabi whoami          # bootstrap admin
+go run ./cmd/rabi targets         # 3 replay QPUs online
 ```
 
 - Console: http://VM:8080/console/ (paste the token)
@@ -42,7 +42,7 @@ move the tarball, run its `install.sh` (verified no-egress in CI).
 
 1. Point at your IdP: set `RABI_OIDC_ISSUER`, `RABI_OIDC_CLIENT_ID`,
    map groups via `RABI_OIDC_GROUP_ROLES` (e.g. `qc-admins=admin`).
-2. `qctl login` → `qctl token create ci-bot --project <org/team> --role member`.
+2. `rabi login` → `rabi token create ci-bot --project <org/team> --role member`.
 3. Unset `RABI_BOOTSTRAP_TOKEN` and restart. Done — no static secrets.
 
 ## Wire your hardware (15 min)
@@ -58,12 +58,12 @@ rabi-adapter-iqm --server https://cocos.resonance.meetiqm.com/<qc>
 ```
 
 Then add it to the fleet: `RABI_ADAPTERS="sim=...,mine=host:5005x"` and
-restart `rabi`. `qctl targets` shows it; probes cover it automatically on
+restart `rabi`. `rabi targets` shows it; probes cover it automatically on
 the next tick.
 
 ## Acceptance for this guide
 
 Work through docs/security-checklist.md, run one Bell job end to end
-(`qctl submit -f examples/bell.yaml`, watch the placement audit in the
+(`rabi submit -f examples/bell.yaml`, watch the placement audit in the
 console), and confirm `reconciliation clean` appears in logs within a
 week (or force with RABI_RECONCILE_EVERY=1h).

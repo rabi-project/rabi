@@ -13,7 +13,7 @@ quantum device is different: it is scarce, shared, and its calibration drifts
 between jobs, so *which* device and *when* is a placement decision that needs
 live calibration data. That decision is all Rabi owns. Everything else — the
 classical compute, the data movement, the DAG — stays with the scheduler you
-already run. The boundary is a single step in your pipeline: `qctl submit`.
+already run. The boundary is a single step in your pipeline: `rabi submit`.
 
 ## The pipeline
 
@@ -22,13 +22,13 @@ Three stages, sharing a working directory:
 1. **`pipeline/pre.sh`** — *classical*. Prepares the quantum workload (here: emits
    a Bell-circuit `QuantumJob`; in real pipelines: circuit generation, parameter
    sweeps, transpilation). Touches no quantum resource.
-2. **`pipeline/quantum.sh`** — *quantum*. `qctl submit` → wait for a terminal
+2. **`pipeline/quantum.sh`** — *quantum*. `rabi submit` → wait for a terminal
    state → write the result counts. The only stage that touches a quantum
    resource; Rabi picks the device and records usage.
 3. **`pipeline/post.sh`** — *classical*. Verifies the Bell correlation
    (fraction of shots in `|00>`/`|11>`) and asserts entanglement.
 
-Needs `qctl` and `jq` on `PATH`, and `RABI_SERVER` / `RABI_TOKEN` set.
+Needs `rabi` and `jq` on `PATH`, and `RABI_SERVER` / `RABI_TOKEN` set.
 
 ## Run it locally
 

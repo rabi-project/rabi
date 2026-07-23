@@ -18,7 +18,7 @@ echo "--- stack up"
 $COMPOSE up -d --build --wait >/dev/null
 
 echo "--- a bound job for the placement-audit page (with a real rejection)"
-go build -o bin/qctl ./cmd/qctl
+go build -o bin/rabi ./cmd/rabi
 python3 - > bin/console-job.json <<'PY'
 import json, base64
 qasm = ("OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nbit[2] c;\n"
@@ -36,11 +36,11 @@ print(json.dumps({
     },
 }))
 PY
-job_id="$(bin/qctl submit -f bin/console-job.json | cut -f1)"
+job_id="$(bin/rabi submit -f bin/console-job.json | cut -f1)"
 # The seeded demo mix queues ahead of this job on the replay targets;
 # slow shared runners need the long leash.
 for _ in $(seq 1 300); do
-  phase="$(bin/qctl get "$job_id" -o json | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"].get("phase",""))')"
+  phase="$(bin/rabi get "$job_id" -o json | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"].get("phase",""))')"
   case "$phase" in SUCCEEDED|FAILED|CANCELLED) break ;; esac
   sleep 1
 done
