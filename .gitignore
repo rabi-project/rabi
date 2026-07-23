@@ -17,3 +17,5 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 node_modules/
+# harvest data — archive lives on the VM + Azure Blob, never in git
+trace/
